@@ -1,36 +1,46 @@
 <script>
+import * as PIXI from 'pixi.js'
+import { TweenMax } from 'gsap' // eslint-disable-line no-unused-vars
+import PixiPlugin from 'gsap/PixiPlugin' // eslint-disable-line no-unused-vars
 import Chainsim from '@/assets/js/chainsim'
+
+let Sprite = PIXI.Sprite
 
 export default {
   name: 'ChainsimPuyo',
-  props: ['index', 'Simulator', 'fieldState', 'fieldData'],
+  props: ['index', 'Simulator', 'fieldState', 'fieldData', 'app', 'pixiLoader', 'pixiResources', 'canvasLoaded'],
+  render: function (h) {
+    return h() // Render nothing, avoid error output.
+  },
   data () {
     return {
-      test: 0
+      check: {},
+      puyoLoaded: false,
+      puyo: new Sprite()
     }
   },
   methods: {
-    endOfPopAnimation: function () {
-      this.$emit('end-popping', { x: this.indexCol, y: this.indexRow, bool: false })
-      this.Simulator.Field.map[this.indexRow][this.indexCol].toPop = false
-      console.log('emitted animation end')
-    },
-    endOfDropAnimation: function () {
-      this.$emit('end-dropping', { x: this.indexCol, y: this.indexRow, bool: false })
-      console.log('emitted drop animation end')
-    },
-    setNewPuyoOnMouseDown: function () {
-      this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
-    },
-    setNewPuyoOnMove: function () {
-      if (this.isMouseDown === true) {
-        this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
-      }
-    }
+    // endOfPopAnimation: function () {
+    //   this.$emit('end-popping', { x: this.indexCol, y: this.indexRow, bool: false })
+    //   this.Simulator.Field.map[this.indexRow][this.indexCol].toPop = false
+    //   console.log('emitted animation end')
+    // },
+    // endOfDropAnimation: function () {
+    //   this.$emit('end-dropping', { x: this.indexCol, y: this.indexRow, bool: false })
+    //   console.log('emitted drop animation end')
+    // },
+    // setNewPuyoOnMouseDown: function () {
+    //   this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
+    // },
+    // setNewPuyoOnMove: function () {
+    //   if (this.isMouseDown === true) {
+    //     this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
+    //   }
+    // }
   },
   computed: {
     indexRow: function () {
-      return Math.floor(this.index / this.Simulator.Field.totalRows)
+      return Math.floor(this.index / this.Simulator.Field.columns)
     },
     indexCol: function () {
       return this.index % this.Simulator.Field.columns
@@ -42,9 +52,9 @@ export default {
         case Chainsim.Constants.Puyo.Blue: return 'blue'
         case Chainsim.Constants.Puyo.Yellow: return 'yellow'
         case Chainsim.Constants.Puyo.Purple: return 'purple'
-        case Chainsim.Constants.Puyo.Nuisance: return -72 // Garbage (oJama)
-        case Chainsim.Constants.Puyo.None: return 100 // Spacer/Nothing
-        case undefined: return 100
+        case Chainsim.Constants.Puyo.Nuisance: return 'garbage' // Garbage (oJama)
+        case Chainsim.Constants.Puyo.None: return 'spacer' // Spacer/Nothing
+        case undefined: return 'spacer'
       }
     },
     Connections: function () {
@@ -56,81 +66,81 @@ export default {
 
         // If this Puyo is in the middle of a dropping animation, then don't give it connections
         if (this.Simulator.droppingCells[this.indexRow][this.indexCol] === true) {
-          return 0
+          return 'n'
         }
 
-        this.check = {}
-        // this.check up
+        let check = {}
+        // check up
         if (this.indexRow <= this.Simulator.Field.hiddenRows) { // Don't look into the hidden row
-          this.check.up = false
+          check.up = false
         } else if (this.Simulator.Field.map[this.indexRow][this.indexCol].puyo === this.Simulator.Field.map[this.indexRow - 1][this.indexCol].puyo) {
           // Don't connect to Puyos that are dropping.
           if (this.Simulator.droppingCells[this.indexRow - 1][this.indexCol] === true) {
-            this.check.up = false
+            check.up = false
           } else {
-            this.check.up = true
+            check.up = true
           }
         } else {
-          this.check.up = false
+          check.up = false
         }
 
-        // this.check left
+        // check left
         if (this.indexCol === 0) { // Don't look into the wall
-          this.check.left = false
+          check.left = false
         } else if (this.Simulator.Field.map[this.indexRow][this.indexCol].puyo === this.Simulator.Field.map[this.indexRow][this.indexCol - 1].puyo) {
           // Don't connect to Puyos that are dropping.
           if (this.Simulator.droppingCells[this.indexRow][this.indexCol - 1] === true) {
-            this.check.left = false
+            check.left = false
           } else {
-            this.check.left = true
+            check.left = true
           }
         } else {
-          this.check.left = false
+          check.left = false
         }
 
-        // this.check right
+        // check right
         if (this.indexCol === (this.Simulator.Field.columns - 1)) { // Don't look into the wall
-          this.check.right = false
+          check.right = false
         } else if (this.Simulator.Field.map[this.indexRow][this.indexCol].puyo === this.Simulator.Field.map[this.indexRow][this.indexCol + 1].puyo) {
           // Don't connect to Puyos that are dropping.
           if (this.Simulator.droppingCells[this.indexRow][this.indexCol + 1] === true) {
-            this.check.right = false
+            check.right = false
           } else {
-            this.check.right = true
+            check.right = true
           }
         } else {
-          this.check.right = false
+          check.right = false
         }
 
-        // this.check down
+        // check down
         if (this.indexRow === (this.Simulator.Field.visibleRows + this.Simulator.Field.hiddenRows - 1)) { // Don't look into the floor
-          this.check.down = false
+          check.down = false
         } else if (this.Simulator.Field.map[this.indexRow][this.indexCol].puyo === this.Simulator.Field.map[this.indexRow + 1][this.indexCol].puyo) {
           if (this.Simulator.droppingCells[this.indexRow + 1][this.indexCol] === true) {
-            this.check.down = false
+            check.down = false
           } else {
-            this.check.down = true
+            check.down = true
           }
         } else {
-          this.check.down = false
+          check.down = false
         }
 
         let connection = ''
         // Decide connection
-        if (this.check.up === false && this.check.left === false && this.check.right === false && this.check.down === false) {
+        if (check.up === false && check.left === false && check.right === false && check.down === false) {
           return 'n'
         }
 
-        if (this.check.up === true) {
+        if (check.up === true) {
           connection += 'u'
         }
-        if (this.check.right === true) {
+        if (check.right === true) {
           connection += 'r'
         }
-        if (this.check.down === true) {
+        if (check.down === true) {
           connection += 'd'
         }
-        if (this.check.down === true) {
+        if (check.down === true) {
           connection += 'l'
         }
 
@@ -138,7 +148,23 @@ export default {
       } else {
         return 'Not a Puyo'
       }
+    },
+    sprites: function () {
+      return this.pixiResources['/img/spritesheet.json'].textures
+    },
+    spriteToLoad: function () {
+      return `${this.PuyoType}_${this.Connections}.png`
+    },
+    xPos: function () {
+      return Math.floor(Math.random() * 500)
+    },
+    yPos: function () {
+      return Math.floor(Math.random() * 600)
     }
+  },
+  mounted () {
+    this.puyoLoaded = true
+    this.puyo = new Sprite(this.sprites[this.spriteToLoad])
   }
 }
 </script>

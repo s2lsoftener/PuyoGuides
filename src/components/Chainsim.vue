@@ -8,7 +8,8 @@
     <chainsim-puyo v-for="index in CellCount" v-bind:key="index" :index="index"
     :Simulator="Simulator" :fieldState="fieldState" :fieldData="fieldData"
     @end-popping="togglePoppingCell" @end-dropping="toggleDroppingCell"
-    @edit-puyo-field="editFieldData"></chainsim-puyo>
+    @edit-puyo-field="editFieldData" :app="app" :pixiLoader="pixiLoader" :pixiResources="pixiResources"
+    :canvasLoaded="canvasLoaded"></chainsim-puyo>
   </div>
 </template>
 
@@ -65,7 +66,8 @@ export default {
       clearPuyosResult: [],
       dropPuyosResult: [],
       windowHeight: 0,
-      scaling: 1
+      scaling: 1,
+      canvasLoaded: false
     }
   },
   created () {
@@ -179,6 +181,12 @@ export default {
       newPuyo.x = newPuyo.width / 2
       newPuyo.y = newPuyo.height / 2 + 60
       return newPuyo
+    },
+    pixiLoader: function () {
+      return loader
+    },
+    pixiResources: function () {
+      return resources
     }
   },
   methods: {
@@ -196,9 +204,11 @@ export default {
       if (resources['/img/spritesheet.json'] === undefined) {
         console.log('Spritesheet not loaded yet. Loading...')
         loader.add('/img/spritesheet.json')
+        this.canvasLoaded = true
         loader.load(setup)
       } else {
         console.log('Spritesheet already loaded')
+        this.canvasLoaded = true
         loader.load(setup)
       }
     },
