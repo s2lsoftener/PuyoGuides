@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Home from './views/Home.vue'
+import Simulator from './views/Simulator.vue'
 
 Vue.use(Router)
 
@@ -24,7 +25,7 @@ export default new Router({
     {
       path: '/simulator',
       name: 'simulator',
-      component: () => import(/* webpackChunkName: "simulator" */ './views/Simulator.vue')
+      component: Simulator
     }
   ]
 })
