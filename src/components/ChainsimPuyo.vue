@@ -152,6 +152,13 @@ export default {
     sprites: function () {
       return this.pixiResources['/img/spritesheet.json'].textures
     },
+    spriteSheetLoaded: function () {
+      if (this.sprites !== undefined) {
+        return true
+      } else {
+        return false
+      }
+    },
     spriteToLoad: function () {
       return `${this.PuyoType}_${this.Connections}.png`
     },
@@ -161,10 +168,6 @@ export default {
     yPos: function () {
       return Math.floor(Math.random() * 600)
     }
-  },
-  mounted () {
-    this.puyoLoaded = true
-    this.puyo = new Sprite(this.sprites[this.spriteToLoad])
   }
 }
 </script>
