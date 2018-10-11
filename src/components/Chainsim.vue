@@ -5,11 +5,13 @@
       Canvas should appear below.
     </p>
     <div ref="game"></div>
-    <chainsim-puyo v-for="index in CellCount" v-bind:key="index" :index="index"
+    <!-- <chainsim-puyo v-for="index in CellCount" v-bind:key="index" :index="index"
     :Simulator="Simulator" :fieldState="fieldState" :fieldData="fieldData"
     @end-popping="togglePoppingCell" @end-dropping="toggleDroppingCell"
-    @edit-puyo-field="editFieldData" :app="app" :pixiLoader="pixiLoader" :pixiResources="pixiResources"
-    :canvasLoaded="canvasLoaded"></chainsim-puyo>
+    @edit-puyo-field="editFieldData" :app="app"></chainsim-puyo> -->
+    <chainsim-puyo v-for="(sprite, index) in spriteMatrix1D" :key="index" :index="index"
+    :Simulator="Simulator" :fieldState="fieldState" :fieldData="fieldData" :sprite="spriteMatrix1D[index]"
+    :spritesheet="sprites" :resources="pixiResources" :spritesheetLoaded="spritesheetLoaded" />
   </div>
 </template>
 
@@ -67,7 +69,8 @@ export default {
       dropPuyosResult: [],
       windowHeight: 0,
       scaling: 1,
-      canvasLoaded: false
+      spriteMatrix: [[]],
+      spritesheetLoaded: false
     }
   },
   created () {
@@ -168,22 +171,29 @@ export default {
     sprites: function () {
       return resources['/img/spritesheet.json'].textures
     },
-    redpuyo: function () {
-      let newPuyo = new Sprite(this.sprites['red_ud.png'])
-      newPuyo.anchor.set(0.5)
-      newPuyo.x = newPuyo.width / 2
-      newPuyo.y = newPuyo.height / 2
-      return newPuyo
+    coordArray: function () {
+      // Used to correctly place a sprite on the field matrix.
+      // Anchor points are set to the middle of the Puyo.
+      let coord = []
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        coord[y] = []
+        for (let x = 0; x < this.Field.columns; x++) {
+          coord[y][x] = {
+            x: (x * this.Field.cellWidth) + (this.Field.cellWidth / 2),
+            y: (y * this.Field.cellHeight) + (this.Field.cellHeight / 2)
+          }
+        }
+      }
+      return coord
     },
-    redOtherPuyo: function () {
-      let newPuyo = new PIXI.Sprite(this.sprites['red_ur.png'])
-      newPuyo.anchor.set(0.5)
-      newPuyo.x = newPuyo.width / 2
-      newPuyo.y = newPuyo.height / 2 + 60
-      return newPuyo
-    },
-    pixiLoader: function () {
-      return loader
+    spriteMatrix1D: function () {
+      let matrix1D = []
+      for (let y = 0; y < this.spriteMatrix.length; y++) {
+        for (let x = 0; x < this.spriteMatrix[0].length; x++) {
+          matrix1D.push(this.spriteMatrix[y][x])
+        }
+      }
+      return matrix1D
     },
     pixiResources: function () {
       return resources
@@ -196,8 +206,8 @@ export default {
       this.$refs.game.appendChild(this.app.view)
       // Setup function
       let setup = () => {
-        this.app.stage.addChild(this.redpuyo)
-        this.app.stage.addChild(this.redOtherPuyo)
+        this.makeSpriteArray()
+        this.setSpritesheetLoaded()
       }
 
       // Load Sprites
@@ -211,6 +221,23 @@ export default {
         this.canvasLoaded = true
         loader.load(setup)
       }
+    },
+    makeSpriteArray: function () {
+      let spriteArray = []
+      for (let y = 0; y < this.fieldData.length; y++) {
+        spriteArray[y] = []
+        for (let x = 0; x < this.fieldData[0].length; x++) {
+          spriteArray[y][x] = new Sprite(this.sprites['blue_urdl.png'])
+          spriteArray[y][x].anchor.set(0.5)
+          spriteArray[y][x].x = this.coordArray[y][x].x
+          spriteArray[y][x].y = this.coordArray[y][x].y
+          this.app.stage.addChild(spriteArray[y][x])
+        }
+      }
+      this.spriteMatrix = spriteArray
+    },
+    setSpritesheetLoaded: function () {
+      this.spritesheetLoaded = true
     },
     // Simulation core
     editFieldData: function (cell) {
