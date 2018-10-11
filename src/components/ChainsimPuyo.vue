@@ -201,15 +201,18 @@ export default {
         let speedString = ''
         let checkForFieldStateChange = () => {
           if (this.fieldState === 'idle') {
+            console.log('Field state change detected')
             TweenMax.to(this.sprite, 0, { useFrames: true, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 }, onOverwrite: this.endOfDropAnimation })
           }
         }
         let accelerate = () => {
           if (distance < maxDistance) {
+            console.log(distance)
             frame += 1
             speed += accelConst * frame * (this.simulationSpeed ** 2)
             distance += speed
-            speedString += `+=${speed}px`
+            speedString = `+=${speed}px`
+            console.log(speedString)
             TweenMax.to(this.sprite, 1, {
               useFrames: true,
               pixi: {

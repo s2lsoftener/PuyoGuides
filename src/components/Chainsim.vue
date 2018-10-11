@@ -8,11 +8,13 @@
     <chainsim-puyo v-for="(sprite, index) in spriteMatrix1D" :key="index" :index="index"
     :Simulator="Simulator" :fieldState="fieldState" :fieldData="fieldData" :sprite="spriteMatrix1D[index]"
     :spritesheet="sprites" :resources="pixiResources" :spritesheetLoaded="spritesheetLoaded"
-    :simulationSpeed="simulationSpeed" :coordArray="coordArray" />
+    :simulationSpeed="simulationSpeed" :coordArray="coordArray"
+    v-on:end-popping="togglePoppingCell" v-on:end-dropping="toggleDroppingCell" v-on:edit-puyo-field="editFieldData" />
     <br>
     <button @click="editFieldData">Change Puyo</button>
     <button @click="clearPuyos">Clear Puyos</button>
     <button @click="dropPuyos">Drop Puyos</button>
+    <button @click="moveTestPuyo">Move Test Puyo</button>
   </div>
 </template>
 
@@ -203,6 +205,9 @@ export default {
     }
   },
   methods: {
+    moveTestPuyo: function () {
+      TweenMax.to(this.spriteMatrix[8][0], 3, { pixi: { y: '+=240px' } })
+    },
     // Canvas methods
     loadCanvas: function () {
       // Add Canvas to HTML
@@ -278,7 +283,7 @@ export default {
       if (anyToDrop === false) {
         this.clearPuyos()
       } else {
-        this.$emit('update-field-state', 'dropping') // When child component hears 'dropping', it'll trigger drop animations.
+        this.fieldState = 'dropping' // When child component hears 'dropping', it'll trigger drop animations.
         console.log('Set fieldState to "dropping"')
       }
     },
@@ -335,7 +340,7 @@ export default {
       this.dropDistances = dropDistances
       this.originalField = originalField
       this.fieldData = emptyField
-      this.$emit('update-field-state', 'idle')
+      this.fieldState = 'idle'
     },
     resetField: function () {
       let poppingCells = []
@@ -354,7 +359,7 @@ export default {
       this.poppingCells = poppingCells
       this.droppingCells = droppingCells
       this.dropDistances = dropDistances
-      this.$emit('update-field-state', 'idle')
+      this.fieldState = 'idle'
       this.$emit('unset-reset-field', false)
       this.$nextTick(() => {
         this.fieldData = this.originalField
@@ -400,7 +405,7 @@ export default {
           if (this.chainAutoPlay === true) {
             this.clearPuyos()
           } else {
-            this.$emit('update-field-state', 'idle')
+            this.fieldState = 'idle'
           }
         }
       }
