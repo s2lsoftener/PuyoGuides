@@ -6,13 +6,33 @@ import Chainsim from '@/assets/js/chainsim'
 
 export default {
   name: 'ChainsimPuyo',
-  props: ['index', 'Simulator', 'fieldState', 'fieldData', 'sprite', 'spritesheet', 'resources', 'spritesheetLoaded'],
+  props: ['index', 'Simulator', 'fieldState', 'fieldData', 'sprite', 'spritesheet', 'resources',
+    'spritesheetLoaded', 'simulationSpeed', 'coordArray'],
   render: function (h) {
     return h() // Render nothing, avoid error output.
   },
   data () {
     return {
-      check: {}
+      asdf: 'test'
+    }
+  },
+  methods: {
+    endOfPopAnimation: function () {
+      this.$emit('end-popping', { x: this.indexCol, y: this.indexRow, bool: false })
+      this.Simulator.Field.map[this.indexRow][this.indexCol].toPop = false
+      console.log('emitted animation end')
+    },
+    endOfDropAnimation: function () {
+      this.$emit('end-dropping', { x: this.indexCol, y: this.indexRow, bool: false })
+      console.log('emitted drop animation end')
+    },
+    setNewPuyoOnMouseDown: function () {
+      this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
+    },
+    setNewPuyoOnMove: function () {
+      if (this.isMouseDown === true) {
+        this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
+      }
     }
   },
   computed: {
@@ -22,6 +42,13 @@ export default {
     indexCol: function () {
       return this.index % this.Simulator.Field.columns
     },
+    origPos: function () {
+      // Original x, y coordinates of Puyo
+      return {
+        x: this.coordArray[this.indexRow][this.indexCol].x,
+        y: this.coordArray[this.indexRow][this.indexCol].y
+      }
+    },
     PuyoType: function () {
       switch (this.Simulator.Field.map[this.indexRow][this.indexCol].puyo) {
         case Chainsim.Constants.Puyo.Red: return 'red'
@@ -29,7 +56,7 @@ export default {
         case Chainsim.Constants.Puyo.Blue: return 'blue'
         case Chainsim.Constants.Puyo.Yellow: return 'yellow'
         case Chainsim.Constants.Puyo.Purple: return 'purple'
-        case Chainsim.Constants.Puyo.Nuisance: return 'spacer' // Garbage (oJama)
+        case Chainsim.Constants.Puyo.Nuisance: return 'garbage' // Garbage (oJama)
         case Chainsim.Constants.Puyo.None: return 'spacer' // Spacer/Nothing
         case undefined: return 'spacer'
       }
@@ -46,110 +73,73 @@ export default {
           return 'n'
         }
 
-        this.check = {}
-        // this.check up
+        let check = {}
+        // check up
         if (this.indexRow <= this.Simulator.Field.hiddenRows) { // Don't look into the hidden row
-          this.check.up = false
+          check.up = false
         } else if (this.Simulator.Field.map[this.indexRow][this.indexCol].puyo === this.Simulator.Field.map[this.indexRow - 1][this.indexCol].puyo) {
           // Don't connect to Puyos that are dropping.
           if (this.Simulator.droppingCells[this.indexRow - 1][this.indexCol] === true) {
-            this.check.up = false
+            check.up = false
           } else {
-            this.check.up = true
+            check.up = true
           }
         } else {
-          this.check.up = false
+          check.up = false
         }
 
-        // this.check left
+        // check left
         if (this.indexCol === 0) { // Don't look into the wall
-          this.check.left = false
+          check.left = false
         } else if (this.Simulator.Field.map[this.indexRow][this.indexCol].puyo === this.Simulator.Field.map[this.indexRow][this.indexCol - 1].puyo) {
           // Don't connect to Puyos that are dropping.
           if (this.Simulator.droppingCells[this.indexRow][this.indexCol - 1] === true) {
-            this.check.left = false
+            check.left = false
           } else {
-            this.check.left = true
+            check.left = true
           }
         } else {
-          this.check.left = false
+          check.left = false
         }
 
-        // this.check right
+        // check right
         if (this.indexCol === (this.Simulator.Field.columns - 1)) { // Don't look into the wall
-          this.check.right = false
+          check.right = false
         } else if (this.Simulator.Field.map[this.indexRow][this.indexCol].puyo === this.Simulator.Field.map[this.indexRow][this.indexCol + 1].puyo) {
           // Don't connect to Puyos that are dropping.
           if (this.Simulator.droppingCells[this.indexRow][this.indexCol + 1] === true) {
-            this.check.right = false
+            check.right = false
           } else {
-            this.check.right = true
+            check.right = true
           }
         } else {
-          this.check.right = false
+          check.right = false
         }
 
-        // this.check down
+        // check down
         if (this.indexRow === (this.Simulator.Field.visibleRows + this.Simulator.Field.hiddenRows - 1)) { // Don't look into the floor
-          this.check.down = false
+          check.down = false
         } else if (this.Simulator.Field.map[this.indexRow][this.indexCol].puyo === this.Simulator.Field.map[this.indexRow + 1][this.indexCol].puyo) {
           if (this.Simulator.droppingCells[this.indexRow + 1][this.indexCol] === true) {
-            this.check.down = false
+            check.down = false
           } else {
-            this.check.down = true
+            check.down = true
           }
         } else {
-          this.check.down = false
+          check.down = false
         }
-
-        // Decide connection
-        // if (this.check.up === false && this.check.left === false && this.check.right === false && this.check.down === false) {
-        //   return 0
-        // } else if (this.check.up === false && this.check.left === false && this.check.right === false && this.check.down === true) {
-        //   return -72
-        // } else if (this.check.up === true && this.check.left === false && this.check.right === false && this.check.down === false) {
-        //   return -144
-        // } else if (this.check.up === true && this.check.left === false && this.check.right === false && this.check.down === true) {
-        //   return -216
-        // } else if (this.check.up === false && this.check.left === false && this.check.right === true && this.check.down === false) {
-        //   return -288
-        // } else if (this.check.up === false && this.check.left === false && this.check.right === true && this.check.down === true) {
-        //   return -360
-        // } else if (this.check.up === true && this.check.left === false && this.check.right === true && this.check.down === false) {
-        //   return -432
-        // } else if (this.check.up === true && this.check.left === false && this.check.right === true && this.check.down === true) {
-        //   return -504
-        // } else if (this.check.up === false && this.check.left === true && this.check.right === false && this.check.down === false) {
-        //   return -576
-        // } else if (this.check.up === false && this.check.left === true && this.check.right === false && this.check.down === true) {
-        //   return -648
-        // } else if (this.check.up === true && this.check.left === true && this.check.right === false && this.check.down === false) {
-        //   return -720
-        // } else if (this.check.up === true && this.check.left === true && this.check.right === false && this.check.down === true) {
-        //   return -792
-        // } else if (this.check.up === false && this.check.left === true && this.check.right === true && this.check.down === false) {
-        //   return -864
-        // } else if (this.check.up === false && this.check.left === true && this.check.right === true && this.check.down === true) {
-        //   return -936
-        // } else if (this.check.up === true && this.check.left === true && this.check.right === true && this.check.down === false) {
-        //   return -1008
-        // } else if (this.check.up === true && this.check.left === true && this.check.right === true && this.check.down === true) {
-        //   return -1080
-        // } else {
-        //   return 32 // Error...
-        // }
 
         let connection = ''
-        if (this.check.up === true) {
+        if (check.up === true) {
           connection += 'u'
         }
-        if (this.check.right === true) {
+        if (check.right === true) {
           connection += 'r'
         }
-        if (this.check.down === true) {
+        if (check.down === true) {
           connection += 'd'
         }
-        if (this.check.left === true) {
+        if (check.left === true) {
           connection += 'l'
         }
         if (connection === '') {
@@ -163,10 +153,143 @@ export default {
     },
     spriteToLoad: function () {
       return `${this.PuyoType}_${this.Connections}.png`
+    },
+    needsPopping: function () {
+      return this.Simulator.poppingCells[this.indexRow][this.indexCol]
+    },
+    cellsToDrop: function () {
+      return this.Simulator.dropDistances[this.indexRow][this.indexCol]
+    },
+    needsDropping: function () {
+      return this.Simulator.droppingCells[this.indexRow][this.indexCol]
     }
   },
   mounted () {
     this.sprite.texture = this.spritesheet[this.spriteToLoad]
+  },
+  watch: {
+    spriteToLoad: function () {
+      this.sprite.texture = this.spritesheet[this.spriteToLoad]
+    },
+    fieldState: function () {
+      if (this.fieldState === 'idle') {
+        TweenMax.to(this.sprite, 0, { useFrames: true, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 } })
+      } else if (this.fieldState === 'popping' && this.needsPopping === true) {
+        let flashRate = Math.round(2 / this.simulationSpeed)
+        let flashSpeed = (this.simulationSpeed > 4 ? 0 : 1)
+
+        // Escape function in case the animation needs to end.
+        let checkForFieldStateChange = () => {
+          if (this.fieldState === 'idle') {
+            TweenMax.to(this.sprite, 0, { useFrames: true, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 }, onOverwrite: this.endOfPopAnimation })
+          }
+        }
+
+        // Define popping animation
+        let popPuyos = () => {
+          TweenMax.to(this.sprite, flashSpeed, { pixi: { alpha: 0 }, useFrames: true, yoyo: true, repeat: 10, repeatDelay: flashRate, onOverwrite: this.endOfPopAnimation, onUpdate: checkForFieldStateChange, onComplete: this.endOfPopAnimation })
+        }
+
+        // Reset transforms, then pop
+        TweenMax.to(this.sprite, 0, { useFrames: true, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 }, onComplete: popPuyos })
+      } else if (this.fieldState === 'dropping' && this.needsDropping === true) {
+        let maxDistance = (this.cellsToDrop) * this.Simulator.Field.cellHeight // cellHeight = 60
+        let frame = 0
+        let speed = this.simulationSpeed
+        let accelConst = 0.1875 / 16 * this.Simulator.Field.cellHeight
+        let distance = 0
+        let speedString = ''
+        let checkForFieldStateChange = () => {
+          if (this.fieldState === 'idle') {
+            TweenMax.to(this.sprite, 0, { useFrames: true, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 }, onOverwrite: this.endOfDropAnimation })
+          }
+        }
+        let accelerate = () => {
+          if (distance < maxDistance) {
+            frame += 1
+            speed += accelConst * frame * (this.simulationSpeed ** 2)
+            distance += speed
+            speedString += `+=${speed}px`
+            TweenMax.to(this.sprite, 1, {
+              useFrames: true,
+              pixi: {
+                y: speedString
+              },
+              onOverwrite: this.endOfDropAnimation,
+              onUpdate: checkForFieldStateChange,
+              onComplete: accelerate
+            })
+          } else {
+            TweenMax.to(this.sprite, 0, {
+              useFrames: true,
+              pixi: {
+                y: maxDistance + this.origPos.y
+              },
+              onOverwrite: this.endOfDropAnimation,
+              onUpdate: checkForFieldStateChange,
+              onComplete: bounce
+            })
+          }
+        }
+        let bounce = () => {
+          let yChange = '+=' + (0.1 * this.Simulator.Field.cellHeight) + 'px'
+          let bounceSpeed = Math.round(8 / this.simulationSpeed)
+          TweenMax.to(this.sprite, bounceSpeed, {
+            useFrames: true,
+            pixi: {
+              scaleX: '1.2',
+              scaleY: '0.8',
+              y: yChange
+            },
+            yoyo: true,
+            repeat: 1,
+            onUpdate: checkForFieldStateChange,
+            onOverwrite: this.endOfDropAnimation,
+            onComplete: this.endOfDropAnimation
+          })
+        }
+        let puyoFall = () => {
+          TweenMax.to(this.sprite, 1, {
+            useFrames: true,
+            pixi: {
+              y: `+=${speed}px`
+            },
+            onOverwrite: this.endOfDropAnimation,
+            onUpdate: this.checkForFieldStateChange,
+            onComplete: accelerate
+          })
+        }
+
+        // Reset transforms, then drop.
+        TweenMax.to(this.sprite, 0, {
+          useFrames: true,
+          overwrite: 'concurrent',
+          pixi: {
+            y: this.origPos.y,
+            alpha: 1,
+            scaleX: 1,
+            scaleY: 1
+          },
+          onUpdate: checkForFieldStateChange,
+          onComplete: puyoFall
+        })
+      }
+    },
+    fieldData: {
+      handler: function () {
+        TweenMax.to(this.sprite, 0, {
+          useFrames: true,
+          overwrite: 'concurrent',
+          pixi: {
+            y: this.origPos.y,
+            alpha: 1,
+            scaleX: 1,
+            scaleY: 1
+          }
+        })
+      },
+      deep: true
+    }
   }
 }
 </script>

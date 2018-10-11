@@ -5,13 +5,14 @@
       Canvas should appear below.
     </p>
     <div ref="game"></div>
-    <!-- <chainsim-puyo v-for="index in CellCount" v-bind:key="index" :index="index"
-    :Simulator="Simulator" :fieldState="fieldState" :fieldData="fieldData"
-    @end-popping="togglePoppingCell" @end-dropping="toggleDroppingCell"
-    @edit-puyo-field="editFieldData" :app="app"></chainsim-puyo> -->
     <chainsim-puyo v-for="(sprite, index) in spriteMatrix1D" :key="index" :index="index"
     :Simulator="Simulator" :fieldState="fieldState" :fieldData="fieldData" :sprite="spriteMatrix1D[index]"
-    :spritesheet="sprites" :resources="pixiResources" :spritesheetLoaded="spritesheetLoaded" />
+    :spritesheet="sprites" :resources="pixiResources" :spritesheetLoaded="spritesheetLoaded"
+    :simulationSpeed="simulationSpeed" :coordArray="coordArray" />
+    <br>
+    <button @click="editFieldData">Change Puyo</button>
+    <button @click="clearPuyos">Clear Puyos</button>
+    <button @click="dropPuyos">Drop Puyos</button>
   </div>
 </template>
 
@@ -70,7 +71,9 @@ export default {
       windowHeight: 0,
       scaling: 1,
       spriteMatrix: [[]],
-      spritesheetLoaded: false
+      spritesheetLoaded: false,
+      simulationSpeed: 1,
+      chainAutoPlay: true
     }
   },
   created () {
@@ -242,6 +245,7 @@ export default {
     // Simulation core
     editFieldData: function (cell) {
       this.fieldData[cell.y].splice(cell.x, 1, cell.puyo)
+      // this.fieldData[Math.floor(Math.random() * 13)].splice(Math.floor(Math.random() * 6), 1, ['R', 'B', 'G', 'Y', 'P'][Math.floor(Math.random() * 4)])
     },
     togglePoppingCell: function (cell) { // expects object of form: {x:int, y:int, bool:boolean}
       this.poppingCells[cell.y].splice(cell.x, 1, cell.bool) // Have to use array methods or this won't be reactive.
@@ -298,10 +302,10 @@ export default {
 
       // If there's no pops to do, set fieldState to 'idle'. Otherwise, set 'popping'
       if (clearResult.popData.poppingGroups.length === 0) {
-        this.$emit('update-field-state', 'idle')
+        this.fieldState = 'idle'
         console.log('Set fieldState to "idle"')
       } else {
-        this.$emit('update-field-state', 'popping')
+        this.fieldState = 'popping'
         console.log('Set fieldState to "popping"')
       }
     },
@@ -371,6 +375,36 @@ export default {
   },
   mounted () {
     this.loadCanvas()
+  },
+  watch: {
+    isPopping: function (newVal, oldVal) {
+      if (newVal === false && oldVal === true) {
+        if (this.toggleResetField === true) {
+          console.log('Resetting field to prior state.')
+          this.resetField()
+        } else {
+          this.fieldData = this.clearPuyosResult
+          console.log('set cleared puyo field')
+          this.dropPuyos()
+        }
+      }
+    },
+    isDropping: function (newVal, oldVal) {
+      if (newVal === false && oldVal === true) {
+        if (this.toggleResetField === true) {
+          console.log('Resetting field to prior state.')
+          this.resetField()
+        } else {
+          this.fieldData = this.dropPuyosResult
+          console.log('Dropped the new puyo field')
+          if (this.chainAutoPlay === true) {
+            this.clearPuyos()
+          } else {
+            this.$emit('update-field-state', 'idle')
+          }
+        }
+      }
+    }
   }
 }
 </script>

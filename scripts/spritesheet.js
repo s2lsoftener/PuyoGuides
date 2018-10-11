@@ -32,6 +32,15 @@ for (let c = 0; c < color.length; c++) {
   }
 }
 
+jsonBody += `    "garbage_n.png": {\n`
+jsonBody += `      "frame": {"x": 1296, "y": 72, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
 jsonBody += `    "spacer_n.png": {\n`
 jsonBody += `      "frame": {"x": 1900, "y": 500, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
 jsonBody += `      "rotated": false,\n`
@@ -53,7 +62,7 @@ jsonAll += `    "scale": "1"\n`
 jsonAll += `  }\n`
 jsonAll += `}`
 
-fs.writeFile('spritesheet.json', jsonAll, function (err) {
+fs.writeFile('../public/img/spritesheet.json', jsonAll, function (err) {
   if (err) {
     return console.log(err)
   }

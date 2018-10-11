@@ -640,6 +640,14 @@
       "sourceSize": {"w": 64, "h": 60},
       "pivot": {"x": 0.5, "y": 0.5}
     },
+    "garbage_n.png": {
+      "frame": {"x": 1296, "y": 72, "w": 64, "h": 60},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 60},
+      "sourceSize": {"w": 64, "h": 60},
+      "pivot": {"x": 0.5, "y": 0.5}
+    },
     "spacer_n.png": {
       "frame": {"x": 1900, "y": 500, "w": 64, "h": 60},
       "rotated": false,
