@@ -10,6 +10,10 @@
     :spritesheet="sprites" :resources="pixiResources" :spritesheetLoaded="spritesheetLoaded"
     :simulationSpeed="simulationSpeed" :coordArray="coordArray"
     v-on:end-popping="togglePoppingCell" v-on:end-dropping="toggleDroppingCell" v-on:edit-puyo-field="editFieldData" />
+    <chainsim-shadow-puyo v-for="(sprite, index) in shadowSpriteMatrix1D" :key="index" :index="index"
+    :Simulator="Simulator" :fieldState="fieldState" :shadowData="shadowData" :sprite="shadowSpriteMatrix1D[index]"
+    :spritesheet="sprites" :resources="pixiResources" :spritesheetLoaded="spritesheetLoaded"
+    v-on:end-popping="togglePoppingCell" v-on:end-dropping="toggleDroppingCell" v-on:edit-puyo-field="editFieldData" />
     <br>
     <button @click="editFieldData">Change Puyo</button>
     <button @click="clearPuyos">Clear Puyos</button>
@@ -24,6 +28,7 @@ import { TweenMax } from 'gsap' // eslint-disable-line no-unused-vars
 import PixiPlugin from 'gsap/PixiPlugin' // eslint-disable-line no-unused-vars
 import Chainsim from '@/assets/js/chainsim'
 import ChainsimPuyo from './ChainsimPuyo'
+import ChainsimShadowPuyo from './ChainsimShadowPuyo'
 
 let loader = PIXI.loader
 let resources = PIXI.loader.resources
@@ -32,7 +37,8 @@ let Sprite = PIXI.Sprite
 export default {
   name: 'Chainsim',
   components: {
-    ChainsimPuyo
+    ChainsimPuyo,
+    ChainsimShadowPuyo
   },
   data () {
     return {
@@ -65,6 +71,19 @@ export default {
         ['0', '0', '0', '0', '0', '0'],
         ['0', '0', '0', '0', '0', '0'],
         ['0', '0', '0', '0', '0', '0']],
+      shadowData: [['0', '0', '0', '0', '0', '0'], // Placeholder field data for testing purposes
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', 'B', 'R', 'P'],
+        ['0', '0', '0', '0', '0', 'G'],
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0']],
       poppingCells: [], // boolean 2D matrix that tracks which cells are currently popping
       droppingCells: [], // boolean 2D matrix that tracks which cells are currently dropping
       dropDistances: [], // numeric 2D matrix that contains how far Puyos need to drop during their drop animations
@@ -73,6 +92,7 @@ export default {
       windowHeight: 0,
       scaling: 1,
       spriteMatrix: [[]],
+      shadowSpriteMatrix: [[]],
       spritesheetLoaded: false,
       simulationSpeed: 1,
       chainAutoPlay: true
@@ -200,6 +220,15 @@ export default {
       }
       return matrix1D
     },
+    shadowSpriteMatrix1D: function () {
+      let matrix1D = []
+      for (let y = 0; y < this.shadowSpriteMatrix.length; y++) {
+        for (let x = 0; x < this.shadowSpriteMatrix[0].length; x++) {
+          matrix1D.push(this.shadowSpriteMatrix[y][x])
+        }
+      }
+      return matrix1D
+    },
     pixiResources: function () {
       return resources
     }
@@ -214,7 +243,7 @@ export default {
       this.$refs.game.appendChild(this.app.view)
       // Setup function
       let setup = () => {
-        this.makeSpriteArray()
+        this.makeSpriteArray() // Chains into makeShadowArray()
         this.setSpritesheetLoaded()
       }
 
@@ -235,7 +264,7 @@ export default {
       for (let y = 0; y < this.fieldData.length; y++) {
         spriteArray[y] = []
         for (let x = 0; x < this.fieldData[0].length; x++) {
-          spriteArray[y][x] = new Sprite(this.sprites['blue_urdl.png'])
+          spriteArray[y][x] = new Sprite()
           spriteArray[y][x].anchor.set(0.5)
           spriteArray[y][x].x = this.coordArray[y][x].x
           spriteArray[y][x].y = this.coordArray[y][x].y
@@ -243,6 +272,22 @@ export default {
         }
       }
       this.spriteMatrix = spriteArray
+      this.makeShadowSpriteArray()
+    },
+    makeShadowSpriteArray: function () {
+      let spriteArray = []
+      for (let y = 0; y < this.fieldData.length; y++) {
+        spriteArray[y] = []
+        for (let x = 0; x < this.fieldData[0].length; x++) {
+          spriteArray[y][x] = new Sprite()
+          spriteArray[y][x].anchor.set(0.5)
+          spriteArray[y][x].alpha = 0.4
+          spriteArray[y][x].x = this.coordArray[y][x].x
+          spriteArray[y][x].y = this.coordArray[y][x].y
+          this.app.stage.addChild(spriteArray[y][x])
+        }
+      }
+      this.shadowSpriteMatrix = spriteArray
     },
     setSpritesheetLoaded: function () {
       this.spritesheetLoaded = true
