@@ -1,8 +1,9 @@
 <script>
 import * as PIXI from 'pixi.js' // eslint-disable-line no-unused-vars
-import { TweenMax } from 'gsap' // eslint-disable-line no-unused-vars
+import { TweenMax, Ease } from 'gsap/TweenMax' // eslint-disable-line no-unused-vars
 import PixiPlugin from 'gsap/PixiPlugin' // eslint-disable-line no-unused-vars
 import Chainsim from '@/assets/js/chainsim'
+import * as BezierEasing from 'bezier-easing'
 
 export default {
   name: 'ChainsimPuyo',
@@ -13,7 +14,7 @@ export default {
   },
   data () {
     return {
-      asdf: 'test'
+      dropDistTiming: [10, 15, 19, 22, 25, 28, 31, 33, 35, 37, 39, 41, 43] // https://puyonexus.com/wiki/Puyo_Puyo_Tsu/Frame_Data_Tables#Free_falling_puyo_after_pair_split
     }
   },
   methods: {
@@ -68,8 +69,8 @@ export default {
           return 'n'
         }
 
-        // If this Puyo is in the middle of a dropping animation, then don't give it connections
-        if (this.Simulator.droppingCells[this.indexRow][this.indexCol] === true) {
+        // If this Puyo has to drop, then don't give it connections
+        if (this.Simulator.dropDistances[this.indexRow][this.indexCol] > 0) {
           return 'n'
         }
 
@@ -79,7 +80,7 @@ export default {
           check.up = false
         } else if (this.Simulator.Field.map[this.indexRow][this.indexCol].puyo === this.Simulator.Field.map[this.indexRow - 1][this.indexCol].puyo) {
           // Don't connect to Puyos that are dropping.
-          if (this.Simulator.droppingCells[this.indexRow - 1][this.indexCol] === true) {
+          if (this.Simulator.dropDistances[this.indexRow - 1][this.indexCol] > 0) {
             check.up = false
           } else {
             check.up = true
@@ -93,7 +94,7 @@ export default {
           check.left = false
         } else if (this.Simulator.Field.map[this.indexRow][this.indexCol].puyo === this.Simulator.Field.map[this.indexRow][this.indexCol - 1].puyo) {
           // Don't connect to Puyos that are dropping.
-          if (this.Simulator.droppingCells[this.indexRow][this.indexCol - 1] === true) {
+          if (this.Simulator.dropDistances[this.indexRow][this.indexCol - 1] > 0) {
             check.left = false
           } else {
             check.left = true
@@ -107,7 +108,7 @@ export default {
           check.right = false
         } else if (this.Simulator.Field.map[this.indexRow][this.indexCol].puyo === this.Simulator.Field.map[this.indexRow][this.indexCol + 1].puyo) {
           // Don't connect to Puyos that are dropping.
-          if (this.Simulator.droppingCells[this.indexRow][this.indexCol + 1] === true) {
+          if (this.Simulator.dropDistances[this.indexRow][this.indexCol + 1] > 0) {
             check.right = false
           } else {
             check.right = true
@@ -120,7 +121,7 @@ export default {
         if (this.indexRow === (this.Simulator.Field.visibleRows + this.Simulator.Field.hiddenRows - 1)) { // Don't look into the floor
           check.down = false
         } else if (this.Simulator.Field.map[this.indexRow][this.indexCol].puyo === this.Simulator.Field.map[this.indexRow + 1][this.indexCol].puyo) {
-          if (this.Simulator.droppingCells[this.indexRow + 1][this.indexCol] === true) {
+          if (this.Simulator.dropDistances[this.indexRow + 1][this.indexCol] > 0) {
             check.down = false
           } else {
             check.down = true
@@ -173,72 +174,46 @@ export default {
     },
     fieldState: function () {
       if (this.fieldState === 'idle') {
-        TweenMax.to(this.sprite, 0, { useFrames: true, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 } })
+        TweenMax.to(this.sprite, 0, { useFrames: false, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 } })
       } else if (this.fieldState === 'popping' && this.needsPopping === true) {
         let flashRate = Math.round(2 / this.simulationSpeed)
         let flashSpeed = (this.simulationSpeed > 4 ? 0 : 1)
 
-        // Escape function in case the animation needs to end.
-        let checkForFieldStateChange = () => {
-          if (this.fieldState === 'idle') {
-            TweenMax.to(this.sprite, 0, { useFrames: true, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 }, onOverwrite: this.endOfPopAnimation })
-          }
-        }
+        // // Escape function in case the animation needs to end.
+        // let checkForFieldStateChange = () => {
+        //   if (this.fieldState === 'idle') {
+        //     TweenMax.to(this.sprite, 0, { useFrames: false, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 }, onOverwrite: this.endOfPopAnimation })
+        //   }
+        // }
 
         // Define popping animation
         let popPuyos = () => {
-          TweenMax.to(this.sprite, flashSpeed, { pixi: { alpha: 0 }, useFrames: true, yoyo: true, repeat: 10, repeatDelay: flashRate, onOverwrite: this.endOfPopAnimation, onUpdate: checkForFieldStateChange, onComplete: this.endOfPopAnimation })
+          TweenMax.to(this.sprite, (flashSpeed / 60), { pixi: { alpha: 0 }, useFrames: false, yoyo: true, repeat: 10, repeatDelay: (flashRate / 60), onOverwrite: this.endOfPopAnimation, onComplete: this.endOfPopAnimation })
         }
 
         // Reset transforms, then pop
-        TweenMax.to(this.sprite, 0, { useFrames: true, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 }, onComplete: popPuyos })
+        TweenMax.to(this.sprite, 0, { useFrames: false, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 }, onComplete: popPuyos })
       } else if (this.fieldState === 'dropping' && this.needsDropping === true) {
-        let maxDistance = (this.cellsToDrop) * this.Simulator.Field.cellHeight // cellHeight = 60
-        let frame = 0
-        let speed = this.simulationSpeed
-        let accelConst = 0.1875 / 16 * this.Simulator.Field.cellHeight
-        let distance = 0
-        let speedString = ''
-        let checkForFieldStateChange = () => {
-          if (this.fieldState === 'idle') {
-            console.log('Field state change detected')
-            TweenMax.to(this.sprite, 0, { useFrames: true, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 }, onOverwrite: this.endOfDropAnimation })
-          }
+        let endpoint = (this.cellsToDrop) * this.Simulator.Field.cellHeight + this.origPos.y // cellHeight = 60
+        let bezierX1 = 0.6 - (0.6 / this.Simulator.Field.cellHeight * (this.cellsToDrop - 1))
+        let duration = this.dropDistTiming[this.cellsToDrop - 1] / 60
+
+        let puyoFall = () => {
+          TweenMax.to(this.sprite, duration, {
+            useFrames: false,
+            pixi: {
+              y: endpoint
+            },
+            onComplete: bounce,
+            ease: new Ease(BezierEasing(bezierX1, 0, 0.7, 0.2))
+          })
         }
-        let accelerate = () => {
-          if (distance < maxDistance) {
-            console.log(distance)
-            frame += 1
-            speed += accelConst * frame * (this.simulationSpeed ** 2)
-            distance += speed
-            speedString = `+=${speed}px`
-            console.log(speedString)
-            TweenMax.to(this.sprite, 1, {
-              useFrames: true,
-              pixi: {
-                y: speedString
-              },
-              onOverwrite: this.endOfDropAnimation,
-              onUpdate: checkForFieldStateChange,
-              onComplete: accelerate
-            })
-          } else {
-            TweenMax.to(this.sprite, 0, {
-              useFrames: true,
-              pixi: {
-                y: maxDistance + this.origPos.y
-              },
-              onOverwrite: this.endOfDropAnimation,
-              onUpdate: checkForFieldStateChange,
-              onComplete: bounce
-            })
-          }
-        }
+
         let bounce = () => {
           let yChange = '+=' + (0.1 * this.Simulator.Field.cellHeight) + 'px'
           let bounceSpeed = Math.round(8 / this.simulationSpeed)
-          TweenMax.to(this.sprite, bounceSpeed, {
-            useFrames: true,
+          TweenMax.to(this.sprite, (bounceSpeed / 60), {
+            useFrames: false,
             pixi: {
               scaleX: '1.2',
               scaleY: '0.8',
@@ -246,26 +221,14 @@ export default {
             },
             yoyo: true,
             repeat: 1,
-            onUpdate: checkForFieldStateChange,
             onOverwrite: this.endOfDropAnimation,
             onComplete: this.endOfDropAnimation
-          })
-        }
-        let puyoFall = () => {
-          TweenMax.to(this.sprite, 1, {
-            useFrames: true,
-            pixi: {
-              y: `+=${speed}px`
-            },
-            onOverwrite: this.endOfDropAnimation,
-            onUpdate: this.checkForFieldStateChange,
-            onComplete: accelerate
           })
         }
 
         // Reset transforms, then drop.
         TweenMax.to(this.sprite, 0, {
-          useFrames: true,
+          useFrames: false,
           overwrite: 'concurrent',
           pixi: {
             y: this.origPos.y,
@@ -273,7 +236,6 @@ export default {
             scaleX: 1,
             scaleY: 1
           },
-          onUpdate: checkForFieldStateChange,
           onComplete: puyoFall
         })
       }
@@ -281,7 +243,7 @@ export default {
     fieldData: {
       handler: function () {
         TweenMax.to(this.sprite, 0, {
-          useFrames: true,
+          useFrames: false,
           overwrite: 'concurrent',
           pixi: {
             y: this.origPos.y,

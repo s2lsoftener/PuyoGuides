@@ -103,6 +103,20 @@ export default {
       ['G', 'R', 'B', 'G', 'Y', 'Y'],
       ['G', 'G', 'R', 'B', 'G', 'G'],
       ['R', 'R', 'B', 'B', 'G', 'Y']]
+
+    this.fieldData = [['0', '0', '0', '0', '0', '0'],
+      ['P', '0', '0', '0', '0', '0'],
+      ['G', '0', '0', '0', '0', '0'],
+      ['B', '0', '0', '0', '0', '0'],
+      ['R', '0', '0', '0', '0', '0'],
+      ['Y', '0', '0', '0', '0', '0'],
+      ['0', '0', '0', '0', '0', '0'],
+      ['0', 'P', 'P', '0', '0', 'R'],
+      ['0', 'P', 'P', 'R', '0', 'R'],
+      ['0', '0', 'P', 'J', 'R', 'Y'],
+      ['0', '0', 'B', 'G', 'Y', 'Y'],
+      ['0', '0', 'R', 'B', 'G', 'G'],
+      ['0', '0', 'B', 'B', 'G', 'Y']]
     console.log('Set default field.')
     console.log('Default settings:')
     console.log(this.fieldSettings)
@@ -249,8 +263,8 @@ export default {
     },
     // Simulation core
     editFieldData: function (cell) {
-      this.fieldData[cell.y].splice(cell.x, 1, cell.puyo)
-      // this.fieldData[Math.floor(Math.random() * 13)].splice(Math.floor(Math.random() * 6), 1, ['R', 'B', 'G', 'Y', 'P'][Math.floor(Math.random() * 4)])
+      // this.fieldData[cell.y].splice(cell.x, 1, cell.puyo)
+      this.fieldData[Math.floor(Math.random() * 13)].splice(Math.floor(Math.random() * 6), 1, ['R', 'B', 'G', 'Y', 'P'][Math.floor(Math.random() * 4)])
     },
     togglePoppingCell: function (cell) { // expects object of form: {x:int, y:int, bool:boolean}
       this.poppingCells[cell.y].splice(cell.x, 1, cell.bool) // Have to use array methods or this won't be reactive.
