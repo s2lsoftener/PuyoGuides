@@ -5,19 +5,20 @@
       Canvas should appear below.
     </p>
     <div ref="game"></div>
-    <chainsim-puyo v-for="(sprite, index) in spriteMatrix1D" :key="index" :index="index"
+    <chainsim-puyo v-for="(sprite, index) in spriteMatrix1D" :key="`Puyo_${index}`" :index="index"
     :Simulator="Simulator" :fieldState="fieldState" :fieldData="fieldData" :sprite="spriteMatrix1D[index]"
     :spritesheet="sprites" :resources="pixiResources" :spritesheetLoaded="spritesheetLoaded"
     :simulationSpeed="simulationSpeed" :coordArray="coordArray"
     v-on:end-popping="togglePoppingCell" v-on:end-dropping="toggleDroppingCell" v-on:edit-puyo-field="editFieldData" />
-    <!-- <chainsim-shadow-puyo v-for="(sprite, index) in shadowSpriteMatrix1D" :key="index" :index="index"
+    <chainsim-shadow-puyo v-for="(sprite, index) in shadowSpriteMatrix1D" :key="`Shadow_${index}`" :index="index"
     :Simulator="Simulator" :fieldState="fieldState" :shadowData="shadowData" :sprite="shadowSpriteMatrix1D[index]"
     :spritesheet="sprites" :resources="pixiResources" :spritesheetLoaded="spritesheetLoaded"
-    v-on:end-popping="togglePoppingCell" v-on:end-dropping="toggleDroppingCell" v-on:edit-puyo-field="editFieldData" /> -->
+    v-on:end-popping="togglePoppingCell" v-on:end-dropping="toggleDroppingCell" v-on:edit-puyo-field="editFieldData" />
     <br>
     <button @click="editFieldData">Change Puyo</button>
-    <button @click="clearPuyos">Clear Puyos</button>
-    <button @click="dropPuyos">Drop Puyos</button>
+    <button @click="playStep">Play Step</button>
+    <button @click="playChain">Play Chain</button>
+    <button @click="skipChain">Skip Chain</button>
     <button @click="moveTestPuyo">Move Test Puyo</button>
   </div>
 </template>
@@ -71,6 +72,7 @@ export default {
         ['0', '0', '0', '0', '0', '0'],
         ['0', '0', '0', '0', '0', '0'],
         ['0', '0', '0', '0', '0', '0']],
+      fieldHistory: [], // This doesn't really work correctly yet. Need to create state handling for chainsim state.
       shadowData: [['0', '0', '0', '0', '0', '0'], // Placeholder field data for testing purposes
         ['0', '0', '0', '0', '0', '0'],
         ['0', '0', '0', '0', '0', '0'],
@@ -96,7 +98,12 @@ export default {
       cursorString: '000000000000111010010101000010101010000101100101000000010101010010010001101010',
       spritesheetLoaded: false,
       simulationSpeed: 1,
-      chainAutoPlay: true
+      chainAutoPlay: true,
+
+      // Scoring
+      score: 0,
+      garbage: 0,
+      chainLength: 0
     }
   },
   created () {
@@ -109,16 +116,19 @@ export default {
       cellWidth: 72, // pixels
       cellHeight: 68, // pixels
       puyoToClear: 4,
+      colorBonus: [0, 3, 6, 12, 24],
+      groupBonus: [0, 2, 3, 4, 5, 6, 7, 10],
+      chainPower: [0, 8, 16, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 480, 512, 544, 576, 608, 640, 672],
       scaling: 1
     }
     this.fieldData = [['R', '0', '0', '0', '0', '0'],
       ['P', '0', '0', '0', '0', '0'],
       ['G', '0', '0', '0', '0', '0'],
       ['B', '0', '0', '0', '0', '0'],
-      ['R', '0', '0', '0', '0', '0'],
-      ['Y', '0', '0', '0', '0', '0'],
-      ['G', 'Y', '0', '0', '0', '0'],
-      ['G', 'Y', 'P', '0', '0', 'R'],
+      ['R', '0', '0', 'B', '0', '0'],
+      ['Y', '0', '0', 'B', '0', '0'],
+      ['G', 'Y', '0', 'B', '0', '0'],
+      ['G', 'Y', 'P', 'B', '0', 'R'],
       ['Y', 'P', 'P', 'R', '0', 'R'],
       ['Y', 'Y', 'P', 'J', 'R', 'Y'],
       ['G', 'R', 'B', 'G', 'Y', 'Y'],
@@ -195,7 +205,10 @@ export default {
       })
     },
     sprites: function () {
-      return resources['/img/spritesheet.json'].textures
+      return resources['/img/puyo.json'].textures
+    },
+    popups: function () {
+      return resources['/img/popups.json'].textures
     },
     coordArray: function () {
       // Used to correctly place a sprite on the field matrix.
@@ -249,9 +262,10 @@ export default {
       }
 
       // Load Sprites
-      if (resources['/img/spritesheet.json'] === undefined) {
-        console.log('Spritesheet not loaded yet. Loading...')
-        loader.add('/img/spritesheet.json')
+      if (resources['/img/puyo.json'] === undefined || resources['/img/popups.json'] === undefined) {
+        console.log('Spritesheets not loaded yet. Loading...')
+        loader.add('/img/puyo.json')
+        loader.add('/img/popups.json')
         this.canvasLoaded = true
         loader.load(setup)
       } else {
@@ -260,7 +274,7 @@ export default {
         loader.load(setup)
       }
     },
-    makeSpriteArray: function () {
+    makeSpriteArray: function () { // Chains into makeShadowSpriteArray
       let spriteArray = []
       for (let y = 0; y < this.fieldData.length; y++) {
         spriteArray[y] = []
@@ -289,6 +303,12 @@ export default {
         }
       }
       this.shadowSpriteMatrix = spriteArray
+    },
+    makeChainPopupSprites: function () {
+      let chainPopups = {}
+      chainPopups.firstDigit = new Sprite()
+      chainPopups.secondDigit = new Sprite()
+      chainPopups.rensa = new Sprite()
     },
     setSpritesheetLoaded: function () {
       this.spritesheetLoaded = true
@@ -336,7 +356,7 @@ export default {
     clearPuyos: function () {
       let clearResult = Chainsim.Simulate.clearPuyos(this.Field)
 
-      // Create an array in the Vuex Store that tracks which cells are animating.
+      // Create an array that tracks which cells are animating.
       let popAnimationArray = []
       for (let y = 0; y < this.Field.totalRows; y++) {
         popAnimationArray[y] = []
@@ -354,11 +374,47 @@ export default {
       // If there's no pops to do, set fieldState to 'idle'. Otherwise, set 'popping'
       if (clearResult.popData.poppingGroups.length === 0) {
         this.fieldState = 'idle'
+        this.fieldHistory.push(JSON.parse(JSON.stringify(this.fieldData)))
         console.log('Set fieldState to "idle"')
       } else {
+        this.calculateScore(clearResult.popData)
+        this.fieldHistory.push(JSON.parse(JSON.stringify(this.fieldData)))
         this.fieldState = 'popping'
         console.log('Set fieldState to "popping"')
       }
+    },
+    calculateScore: function (popData) {
+      this.chainLength += 1
+      let uniqueColors = [...new Set(popData.poppingColors)]
+      console.log(uniqueColors)
+      let CB = this.fieldSettings.colorBonus[uniqueColors.length - 1]
+      let CP = this.fieldSettings.chainPower[this.chainLength - 1]
+      let GB = 0 // group bonus
+      let PC = 0 // number of puyo cleared in chain
+      for (let g = 0; g < popData.poppingGroups.length; g++) {
+        let puyoInGroup = popData.poppingGroups[g].length
+        PC += puyoInGroup
+        if (puyoInGroup >= 11) {
+          GB += this.fieldSettings.groupBonus[this.fieldSettings.groupBonus.length - 1]
+        } else {
+          GB += this.fieldSettings.groupBonus[puyoInGroup - 4]
+        }
+      }
+
+      let totalBonus = CP + CB + GB
+      if (totalBonus < 1) {
+        totalBonus = 1
+      } else if (totalBonus > 999) {
+        totalBonus = 999
+      }
+
+      console.log(`Color Bonus: ${CB}`)
+      console.log(`Chain Power: ${CP}`)
+      console.log(`Group Bonus: ${GB}`)
+      console.log(`Puyo Cleared: ${PC}`)
+      console.log(`Total Bonus: ${totalBonus}`)
+      console.log(popData)
+      this.score += (10 * PC) * (totalBonus)
     },
     // Simulation controls
     clearField: function () {
@@ -413,13 +469,25 @@ export default {
     },
     playStep: function () {
       if (this.fieldState === 'idle') {
-        this.originalField = JSON.parse(JSON.stringify(this.fieldData))
+        this.fieldHistory.push(JSON.parse(JSON.stringify(this.fieldData)))
+        this.chainAutoPlay = false
+        this.simulationSpeed = 1
         this.dropPuyos()
       }
     },
     playChain: function () {
       if (this.fieldState === 'idle') {
-        this.originalField = JSON.parse(JSON.stringify(this.fieldData))
+        this.fieldHistory.push(JSON.parse(JSON.stringify(this.fieldData)))
+        this.chainAutoPlay = true
+        this.simulationSpeed = 1
+        this.dropPuyos()
+      }
+    },
+    skipChain: function () {
+      if (this.fieldState === 'idle') {
+        this.fieldHistory.push(JSON.parse(JSON.stringify(this.fieldData)))
+        this.chainAutoPlay = true
+        this.simulationSpeed = 5
         this.dropPuyos()
       }
     }

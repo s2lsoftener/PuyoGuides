@@ -62,7 +62,7 @@ jsonAll += `    "scale": "1"\n`
 jsonAll += `  }\n`
 jsonAll += `}`
 
-fs.writeFile('../public/img/spritesheet.json', jsonAll, function (err) {
+fs.writeFile('../public/img/puyo.json', jsonAll, function (err) {
   if (err) {
     return console.log(err)
   }
