@@ -1,9 +1,9 @@
 <script>
 import * as PIXI from 'pixi.js' // eslint-disable-line no-unused-vars
-import { TweenMax, Ease } from 'gsap/TweenMax' // eslint-disable-line no-unused-vars
+import { TweenMax, Ease, Linear } from 'gsap/all' // eslint-disable-line no-unused-vars
 import PixiPlugin from 'gsap/PixiPlugin' // eslint-disable-line no-unused-vars
+import ModifiersPlugin from 'gsap/ModifiersPlugin' // eslint-disable-line no-unused-vars
 import Chainsim from '@/assets/js/chainsim'
-import * as BezierEasing from 'bezier-easing'
 
 export default {
   name: 'ChainsimPuyo',
@@ -165,10 +165,10 @@ export default {
       return this.Simulator.droppingCells[this.indexRow][this.indexCol]
     },
     animationParams: function () {
-      d = this.cellsToDrop - this.origPos.y // Distance to drop, pixels
-      a = 0.1875 / 16 * this.Simulator.Field.cellHeight // acceleration pixels/frames^2
-      vi = 1 / 16 * this.Simulator.Field.cellHeight // Initial speed, in pixel
-      tf = (Math.sqrt(2 * a * d + vi ** 2) - vi) / a / 60 // Duration of animation, in seconds (seconds!)
+      let d = this.cellsToDrop * this.Simulator.Field.cellHeight // Distance to drop, pixels
+      let a = 0.1875 / 16 * this.Simulator.Field.cellHeight // acceleration pixels/frames^2
+      let vi = 1 / 16 * this.Simulator.Field.cellHeight // Initial speed, in pixel
+      let tf = (Math.sqrt(2 * a * d + vi ** 2) - vi) / a // Duration of animation, in seconds (seconds!)
 
       return {
         distance: d,
@@ -207,21 +207,29 @@ export default {
         // Reset transforms, then pop
         TweenMax.to(this.sprite, 0, { useFrames: false, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 }, onComplete: popPuyos })
       } else if (this.fieldState === 'dropping' && this.needsDropping === true) {
-        let distance = this.animationParams.distance
-        let speed = this.animationParams.initialVelocity
-        let duration = this.animationParams.duration
+        let duration = Math.floor(this.animationParams.duration)
+        let speed = Math.round(this.animationParams.initialVelocity)
+        let acceleration = this.animationParams.acceleration
+        let time = 0
 
         let puyoFall = () => {
           TweenMax.to(this.sprite, duration, {
-            pixi: {
-              y: endpoint
+            useFrames: true,
+            onUpdate: () => {
+              if (this.sprite.y + speed < this.origPos.y + this.animationParams.distance) {
+                this.sprite.y += speed
+                speed += Math.round(acceleration * time)
+                time += 1
+              } else {
+                this.sprite.y = this.origPos.y + this.animationParams.distance
+              }
             },
-            onComplete: bounce,
-            ease: new Ease(BezierEasing(bezierX1, 0, 0.7, 0.2))
+            onOverwrite: this.endOfDropAnimation,
+            onComplete: bounce
           })
         }
 
-        let bounce = () => {
+        let bounce = () => { // eslint-disable-line no-unused-vars
           let yChange = '+=' + (0.1 * this.Simulator.Field.cellHeight) + 'px'
           let bounceSpeed = Math.round(8 / this.simulationSpeed)
           TweenMax.to(this.sprite, (bounceSpeed / 60), {
