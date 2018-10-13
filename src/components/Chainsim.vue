@@ -10,10 +10,10 @@
     :spritesheet="sprites" :resources="pixiResources" :spritesheetLoaded="spritesheetLoaded"
     :simulationSpeed="simulationSpeed" :coordArray="coordArray"
     v-on:end-popping="togglePoppingCell" v-on:end-dropping="toggleDroppingCell" v-on:edit-puyo-field="editFieldData" />
-    <chainsim-shadow-puyo v-for="(sprite, index) in shadowSpriteMatrix1D" :key="index" :index="index"
+    <!-- <chainsim-shadow-puyo v-for="(sprite, index) in shadowSpriteMatrix1D" :key="index" :index="index"
     :Simulator="Simulator" :fieldState="fieldState" :shadowData="shadowData" :sprite="shadowSpriteMatrix1D[index]"
     :spritesheet="sprites" :resources="pixiResources" :spritesheetLoaded="spritesheetLoaded"
-    v-on:end-popping="togglePoppingCell" v-on:end-dropping="toggleDroppingCell" v-on:edit-puyo-field="editFieldData" />
+    v-on:end-popping="togglePoppingCell" v-on:end-dropping="toggleDroppingCell" v-on:edit-puyo-field="editFieldData" /> -->
     <br>
     <button @click="editFieldData">Change Puyo</button>
     <button @click="clearPuyos">Clear Puyos</button>
@@ -93,6 +93,7 @@ export default {
       scaling: 1,
       spriteMatrix: [[]],
       shadowSpriteMatrix: [[]],
+      cursorString: '000000000000111010010101000010101010000101100101000000010101010010010001101010',
       spritesheetLoaded: false,
       simulationSpeed: 1,
       chainAutoPlay: true
@@ -189,7 +190,7 @@ export default {
         width: 64 * 6,
         height: 60 * 13,
         antialias: true,
-        transparent: false,
+        transparent: true,
         resolution: 1
       })
     },
@@ -451,6 +452,18 @@ export default {
             this.clearPuyos()
           } else {
             this.fieldState = 'idle'
+          }
+        }
+      }
+    },
+    fieldState: function (newVal, oldVal) {
+      console.log(newVal)
+      console.log(oldVal)
+      if (newVal !== 'dropping' && oldVal === 'dropping') {
+        console.log('Resetting drop distances to 0')
+        for (let y = 0; y < this.dropDistances.length; y++) {
+          for (let x = 0; x < this.dropDistances[0].length; x++) {
+            this.dropDistances[y].splice(x, 1, 0)
           }
         }
       }

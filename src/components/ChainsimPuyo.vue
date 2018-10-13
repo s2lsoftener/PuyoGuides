@@ -163,6 +163,19 @@ export default {
     },
     needsDropping: function () {
       return this.Simulator.droppingCells[this.indexRow][this.indexCol]
+    },
+    animationParams: function () {
+      d = this.cellsToDrop - this.origPos.y // Distance to drop, pixels
+      a = 0.1875 / 16 * this.Simulator.Field.cellHeight // acceleration pixels/frames^2
+      vi = 1 / 16 * this.Simulator.Field.cellHeight // Initial speed, in pixel
+      tf = (Math.sqrt(2 * a * d + vi ** 2) - vi) / a / 60 // Duration of animation, in seconds (seconds!)
+
+      return {
+        distance: d,
+        acceleration: a,
+        initialVelocity: vi,
+        duration: tf
+      }
     }
   },
   mounted () {
@@ -194,13 +207,12 @@ export default {
         // Reset transforms, then pop
         TweenMax.to(this.sprite, 0, { useFrames: false, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 }, onComplete: popPuyos })
       } else if (this.fieldState === 'dropping' && this.needsDropping === true) {
-        let endpoint = (this.cellsToDrop) * this.Simulator.Field.cellHeight + this.origPos.y // cellHeight = 60
-        let bezierX1 = 0.6 - (0.6 / this.Simulator.Field.cellHeight * (this.cellsToDrop - 1))
-        let duration = this.dropDistTiming[this.cellsToDrop - 1] / 60
+        let distance = this.animationParams.distance
+        let speed = this.animationParams.initialVelocity
+        let duration = this.animationParams.duration
 
         let puyoFall = () => {
           TweenMax.to(this.sprite, duration, {
-            useFrames: false,
             pixi: {
               y: endpoint
             },
