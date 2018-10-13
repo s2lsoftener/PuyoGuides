@@ -103,7 +103,11 @@ export default {
       // Scoring
       score: 0,
       garbage: 0,
-      chainLength: 0
+      chainLength: 0,
+
+      // Sprites
+      fieldObjects: {},
+      scoreDisplay: []
     }
   },
   created () {
@@ -197,10 +201,11 @@ export default {
     // Canvas stuff
     app: function () {
       return new PIXI.Application({
-        width: 64 * 6,
-        height: 60 * 13,
+        width: 608, // 608
+        height: 854, // 842
         antialias: true,
-        transparent: true,
+        transparent: false,
+        backgroundColor: 0x061639,
         resolution: 1
       })
     },
@@ -210,6 +215,9 @@ export default {
     popups: function () {
       return resources['/img/popups.json'].textures
     },
+    fieldSprites: function () {
+      return resources['/img/field.json'].textures
+    },
     coordArray: function () {
       // Used to correctly place a sprite on the field matrix.
       // Anchor points are set to the middle of the Puyo.
@@ -218,8 +226,8 @@ export default {
         coord[y] = []
         for (let x = 0; x < this.Field.columns; x++) {
           coord[y][x] = {
-            x: (x * this.Field.cellWidth) + (this.Field.cellWidth / 2),
-            y: (y * this.Field.cellHeight) + (this.Field.cellHeight / 2)
+            x: (x * this.Field.cellWidth) + (this.Field.cellWidth / 2) + 24,
+            y: (y * this.Field.cellHeight) + (this.Field.cellHeight / 2) + 4
           }
         }
       }
@@ -257,13 +265,17 @@ export default {
       this.$refs.game.appendChild(this.app.view)
       // Setup function
       let setup = () => {
-        this.makeSpriteArray() // Chains into makeShadowArray()
+        this.makeFieldSprites() // Chains into makeShadowArray()
         this.setSpritesheetLoaded()
       }
 
       // Load Sprites
-      if (resources['/img/puyo.json'] === undefined || resources['/img/popups.json'] === undefined) {
+      if (resources['/img/puyo.json'] === undefined ||
+          resources['/img/popups.json'] === undefined ||
+          resources['/img/field.json'] === undefined) {
         console.log('Spritesheets not loaded yet. Loading...')
+        loader.add('/img/arle_bg.png')
+        loader.add('/img/field.json')
         loader.add('/img/puyo.json')
         loader.add('/img/popups.json')
         this.canvasLoaded = true
@@ -273,6 +285,73 @@ export default {
         this.canvasLoaded = true
         loader.load(setup)
       }
+    },
+    makeFieldSprites: function () {
+      // Character Background
+      this.fieldObjects.charBG = new Sprite(resources['/img/arle_bg.png'].texture)
+      this.fieldObjects.charBG.x = 17
+      this.fieldObjects.charBG.y = 63
+      this.app.stage.addChild(this.fieldObjects.charBG)
+
+      // Top Border
+      this.fieldObjects.borderTop = new Sprite(this.fieldSprites['field_border_top.png'])
+      this.fieldObjects.borderTop.y = 12
+      this.app.stage.addChild(this.fieldObjects.borderTop)
+
+      // Left border, top half
+      this.fieldObjects.borderLeftTop = new Sprite(this.fieldSprites['field_border_left_tophalf.png'])
+      this.fieldObjects.borderLeftTop.y = 64
+      this.app.stage.addChild(this.fieldObjects.borderLeftTop)
+
+      // Left border, bottom half
+      this.fieldObjects.borderLeftBottom = new Sprite(this.fieldSprites['field_border_left_bottomhalf.png'])
+      this.fieldObjects.borderLeftBottom.y = 416
+      this.app.stage.addChild(this.fieldObjects.borderLeftBottom)
+
+      // Right border, top half
+      this.fieldObjects.borderRightTop = new Sprite(this.fieldSprites['field_border_right_tophalf.png'])
+      this.fieldObjects.borderRightTop.x = 417
+      this.fieldObjects.borderRightTop.y = 64
+      this.app.stage.addChild(this.fieldObjects.borderRightTop)
+
+      // Right border, bottom half
+      this.fieldObjects.borderRightBottom = new Sprite(this.fieldSprites['field_border_right_bottomhalf.png'])
+      this.fieldObjects.borderRightBottom.x = 417
+      this.fieldObjects.borderRightBottom.y = 416
+      this.app.stage.addChild(this.fieldObjects.borderRightBottom)
+
+      // Bottom border
+      this.fieldObjects.borderBottom = new Sprite(this.fieldSprites['field_border_bottom.png'])
+      this.fieldObjects.borderBottom.y = 782
+      this.app.stage.addChild(this.fieldObjects.borderBottom)
+
+      // Next Window Border
+      this.fieldObjects.nextWindowBorder = new Sprite(this.fieldSprites['next_border_1p.png'])
+      this.fieldObjects.nextWindowBorder.x = 456
+      this.fieldObjects.nextWindowBorder.y = 12
+      this.app.stage.addChild(this.fieldObjects.nextWindowBorder)
+
+      // Next Window Inner
+      this.fieldObjects.nextWindowInner = new Sprite(this.fieldSprites['next_background_1p.png'])
+      this.fieldObjects.nextWindowInner.x = 456
+      this.fieldObjects.nextWindowInner.y = 12
+      this.app.stage.addChild(this.fieldObjects.nextWindowInner)
+
+      // Chain into makeScoreDisplay
+      this.makeScoreDisplay()
+    },
+    makeScoreDisplay: function () {
+      let startX = 130
+      let y = 790
+      for (let i = 0; i < 8; i++) {
+        this.scoreDisplay.push(new Sprite(this.fieldSprites['score_0.png']))
+        this.scoreDisplay[i].x = startX + this.scoreDisplay[i].width * 0.9 * i
+        this.scoreDisplay[i].y = y
+        this.app.stage.addChild(this.scoreDisplay[i])
+      }
+
+      // Chain into makeSpriteArray
+      this.makeSpriteArray()
     },
     makeSpriteArray: function () { // Chains into makeShadowSpriteArray
       let spriteArray = []
@@ -303,6 +382,7 @@ export default {
         }
       }
       this.shadowSpriteMatrix = spriteArray
+      this.makeChainPopupSprites()
     },
     makeChainPopupSprites: function () {
       let chainPopups = {}
