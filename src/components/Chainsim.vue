@@ -14,6 +14,7 @@
     :Simulator="Simulator" :fieldState="fieldState" :shadowData="shadowData" :sprite="shadowSpriteMatrix1D[index]"
     :spritesheet="sprites" :resources="pixiResources" :spritesheetLoaded="spritesheetLoaded"
     v-on:end-popping="togglePoppingCell" v-on:end-dropping="toggleDroppingCell" v-on:edit-puyo-field="editFieldData" />
+    <chainsim-scoredisplay :scoreDisplay="scoreDisplay" :score="score" :spritesheetLoaded="spritesheetLoaded" :fieldSprites="fieldSprites" />
     <br>
     <button @click="editFieldData">Change Puyo</button>
     <button @click="playStep">Play Step</button>
@@ -30,6 +31,7 @@ import PixiPlugin from 'gsap/PixiPlugin' // eslint-disable-line no-unused-vars
 import Chainsim from '@/assets/js/chainsim'
 import ChainsimPuyo from './ChainsimPuyo'
 import ChainsimShadowPuyo from './ChainsimShadowPuyo'
+import ChainsimScoredisplay from './ChainsimScoredisplay'
 
 let loader = PIXI.loader
 let resources = PIXI.loader.resources
@@ -39,7 +41,8 @@ export default {
   name: 'Chainsim',
   components: {
     ChainsimPuyo,
-    ChainsimShadowPuyo
+    ChainsimShadowPuyo,
+    ChainsimScoredisplay
   },
   data () {
     return {
@@ -106,8 +109,11 @@ export default {
       chainLength: 0,
 
       // Sprites
+      sprites: {},
+      fieldSprites: {},
       fieldObjects: {},
-      scoreDisplay: []
+      scoreDisplay: [],
+      scoreSprites: {}
     }
   },
   created () {
@@ -209,14 +215,8 @@ export default {
         resolution: 1
       })
     },
-    sprites: function () {
-      return resources['/img/puyo.json'].textures
-    },
     popups: function () {
       return resources['/img/popups.json'].textures
-    },
-    fieldSprites: function () {
-      return resources['/img/field.json'].textures
     },
     coordArray: function () {
       // Used to correctly place a sprite on the field matrix.
@@ -266,7 +266,6 @@ export default {
       // Setup function
       let setup = () => {
         this.makeFieldSprites() // Chains into makeShadowArray()
-        this.setSpritesheetLoaded()
       }
 
       // Load Sprites
@@ -287,6 +286,9 @@ export default {
       }
     },
     makeFieldSprites: function () {
+      // Make field sprites available
+      this.fieldSprites = resources['/img/field.json'].textures
+
       // Character Background
       this.fieldObjects.charBG = new Sprite(resources['/img/arle_bg.png'].texture)
       this.fieldObjects.charBG.x = 17
@@ -341,19 +343,26 @@ export default {
       this.makeScoreDisplay()
     },
     makeScoreDisplay: function () {
-      let startX = 130
-      let y = 790
+      let startX = 150
+      let spriteArray = []
       for (let i = 0; i < 8; i++) {
-        this.scoreDisplay.push(new Sprite(this.fieldSprites['score_0.png']))
-        this.scoreDisplay[i].x = startX + this.scoreDisplay[i].width * 0.9 * i
-        this.scoreDisplay[i].y = y
-        this.app.stage.addChild(this.scoreDisplay[i])
+        spriteArray[i] = new Sprite()
+        spriteArray[i].anchor.set(0.5)
+        spriteArray[i].x = startX + 40 * 0.9 * i
+        spriteArray[i].y = 815
+        this.app.stage.addChild(spriteArray[i])
       }
+
+      // Set scoreDisplay array
+      this.scoreDisplay = spriteArray
 
       // Chain into makeSpriteArray
       this.makeSpriteArray()
     },
     makeSpriteArray: function () { // Chains into makeShadowSpriteArray
+      // Make Puyo sprites available
+      this.sprites = resources['/img/puyo.json'].textures
+
       let spriteArray = []
       for (let y = 0; y < this.fieldData.length; y++) {
         spriteArray[y] = []
@@ -389,6 +398,7 @@ export default {
       chainPopups.firstDigit = new Sprite()
       chainPopups.secondDigit = new Sprite()
       chainPopups.rensa = new Sprite()
+      this.setSpritesheetLoaded()
     },
     setSpritesheetLoaded: function () {
       this.spritesheetLoaded = true
