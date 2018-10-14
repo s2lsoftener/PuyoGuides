@@ -41,6 +41,114 @@ jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.tri
 jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
 jsonBody += `    },\n`
 
+jsonBody += `    "crown.png": {\n`
+jsonBody += `      "frame": {"x": 1328, "y": 792, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "moon.png": {\n`
+jsonBody += `      "frame": {"x": 1400, "y": 792, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "star.png": {\n`
+jsonBody += `      "frame": {"x": 1472, "y": 792, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "rock.png": {\n`
+jsonBody += `      "frame": {"x": 1544, "y": 792, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "line.png": {\n`
+jsonBody += `      "frame": {"x": 1616, "y": 792, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "unit.png": {\n`
+jsonBody += `      "frame": {"x": 1688, "y": 792, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "burst_red.png": {\n`
+jsonBody += `      "frame": {"x": 504, "y": 720, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "burst_green.png": {\n`
+jsonBody += `      "frame": {"x": 648, "y": 720, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "burst_blue.png": {\n`
+jsonBody += `      "frame": {"x": 792, "y": 720, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "burst_yellow.png": {\n`
+jsonBody += `      "frame": {"x": 936, "y": 720, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "burst_purple.png": {\n`
+jsonBody += `      "frame": {"x": 1080, "y": 720, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "death_X.png": {\n`
+jsonBody += `      "frame": {"x": 360, "y": 792, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
 jsonBody += `    "spacer_n.png": {\n`
 jsonBody += `      "frame": {"x": 1900, "y": 500, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
 jsonBody += `      "rotated": false,\n`

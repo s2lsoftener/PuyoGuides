@@ -4,7 +4,8 @@
     <p>
       Canvas should appear below.
     </p>
-    <div ref="game"></div>
+    <div ref="game">
+    </div>
     <chainsim-puyo v-for="(sprite, index) in spriteMatrix1D" :key="`Puyo_${index}`" :index="index"
     :Simulator="Simulator" :fieldState="fieldState" :fieldData="fieldData" :sprite="spriteMatrix1D[index]"
     :spritesheet="sprites" :resources="pixiResources" :spritesheetLoaded="spritesheetLoaded"
@@ -361,12 +362,19 @@ export default {
       // Set scoreDisplay array
       this.scoreDisplay = spriteArray
 
-      // Chain into makeSpriteArray
-      this.makeSpriteArray()
+      // Chain into makePuyoSprites
+      this.makePuyoSprites()
     },
-    makeSpriteArray: function () { // Chains into makeShadowSpriteArray
+    makePuyoSprites: function () { // Chains into makeShadowSpriteArray
       // Make Puyo sprites available
       this.sprites = resources['/img/puyo.json'].textures
+
+      // Make gameover X
+      this.fieldObjects.redX = new Sprite(this.sprites['death_X.png'])
+      this.fieldObjects.redX.anchor.set(0.5)
+      this.fieldObjects.redX.x = this.coordArray[1][2].x
+      this.fieldObjects.redX.y = this.coordArray[1][2].y
+      this.app.stage.addChild(this.fieldObjects.redX)
 
       let spriteArray = []
       for (let y = 0; y < this.fieldData.length; y++) {
