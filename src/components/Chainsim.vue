@@ -105,7 +105,11 @@ export default {
 
       // Scoring
       score: 0,
+      stepScore: 0,
       garbage: 0,
+      stepGarbage: 0,
+      garbagePoints: 0,
+      leftoverGarbagePoints: 0,
       chainLength: 0,
 
       // Sprites
@@ -129,6 +133,7 @@ export default {
       colorBonus: [0, 3, 6, 12, 24],
       groupBonus: [0, 2, 3, 4, 5, 6, 7, 10],
       chainPower: [0, 8, 16, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 480, 512, 544, 576, 608, 640, 672],
+      targetPoint: 70,
       scaling: 1
     }
     this.fieldData = [['R', '0', '0', '0', '0', '0'],
@@ -260,7 +265,7 @@ export default {
       TweenMax.to(this.spriteMatrix[8][0], 3, { pixi: { y: '+=240px' } })
     },
     // Canvas methods
-    loadCanvas: function () {
+    loadCanvas: function () { // Chains ino makeFieldSprites
       // Add Canvas to HTML
       this.$refs.game.appendChild(this.app.view)
       // Setup function
@@ -285,7 +290,7 @@ export default {
         loader.load(setup)
       }
     },
-    makeFieldSprites: function () {
+    makeFieldSprites: function () { // Chains into makeScoreDisplay
       // Make field sprites available
       this.fieldSprites = resources['/img/field.json'].textures
 
@@ -342,7 +347,7 @@ export default {
       // Chain into makeScoreDisplay
       this.makeScoreDisplay()
     },
-    makeScoreDisplay: function () {
+    makeScoreDisplay: function () { // Chains into makeSpriteArray
       let startX = 150
       let spriteArray = []
       for (let i = 0; i < 8; i++) {
@@ -377,7 +382,7 @@ export default {
       this.spriteMatrix = spriteArray
       this.makeShadowSpriteArray()
     },
-    makeShadowSpriteArray: function () {
+    makeShadowSpriteArray: function () { // chains into makeChainPopupSprites
       let spriteArray = []
       for (let y = 0; y < this.fieldData.length; y++) {
         spriteArray[y] = []
@@ -393,7 +398,7 @@ export default {
       this.shadowSpriteMatrix = spriteArray
       this.makeChainPopupSprites()
     },
-    makeChainPopupSprites: function () {
+    makeChainPopupSprites: function () { // chains into setSpritesheetLoaded
       let chainPopups = {}
       chainPopups.firstDigit = new Sprite()
       chainPopups.secondDigit = new Sprite()
@@ -498,13 +503,16 @@ export default {
         totalBonus = 999
       }
 
-      console.log(`Color Bonus: ${CB}`)
-      console.log(`Chain Power: ${CP}`)
-      console.log(`Group Bonus: ${GB}`)
-      console.log(`Puyo Cleared: ${PC}`)
-      console.log(`Total Bonus: ${totalBonus}`)
-      console.log(popData)
-      this.score += (10 * PC) * (totalBonus)
+      this.stepScore = (10 * PC) * (totalBonus)
+      this.score += this.stepScore
+
+      this.calculateGarbage()
+    },
+    calculateGarbage: function () {
+      this.garbagePoints = this.stepScore / this.fieldSettings.targetPoint + this.leftoverGarbagePoints
+      this.stepGarbage = Math.floor(this.garbagePoints)
+      this.leftoverGarbagePoints = this.garbagePoints - this.stepGarbage
+      this.garbage += this.stepGarbage
     },
     // Simulation controls
     clearField: function () {

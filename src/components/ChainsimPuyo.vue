@@ -191,18 +191,15 @@ export default {
           TweenMax.to(this.sprite, 0, { useFrames: false, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 } })
         } else if (this.fieldState === 'popping' && this.needsPopping === true) {
           if (this.simulationSpeed <= 4) {
-            console.log(`${this.indexRow}, ${this.indexCol}: Setting flash rate`)
             let flashRate = Math.round(2 / this.simulationSpeed)
             let flashSpeed = (this.simulationSpeed > 4 ? 0 : 1)
 
             // Define popping animation
-            console.log(`${this.indexRow}, ${this.indexCol}: Setting popping animation`)
             let popPuyos = () => {
               TweenMax.to(this.sprite, (flashSpeed / 60), { pixi: { alpha: 0 }, useFrames: false, yoyo: true, repeat: 10, repeatDelay: (flashRate / 60), onOverwrite: this.endOfPopAnimation, onComplete: this.endOfPopAnimation })
             }
 
             // Reset transforms, then pop
-            console.log(`${this.indexRow}, ${this.indexCol}: Starting popping animation`)
             TweenMax.to(this.sprite, 0, { useFrames: false, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 }, onComplete: popPuyos })
           } else {
             this.endOfPopAnimation()
