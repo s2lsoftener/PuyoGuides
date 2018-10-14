@@ -649,7 +649,7 @@
       "pivot": {"x": 0.5, "y": 0.5}
     },
     "crown.png": {
-      "frame": {"x": 1328, "y": 792, "w": 64, "h": 60},
+      "frame": {"x": 720, "y": 792, "w": 64, "h": 60},
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 60},
@@ -657,7 +657,7 @@
       "pivot": {"x": 0.5, "y": 0.5}
     },
     "moon.png": {
-      "frame": {"x": 1400, "y": 792, "w": 64, "h": 60},
+      "frame": {"x": 792, "y": 792, "w": 64, "h": 60},
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 60},
@@ -665,7 +665,7 @@
       "pivot": {"x": 0.5, "y": 0.5}
     },
     "star.png": {
-      "frame": {"x": 1472, "y": 792, "w": 64, "h": 60},
+      "frame": {"x": 864, "y": 792, "w": 64, "h": 60},
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 60},
@@ -673,7 +673,7 @@
       "pivot": {"x": 0.5, "y": 0.5}
     },
     "rock.png": {
-      "frame": {"x": 1544, "y": 792, "w": 64, "h": 60},
+      "frame": {"x": 936, "y": 792, "w": 64, "h": 60},
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 60},
@@ -681,7 +681,7 @@
       "pivot": {"x": 0.5, "y": 0.5}
     },
     "line.png": {
-      "frame": {"x": 1616, "y": 792, "w": 64, "h": 60},
+      "frame": {"x": 1008, "y": 792, "w": 64, "h": 60},
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 60},
@@ -689,7 +689,7 @@
       "pivot": {"x": 0.5, "y": 0.5}
     },
     "unit.png": {
-      "frame": {"x": 1688, "y": 792, "w": 64, "h": 60},
+      "frame": {"x": 1080, "y": 792, "w": 64, "h": 60},
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 60},

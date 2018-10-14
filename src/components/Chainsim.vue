@@ -4,7 +4,10 @@
     <p>
       Canvas should appear below.
     </p>
-    <div ref="game">
+    <div id="game" ref="game">
+      <div class="loading-progress" v-if="!spritesheetLoaded">
+        <p><img class="loading-wheel" src="/img/save_wheel.png" style="vertical-align: middle">{{ loadingText }}</p>
+      </div>
     </div>
     <chainsim-puyo v-for="(sprite, index) in spriteMatrix1D" :key="`Puyo_${index}`" :index="index"
     :Simulator="Simulator" :fieldState="fieldState" :fieldData="fieldData" :sprite="spriteMatrix1D[index]"
@@ -16,6 +19,7 @@
     :spritesheet="sprites" :resources="pixiResources" :spritesheetLoaded="spritesheetLoaded"
     v-on:end-popping="togglePoppingCell" v-on:end-dropping="toggleDroppingCell" v-on:edit-puyo-field="editFieldData" />
     <chainsim-scoredisplay :scoreDisplay="scoreDisplay" :score="score" :spritesheetLoaded="spritesheetLoaded" :fieldSprites="fieldSprites" />
+    <chainsim-garbagetray :garbage="garbage" :spritesheet="sprites" :spritesheetLoaded="spritesheetLoaded" :garbageDisplay="garbageDisplay" />
     <br>
     <button @click="editFieldData">Change Puyo</button>
     <button @click="playStep">Play Step</button>
@@ -33,6 +37,7 @@ import Chainsim from '@/assets/js/chainsim'
 import ChainsimPuyo from './ChainsimPuyo'
 import ChainsimShadowPuyo from './ChainsimShadowPuyo'
 import ChainsimScoredisplay from './ChainsimScoredisplay'
+import ChainsimGarbagetray from './ChainsimGarbagetray'
 
 let loader = PIXI.loader
 let resources = PIXI.loader.resources
@@ -43,7 +48,8 @@ export default {
   components: {
     ChainsimPuyo,
     ChainsimShadowPuyo,
-    ChainsimScoredisplay
+    ChainsimScoredisplay,
+    ChainsimGarbagetray
   },
   data () {
     return {
@@ -100,7 +106,6 @@ export default {
       spriteMatrix: [[]],
       shadowSpriteMatrix: [[]],
       cursorString: '000000000000111010010101000010101010000101100101000000010101010010010001101010',
-      spritesheetLoaded: false,
       simulationSpeed: 1,
       chainAutoPlay: true,
 
@@ -118,7 +123,12 @@ export default {
       fieldSprites: {},
       fieldObjects: {},
       scoreDisplay: [],
-      scoreSprites: {}
+      scoreSprites: {},
+      garbageDisplay: [],
+
+      // Loader stuff
+      loadingText: 'Loading canvas...',
+      spritesheetLoaded: false
     }
   },
   created () {
@@ -213,7 +223,7 @@ export default {
     // Canvas stuff
     app: function () {
       return new PIXI.Application({
-        width: 608, // 608
+        width: 872, // 608
         height: 854, // 842
         antialias: true,
         transparent: false,
@@ -273,6 +283,9 @@ export default {
       let setup = () => {
         this.makeFieldSprites() // Chains into makeShadowArray()
       }
+
+      // Set loading message
+      this.loadingText = 'Loading...'
 
       // Load Sprites
       if (resources['/img/puyo.json'] === undefined ||
@@ -336,14 +349,20 @@ export default {
       // Next Window Border
       this.fieldObjects.nextWindowBorder = new Sprite(this.fieldSprites['next_border_1p.png'])
       this.fieldObjects.nextWindowBorder.x = 456
-      this.fieldObjects.nextWindowBorder.y = 12
+      this.fieldObjects.nextWindowBorder.y = 40
       this.app.stage.addChild(this.fieldObjects.nextWindowBorder)
 
       // Next Window Inner
       this.fieldObjects.nextWindowInner = new Sprite(this.fieldSprites['next_background_1p.png'])
       this.fieldObjects.nextWindowInner.x = 456
-      this.fieldObjects.nextWindowInner.y = 12
+      this.fieldObjects.nextWindowInner.y = 40
       this.app.stage.addChild(this.fieldObjects.nextWindowInner)
+
+      // Garbage Tray (opponent)
+      this.fieldObjects.garbageTray = new Sprite(this.fieldSprites['garbage_tray.png'])
+      this.fieldObjects.garbageTray.x = 456
+      this.fieldObjects.garbageTray.y = 360
+      this.app.stage.addChild(this.fieldObjects.garbageTray)
 
       // Chain into makeScoreDisplay
       this.makeScoreDisplay()
@@ -365,7 +384,7 @@ export default {
       // Chain into makePuyoSprites
       this.makePuyoSprites()
     },
-    makePuyoSprites: function () { // Chains into makeShadowSpriteArray
+    makePuyoSprites: function () { // Chains into makeGarbageSprites
       // Make Puyo sprites available
       this.sprites = resources['/img/puyo.json'].textures
 
@@ -388,6 +407,18 @@ export default {
         }
       }
       this.spriteMatrix = spriteArray
+      this.makeGarbageSprites()
+    },
+    makeGarbageSprites: function () { // Chains into makeShadowSpriteArray
+      let spriteArray = []
+      let startX = 468
+      for (let i = 0; i < this.Field.columns; i++) {
+        spriteArray[i] = new Sprite(this.sprites['crown.png'])
+        spriteArray[i].x = startX + spriteArray[i].width * i
+        spriteArray[i].y = 350
+        this.app.stage.addChild(spriteArray[i])
+      }
+      this.garbageDisplay = spriteArray
       this.makeShadowSpriteArray()
     },
     makeShadowSpriteArray: function () { // chains into makeChainPopupSprites
@@ -660,5 +691,43 @@ li {
 }
 a {
   color: #42b983;
+}
+
+#game {
+  position: relative;
+  width: auto;
+  height: auto;
+}
+
+.loading-progress {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  text-align: center;
+}
+
+.loading-progress p {
+  font-weight: bold;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 1.7rem;
+  line-height: 0;
+  color: white;
+  text-shadow: 2px 2px black;
+  vertical-align: middle;
+}
+
+.loading-wheel {
+  width: 3rem;
+  height: 3rem;
+  animation: rotation 2s infinite linear;
+}
+
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
 }
 </style>
