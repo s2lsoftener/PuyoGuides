@@ -160,6 +160,19 @@ export default {
       ['G', 'R', 'B', 'G', 'Y', 'Y'],
       ['G', 'G', 'R', 'B', 'G', 'G'],
       ['R', 'R', 'B', 'B', 'G', 'Y']]
+    this.fieldData = [['J', 'J', 'P', 'B', 'R', 'P'],
+      ['R', 'Y', 'Y', 'B', 'R', 'G'],
+      ['G', 'Y', 'Y', 'P', 'B', 'R'],
+      ['B', 'P', 'P', 'B', 'R', 'G'],
+      ['R', 'G', 'Y', 'P', 'B', 'G'],
+      ['G', 'Y', 'P', 'B', 'P', 'G'],
+      ['R', 'G', 'Y', 'P', 'B', 'P'],
+      ['R', 'G', 'Y', 'P', 'B', 'P'],
+      ['R', 'B', 'B', 'G', 'R', 'G'],
+      ['B', 'P', 'Y', 'B', 'G', 'G'],
+      ['G', 'R', 'P', 'Y', 'B', 'R'],
+      ['G', 'R', 'P', 'Y', 'B', 'R'],
+      ['G', 'R', 'P', 'Y', 'B', 'R']]
     console.log('Set default field.')
     console.log('Default settings:')
     console.log(this.fieldSettings)
