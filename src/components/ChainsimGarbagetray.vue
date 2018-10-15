@@ -69,15 +69,7 @@ export default {
         if (g - 1 >= 0) {
           this.icons.splice(i, 1, 'unit')
           this.checkUnit(g - 1, i + 1)
-        } else {
-          this.addNull(i)
         }
-      }
-    },
-    addNull: function (i) {
-      console.log('Have to add some empty garbage icons')
-      for (let x = i; x < 6; x++) {
-        this.icons.splice(i, 1, null)
       }
     }
   },
@@ -89,6 +81,7 @@ export default {
       }
     },
     garbage: function () {
+      this.icons = [null, null, null, null, null, null]
       this.countGarbage(this.garbage, 0) // second parameter is i, the index for icons (array)
       for (let i = 0; i < 6; i++) {
         this.garbageDisplay[i].texture = this.spritesheet[`${this.icons[i]}.png`]

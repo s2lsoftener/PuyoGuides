@@ -11,11 +11,20 @@ export default {
     scoreString: function () {
       let string = this.score.toString()
       let zeroesToAdd = 8 - string.length
-      for (let i = 0; i < zeroesToAdd; i++) {
-        string = '0' + string
+
+      if (string.length > 8) {
+        return '99999999'
+      } else {
+        for (let i = 0; i < zeroesToAdd; i++) {
+          string = '0' + string
+        }
+        return string
       }
-      return string
     }
+  },
+  mounted () {
+    console.log('Score display')
+    console.log(this.spritesheetLoaded)
   },
   watch: {
     spritesheetLoaded: function () {

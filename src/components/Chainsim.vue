@@ -1,5 +1,5 @@
 <template>
-  <div class="chainsim">
+  <div class="chainsim" @mousedown="setMouseDown(true)" @mouseup="setMouseDown(false)">
     <h1>Chainsim page.</h1>
     <p>
       Canvas should appear below.
@@ -12,7 +12,8 @@
     <chainsim-puyo v-for="(sprite, index) in spriteMatrix1D" :key="`Puyo_${index}`" :index="index"
     :Simulator="Simulator" :fieldState="fieldState" :fieldData="fieldData" :sprite="spriteMatrix1D[index]"
     :spritesheet="sprites" :resources="pixiResources" :spritesheetLoaded="spritesheetLoaded"
-    :simulationSpeed="simulationSpeed" :coordArray="coordArray"
+    :simulationSpeed="simulationSpeed" :coordArray="coordArray" :needToReset="needToReset"
+    :isMouseDown="isMouseDown"
     v-on:end-popping="togglePoppingCell" v-on:end-dropping="toggleDroppingCell" v-on:edit-puyo-field="editFieldData" />
     <chainsim-shadow-puyo v-for="(sprite, index) in shadowSpriteMatrix1D" :key="`Shadow_${index}`" :index="index"
     :Simulator="Simulator" :fieldState="fieldState" :shadowData="shadowData" :sprite="shadowSpriteMatrix1D[index]"
@@ -20,12 +21,11 @@
     v-on:end-popping="togglePoppingCell" v-on:end-dropping="toggleDroppingCell" v-on:edit-puyo-field="editFieldData" />
     <chainsim-scoredisplay :scoreDisplay="scoreDisplay" :score="score" :spritesheetLoaded="spritesheetLoaded" :fieldSprites="fieldSprites" />
     <chainsim-garbagetray :garbage="garbage" :spritesheet="sprites" :spritesheetLoaded="spritesheetLoaded" :garbageDisplay="garbageDisplay" />
-    <br>
-    <button @click="editFieldData">Change Puyo</button>
-    <button @click="playStep">Play Step</button>
-    <button @click="playChain">Play Chain</button>
-    <button @click="skipChain">Skip Chain</button>
-    <button @click="moveTestPuyo">Move Test Puyo</button>
+    <chainsim-control-button v-for="(sprite, index) in fieldControls" :key="`Control_${index}`"
+    :spritesheetLoaded="spritesheetLoaded" :fieldSprites="fieldSprites" :button="sprite" :buttonName="index"
+    v-on:controlField="controlField" />
+    <chainsim-chain-count :chainLength="chainLength" :chainCountSprites="chainCountSprites" :spritesheetLoaded="spritesheetLoaded"
+    :chainCountContainer="chainCountContainer" />
   </div>
 </template>
 
@@ -38,6 +38,8 @@ import ChainsimPuyo from './ChainsimPuyo'
 import ChainsimShadowPuyo from './ChainsimShadowPuyo'
 import ChainsimScoredisplay from './ChainsimScoredisplay'
 import ChainsimGarbagetray from './ChainsimGarbagetray'
+import ChainsimControlButton from './ChainsimControlButton'
+import ChainsimChainCount from './ChainsimChainCount'
 
 let loader = PIXI.loader
 let resources = PIXI.loader.resources
@@ -49,10 +51,15 @@ export default {
     ChainsimPuyo,
     ChainsimShadowPuyo,
     ChainsimScoredisplay,
-    ChainsimGarbagetray
+    ChainsimGarbagetray,
+    ChainsimControlButton,
+    ChainsimChainCount
   },
   data () {
     return {
+      // Chainsim display mode. Simple, full (editor buttons, garbage tray).
+      displayMode: 'simple',
+
       // Chainsim State data
       fieldState: 'idle', // idle -> dropping -> popping -> idle/dropping
       fieldSettings: {},
@@ -69,19 +76,19 @@ export default {
         ['0', '0', '0', '0', '0', '0'],
         ['0', '0', '0', '0', '0', '0'],
         ['0', '0', '0', '0', '0', '0']], // On app load, this gets set to a field provided via URL. Otherwise, loads a blank field.
-      originalField: [['0', '0', '0', '0', '0', '0'], // Placeholder field data for testing purposes
-        ['0', '0', '0', '0', '0', '0'],
-        ['0', '0', '0', '0', '0', '0'],
-        ['0', '0', '0', '0', '0', '0'],
-        ['0', '0', '0', '0', '0', '0'],
-        ['0', '0', '0', '0', '0', '0'],
-        ['0', '0', '0', '0', '0', '0'],
-        ['0', '0', '0', '0', '0', '0'],
-        ['0', '0', '0', '0', '0', '0'],
-        ['0', '0', '0', '0', '0', '0'],
-        ['0', '0', '0', '0', '0', '0'],
-        ['0', '0', '0', '0', '0', '0'],
-        ['0', '0', '0', '0', '0', '0']],
+      originalField: [['J', 'J', 'P', 'B', 'R', 'P'],
+        ['R', 'Y', 'Y', 'B', 'R', 'G'],
+        ['G', 'Y', 'Y', 'P', 'B', 'R'],
+        ['B', 'P', 'P', 'B', 'R', 'G'],
+        ['R', 'G', 'Y', 'P', 'B', 'G'],
+        ['G', 'Y', 'P', 'B', 'P', 'G'],
+        ['R', 'G', 'Y', 'P', 'B', 'P'],
+        ['R', 'G', 'Y', 'P', 'B', 'P'],
+        ['R', 'B', 'B', 'G', 'R', 'G'],
+        ['B', 'P', 'Y', 'B', 'G', 'G'],
+        ['G', 'R', 'P', 'Y', 'B', 'R'],
+        ['G', 'R', 'P', 'Y', 'B', 'R'],
+        ['G', 'R', 'P', 'Y', 'B', 'R']],
       fieldHistory: [], // This doesn't really work correctly yet. Need to create state handling for chainsim state.
       shadowData: [['0', '0', '0', '0', '0', '0'], // Placeholder field data for testing purposes
         ['0', '0', '0', '0', '0', '0'],
@@ -108,6 +115,7 @@ export default {
       cursorString: '000000000000111010010101000010101010000101100101000000010101010010010001101010',
       simulationSpeed: 1,
       chainAutoPlay: true,
+      needToReset: false,
 
       // Scoring
       score: 0,
@@ -125,8 +133,14 @@ export default {
       scoreDisplay: [],
       scoreSprites: {},
       garbageDisplay: [],
+      fieldControls: {},
+      chainCountSprites: {},
+      chainCountContainer: {},
 
-      // Loader stuff
+      // Editor controls
+      isMouseDown: false,
+
+      // Canvas loading stuff
       loadingText: 'Loading canvas...',
       spritesheetLoaded: false
     }
@@ -235,14 +249,25 @@ export default {
     },
     // Canvas stuff
     app: function () {
-      return new PIXI.Application({
-        width: 872, // 608
-        height: 854, // 842
-        antialias: true,
-        transparent: false,
-        backgroundColor: 0x061639,
-        resolution: 1
-      })
+      if (this.displayMode === 'simple') {
+        return new PIXI.Application({
+          width: 608,
+          height: 854, // 842
+          antialias: true,
+          transparent: true,
+          backgroundColor: 0x061639,
+          resolution: 1
+        })
+      } else if (this.displayMode === 'full') {
+        return new PIXI.Application({
+          width: 872, // 608
+          height: 854, // 842
+          antialias: true,
+          transparent: true,
+          backgroundColor: 0x061639,
+          resolution: 1
+        })
+      }
     },
     popups: function () {
       return resources['/img/popups.json'].textures
@@ -285,8 +310,9 @@ export default {
     }
   },
   methods: {
-    moveTestPuyo: function () {
-      TweenMax.to(this.spriteMatrix[8][0], 3, { pixi: { y: '+=240px' } })
+    setMouseDown: function (bool) {
+      this.isMouseDown = bool // true, false
+      console.log(bool)
     },
     // Canvas methods
     loadCanvas: function () { // Chains ino makeFieldSprites
@@ -302,13 +328,18 @@ export default {
 
       // Load Sprites
       if (resources['/img/puyo.json'] === undefined ||
-          resources['/img/popups.json'] === undefined ||
-          resources['/img/field.json'] === undefined) {
+          resources['/img/field.json'] === undefined ||
+          resources['/img/chain_font.json'] === undefined ||
+          resources['/img/arle_bg.png'] === undefined ||
+          resources['/img/arrow.png'] === undefined ||
+          resources['/img/cursor.png'] === undefined) {
         console.log('Spritesheets not loaded yet. Loading...')
         loader.add('/img/arle_bg.png')
         loader.add('/img/field.json')
         loader.add('/img/puyo.json')
-        loader.add('/img/popups.json')
+        loader.add('/img/arrow.png')
+        loader.add('/img/cursor.png')
+        loader.add('/img/chain_font.json')
         this.canvasLoaded = true
         loader.load(setup)
       } else {
@@ -371,17 +402,16 @@ export default {
       this.fieldObjects.nextWindowInner.y = 40
       this.app.stage.addChild(this.fieldObjects.nextWindowInner)
 
-      // Garbage Tray (opponent)
-      this.fieldObjects.garbageTray = new Sprite(this.fieldSprites['garbage_tray.png'])
-      this.fieldObjects.garbageTray.x = 456
-      this.fieldObjects.garbageTray.y = 360
-      this.app.stage.addChild(this.fieldObjects.garbageTray)
-
       // Chain into makeScoreDisplay
       this.makeScoreDisplay()
     },
     makeScoreDisplay: function () { // Chains into makeSpriteArray
       let startX = 150
+      if (this.displayMode === 'full') {
+        startX = 150
+      } else if (this.displayMode === 'simple') {
+        startX = 32
+      }
       let spriteArray = []
       for (let i = 0; i < 8; i++) {
         spriteArray[i] = new Sprite()
@@ -423,15 +453,42 @@ export default {
       this.makeGarbageSprites()
     },
     makeGarbageSprites: function () { // Chains into makeShadowSpriteArray
-      let spriteArray = []
-      let startX = 468
-      for (let i = 0; i < this.Field.columns; i++) {
-        spriteArray[i] = new Sprite(this.sprites['crown.png'])
-        spriteArray[i].x = startX + spriteArray[i].width * i
-        spriteArray[i].y = 350
-        this.app.stage.addChild(spriteArray[i])
+      // Garbage Tray (opponent)
+      if (this.displayMode === 'full') { // Display mode: full
+        this.fieldObjects.garbageTray = new Sprite(this.fieldSprites['garbage_tray.png'])
+        this.fieldObjects.garbageTray.x = 456
+        this.fieldObjects.garbageTray.y = 360
+        this.app.stage.addChild(this.fieldObjects.garbageTray)
+      } else if (this.displayMode === 'simple') {
+        this.fieldObjects.garbageTray = new Sprite(this.fieldSprites['garbage_tray.png'])
+        this.fieldObjects.garbageTray.x = 316
+        this.fieldObjects.garbageTray.y = 795
+        this.fieldObjects.garbageTray.scale.set(0.7, 0.7)
+        this.app.stage.addChild(this.fieldObjects.garbageTray)
       }
-      this.garbageDisplay = spriteArray
+
+      if (this.displayMode === 'full') {
+        let spriteArray = []
+        let startX = 468
+        for (let i = 0; i < this.Field.columns; i++) {
+          spriteArray[i] = new Sprite(this.sprites['crown.png'])
+          spriteArray[i].x = startX + spriteArray[i].width * i
+          spriteArray[i].y = 350
+          this.app.stage.addChild(spriteArray[i])
+        }
+        this.garbageDisplay = spriteArray
+      } else if (this.displayMode === 'simple') {
+        let spriteArray = []
+        let startX = 324
+        for (let i = 0; i < this.Field.columns; i++) {
+          spriteArray[i] = new Sprite(this.sprites['crown.png'])
+          spriteArray[i].scale.set(0.7, 0.7)
+          spriteArray[i].x = startX + spriteArray[i].width * i
+          spriteArray[i].y = 790
+          this.app.stage.addChild(spriteArray[i])
+        }
+        this.garbageDisplay = spriteArray
+      }
       this.makeShadowSpriteArray()
     },
     makeShadowSpriteArray: function () { // chains into makeChainPopupSprites
@@ -450,20 +507,112 @@ export default {
       this.shadowSpriteMatrix = spriteArray
       this.makeChainPopupSprites()
     },
-    makeChainPopupSprites: function () { // chains into setSpritesheetLoaded
-      let chainPopups = {}
-      chainPopups.firstDigit = new Sprite()
-      chainPopups.secondDigit = new Sprite()
-      chainPopups.rensa = new Sprite()
-      this.setSpritesheetLoaded()
+    makeChainPopupSprites: function () { // chains into makeFieldControls
+      this.chainCountSprites = resources['/img/chain_font.json'].textures
+      let startX = 412
+      let startY = 612
+
+      this.chainCountSprites.firstDigit = new Sprite(this.chainCountSprites['chain_1.png'])
+      this.chainCountSprites.firstDigit.x = startX
+      this.chainCountSprites.firstDigit.y = startY
+      this.chainCountSprites.firstDigit.scale.set(0.85, 0.85)
+
+      this.chainCountSprites.secondDigit = new Sprite(this.chainCountSprites['chain_0.png'])
+      this.chainCountSprites.secondDigit.x = startX + 40
+      this.chainCountSprites.secondDigit.y = startY
+      this.chainCountSprites.secondDigit.scale.set(0.85, 0.85)
+
+      this.chainCountSprites.chainText = new Sprite(this.chainCountSprites['chain_text.png'])
+      this.chainCountSprites.chainText.x = startX + 84
+      this.chainCountSprites.chainText.y = startY + 10
+      this.chainCountSprites.chainText.scale.set(0.85, 0.85)
+
+      this.chainCountContainer = new PIXI.Container()
+      this.chainCountContainer.addChild(this.chainCountSprites.firstDigit)
+      this.chainCountContainer.addChild(this.chainCountSprites.secondDigit)
+      this.chainCountContainer.addChild(this.chainCountSprites.chainText)
+      this.app.stage.addChild(this.chainCountContainer)
+
+      this.makeFieldControls()
     },
-    setSpritesheetLoaded: function () {
+    makeFieldControls: function () { // Chains into setSpritesheetLoaded
+      let startY = 360
+      // let controls = ['reset', 'back', 'pause', 'play', 'auto']
+      let height
+      let i = 0
+      // for (i = 0; i < controls.length; i++) {
+      //   this.fieldControls[controls[i]] = new Sprite(this.fieldSprites[`btn_${controls[i]}.png`])
+      //   this.fieldControls[controls[i]].x = 490
+      //   this.fieldControls[controls[i]].y = startY + this.fieldControls[controls[i]].height * i
+      //   this.app.stage.addChild(this.fieldControls[controls[i]])
+      //   this.fieldControls[controls[i]].interactive = true
+      //   this.fieldControls[controls[i]].buttonMode = true
+      //   // this.fieldControls[controls[i]].nameOfButton = controls[i]
+      // }
+
+      // this.fieldControls.reset = new Sprite(this.fieldSprites['btn_reset.png'])
+      // this.fieldControls.reset.x = 490
+      // this.fieldControls.reset.y = startY
+      // this.fieldControls.reset.interactive = true
+      // this.fieldControls.reset.buttonMode = true
+      // this.app.stage.addChild(this.fieldControls.reset)
+      // i += 1
+      // height = this.fieldControls.reset.height
+
+      // this.fieldControls.back = new Sprite(this.fieldSprites['btn_back.png'])
+      // this.fieldControls.back.x = 452
+      // this.fieldControls.back.y = startY + height * i
+      // this.fieldControls.back.interactive = true
+      // this.fieldControls.back.buttonMode = true
+      // this.app.stage.addChild(this.fieldControls.back)
+
+      this.fieldControls.reset = new Sprite(this.fieldSprites['btn_reset.png'])
+      this.fieldControls.reset.x = 452
+      this.fieldControls.reset.y = startY
+      this.fieldControls.reset.interactive = true
+      this.fieldControls.reset.buttonMode = true
+      this.app.stage.addChild(this.fieldControls.reset)
+      height = this.fieldControls.reset.height
+
+      this.fieldControls.pause = new Sprite(this.fieldSprites['btn_pause.png'])
+      this.fieldControls.pause.x = 528
+      this.fieldControls.pause.y = startY + height * i
+      this.fieldControls.pause.interactive = true
+      this.fieldControls.pause.buttonMode = true
+      this.app.stage.addChild(this.fieldControls.pause)
+      i += 1
+
+      this.fieldControls.play = new Sprite(this.fieldSprites['btn_play.png'])
+      this.fieldControls.play.x = 452
+      this.fieldControls.play.y = startY + height * i
+      this.fieldControls.play.interactive = true
+      this.fieldControls.play.buttonMode = true
+      this.app.stage.addChild(this.fieldControls.play)
+
+      this.fieldControls.auto = new Sprite(this.fieldSprites['btn_auto.png'])
+      this.fieldControls.auto.x = 528
+      this.fieldControls.auto.y = startY + height * i
+      this.fieldControls.auto.interactive = true
+      this.fieldControls.auto.buttonMode = true
+      this.app.stage.addChild(this.fieldControls.auto)
+      i += 1
+
+      this.fieldControls.edit = new Sprite(this.fieldSprites['btn_edit.png'])
+      this.fieldControls.edit.x = 490
+      this.fieldControls.edit.y = startY + i * this.fieldControls.edit.height /* + this.fieldControls.edit.height / 3 */
+      this.fieldControls.edit.interactive = true
+      this.fieldControls.edit.buttonMode = true
+      this.app.stage.addChild(this.fieldControls.edit)
+
+      this.finishedLoading()
+    },
+    finishedLoading: function () {
       this.spritesheetLoaded = true
     },
     // Simulation core
     editFieldData: function (cell) {
-      // this.fieldData[cell.y].splice(cell.x, 1, cell.puyo)
-      this.fieldData[Math.floor(Math.random() * 13)].splice(Math.floor(Math.random() * 6), 1, ['R', 'B', 'G', 'Y', 'P'][Math.floor(Math.random() * 4)])
+      this.fieldData[cell.y].splice(cell.x, 1, cell.puyo)
+      // this.fieldData[Math.floor(Math.random() * 13)].splice(Math.floor(Math.random() * 6), 1, ['R', 'B', 'G', 'Y', 'P'][Math.floor(Math.random() * 4)])
     },
     togglePoppingCell: function (cell) { // expects object of form: {x:int, y:int, bool:boolean}
       this.poppingCells[cell.y].splice(cell.x, 1, cell.bool) // Have to use array methods or this won't be reactive.
@@ -567,6 +716,21 @@ export default {
       this.garbage += this.stepGarbage
     },
     // Simulation controls
+    controlField: function (control) { // expects a string
+      if (control === 'reset') {
+        if (this.fieldState !== 'idle') {
+          this.needToReset = true
+        }
+      } else if (control === 'back') {
+        console.log(`I didn't make a function for back yet.`)
+      } else if (control === 'pause') {
+        this.chainAutoPlay = false
+      } else if (control === 'play') {
+        this.playStep()
+      } else if (control === 'auto') {
+        this.playChain()
+      }
+    },
     clearField: function () {
       let poppingCells = []
       let droppingCells = []
@@ -612,7 +776,14 @@ export default {
       this.droppingCells = droppingCells
       this.dropDistances = dropDistances
       this.fieldState = 'idle'
-      this.$emit('unset-reset-field', false)
+      this.needToReset = false
+      this.score = 0
+      this.stepScore = 0
+      this.garbage = 0
+      this.stepGarbage = 0
+      this.garbagePoints = 0
+      this.leftoverGarbagePoints = 0
+      this.chainLength = 0
       this.$nextTick(() => {
         this.fieldData = this.originalField
       })
@@ -648,9 +819,10 @@ export default {
   watch: {
     isPopping: function (newVal, oldVal) {
       if (newVal === false && oldVal === true) {
-        if (this.toggleResetField === true) {
+        if (this.needToReset === true) {
           console.log('Resetting field to prior state.')
           this.resetField()
+          this.needToReset = false
         } else {
           this.fieldData = this.clearPuyosResult
           console.log('set cleared puyo field')
@@ -660,9 +832,10 @@ export default {
     },
     isDropping: function (newVal, oldVal) {
       if (newVal === false && oldVal === true) {
-        if (this.toggleResetField === true) {
+        if (this.needToReset === true) {
           console.log('Resetting field to prior state.')
           this.resetField()
+          this.needToReset = false
         } else {
           this.fieldData = this.dropPuyosResult
           console.log('Dropped the new puyo field')
@@ -675,8 +848,6 @@ export default {
       }
     },
     fieldState: function (newVal, oldVal) {
-      console.log(newVal)
-      console.log(oldVal)
       if (newVal !== 'dropping' && oldVal === 'dropping') {
         console.log('Resetting drop distances to 0')
         for (let y = 0; y < this.dropDistances.length; y++) {

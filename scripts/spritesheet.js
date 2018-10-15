@@ -177,3 +177,145 @@ fs.writeFile('../public/img/puyo.json', jsonAll, function (err) {
 
   console.log('The file was saved!')
 })
+
+jsonBody = ''
+jsonAll = ''
+let i = 0
+
+jsonAll += `{\n  "frames": {\n`
+jsonBody += `    "chain_0.png": {\n`
+jsonBody += `      "frame": {"x": ${64 * i}, "y": 15, "w": 64, "h": 96},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 96},\n`
+jsonBody += `      "sourceSize": {"w": 64, "h": 96},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+i += 1
+
+jsonBody += `    "chain_1.png": {\n`
+jsonBody += `      "frame": {"x": ${64 * i}, "y": 15, "w": 64, "h": 96},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 96},\n`
+jsonBody += `      "sourceSize": {"w": 64, "h": 96},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+i += 1
+
+jsonBody += `    "chain_2.png": {\n`
+jsonBody += `      "frame": {"x": ${64 * i}, "y": 15, "w": 64, "h": 96},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 96},\n`
+jsonBody += `      "sourceSize": {"w": 64, "h": 96},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+i += 1
+
+jsonBody += `    "chain_3.png": {\n`
+jsonBody += `      "frame": {"x": ${64 * i}, "y": 15, "w": 64, "h": 96},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 96},\n`
+jsonBody += `      "sourceSize": {"w": 64, "h": 96},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+i += 1
+
+jsonBody += `    "chain_4.png": {\n`
+jsonBody += `      "frame": {"x": ${64 * i}, "y": 15, "w": 64, "h": 96},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 96},\n`
+jsonBody += `      "sourceSize": {"w": 64, "h": 96},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+i += 1
+
+jsonBody += `    "chain_5.png": {\n`
+jsonBody += `      "frame": {"x": ${64 * i}, "y": 15, "w": 64, "h": 96},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 96},\n`
+jsonBody += `      "sourceSize": {"w": 64, "h": 96},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+i += 1
+
+jsonBody += `    "chain_6.png": {\n`
+jsonBody += `      "frame": {"x": ${64 * i}, "y": 15, "w": 64, "h": 96},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 96},\n`
+jsonBody += `      "sourceSize": {"w": 64, "h": 96},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+i += 1
+
+jsonBody += `    "chain_7.png": {\n`
+jsonBody += `      "frame": {"x": ${64 * i}, "y": 15, "w": 64, "h": 96},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 96},\n`
+jsonBody += `      "sourceSize": {"w": 64, "h": 96},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+i = 0
+
+jsonBody += `    "chain_8.png": {\n`
+jsonBody += `      "frame": {"x": ${64 * i}, "y": 135, "w": 64, "h": 96},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 96},\n`
+jsonBody += `      "sourceSize": {"w": 64, "h": 96},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+i += 1
+
+jsonBody += `    "chain_9.png": {\n`
+jsonBody += `      "frame": {"x": ${64 * i}, "y": 135, "w": 64, "h": 96},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 96},\n`
+jsonBody += `      "sourceSize": {"w": 64, "h": 96},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "spacer.png": {\n`
+jsonBody += `      "frame": {"x": 430, "y": 135, "w": 64, "h": 96},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 96},\n`
+jsonBody += `      "sourceSize": {"w": 64, "h": 96},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "chain_text.png": {\n`
+jsonBody += `      "frame": {"x": 192, "y": 135, "w": 128, "h": 96},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 96},\n`
+jsonBody += `      "sourceSize": {"w": 64, "h": 96},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    }\n`
+jsonBody += `  },\n`
+
+jsonAll += jsonBody
+jsonAll += `  "meta": {\n`
+jsonAll += `    "app": "http://www.puyonexus.com",\n`
+jsonAll += `    "version": "1.0",\n`
+jsonAll += `    "image": "chain_font.png",\n`
+jsonAll += `    "format": "RGBA8888",\n`
+jsonAll += `    "size": {"w": 512, "h": 256},\n`
+jsonAll += `    "scale": "1"\n`
+jsonAll += `  }\n`
+jsonAll += `}`
+
+fs.writeFile('../public/img/chain_font.json', jsonAll, function (err) {
+  if (err) {
+    return console.log(err)
+  }
+
+  console.log('The file was saved!')
+})

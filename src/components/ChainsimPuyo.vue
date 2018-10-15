@@ -8,7 +8,7 @@ import Chainsim from '@/assets/js/chainsim'
 export default {
   name: 'ChainsimPuyo',
   props: ['index', 'Simulator', 'fieldState', 'fieldData', 'sprite', 'spritesheet', 'resources',
-    'spritesheetLoaded', 'simulationSpeed', 'coordArray'],
+    'spritesheetLoaded', 'simulationSpeed', 'coordArray', 'needToReset', 'isMouseDown'],
   render: function (h) {
     return h() // Render nothing, avoid error output.
   },
@@ -21,17 +21,17 @@ export default {
     endOfPopAnimation: function () {
       this.$emit('end-popping', { x: this.indexCol, y: this.indexRow, bool: false })
       this.Simulator.Field.map[this.indexRow][this.indexCol].toPop = false
-      console.log('emitted animation end')
     },
     endOfDropAnimation: function () {
       this.$emit('end-dropping', { x: this.indexCol, y: this.indexRow, bool: false })
-      console.log('emitted drop animation end')
     },
     setNewPuyoOnMouseDown: function () {
+      console.log('setNewPuyoOnMouseDown')
       this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
     },
     setNewPuyoOnMove: function () {
       if (this.isMouseDown === true) {
+        console.log('setNewPuyoOnMove')
         this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
       }
     }
@@ -180,10 +180,18 @@ export default {
   },
   mounted () {
     this.sprite.texture = this.spritesheet[this.spriteToLoad]
+    this.sprite.interactive = true
+    this.sprite
+      .on('pointerdown', this.setNewPuyoOnMouseDown)
+      .on('pointerover', this.setNewPuyoOnMove)
   },
   watch: {
     spriteToLoad: function () {
       this.sprite.texture = this.spritesheet[this.spriteToLoad]
+      this.sprite.interactive = true
+      this.sprite
+        .on('pointerdown', this.setNewPuyoOnMouseDown)
+        .on('pointerover', this.setNewPuyoOnMove)
     },
     fieldState: {
       handler: function () {
@@ -194,9 +202,36 @@ export default {
             let flashRate = Math.round(2 / this.simulationSpeed)
             let flashSpeed = (this.simulationSpeed > 4 ? 0 : 1)
 
+            let checkForFieldStateChange = () => {
+              if (this.fieldState === 'idle') {
+                TweenMax.killTweensOf(this.sprite)
+                TweenMax.to(this.sprite, 0, {
+                  useFrames: false,
+                  overwrite: 'concurrent',
+                  onOverwrite: this.endOfDropAnimation,
+                  onComplete: this.endOfDropAnimation,
+                  pixi: {
+                    y: this.origPos.y,
+                    alpha: 1,
+                    scaleX: 1,
+                    scaleY: 1
+                  }
+                })
+              }
+            }
+
             // Define popping animation
             let popPuyos = () => {
-              TweenMax.to(this.sprite, (flashSpeed / 60), { pixi: { alpha: 0 }, useFrames: false, yoyo: true, repeat: 10, repeatDelay: (flashRate / 60), onOverwrite: this.endOfPopAnimation, onComplete: this.endOfPopAnimation })
+              TweenMax.to(this.sprite, (flashSpeed / 60), {
+                pixi: { alpha: 0 },
+                useFrames: false,
+                yoyo: true,
+                repeat: 10,
+                repeatDelay: (flashRate / 60),
+                onRepeat: checkForFieldStateChange,
+                onOverwrite: this.endOfPopAnimation,
+                onComplete: this.endOfPopAnimation
+              })
             }
 
             // Reset transforms, then pop
@@ -211,6 +246,24 @@ export default {
             let acceleration = this.animationParams.acceleration
             let time = 0
 
+            let checkForFieldStateChange = () => {
+              if (this.fieldState === 'idle') {
+                TweenMax.killTweensOf(this.sprite)
+                TweenMax.to(this.sprite, 0, {
+                  useFrames: false,
+                  overwrite: 'concurrent',
+                  onOverwrite: this.endOfDropAnimation,
+                  onComplete: this.endOfDropAnimation,
+                  pixi: {
+                    y: this.origPos.y,
+                    alpha: 1,
+                    scaleX: 1,
+                    scaleY: 1
+                  }
+                })
+              }
+            }
+
             let puyoFall = () => {
               TweenMax.to(this.sprite, duration, {
                 useFrames: true,
@@ -222,6 +275,7 @@ export default {
                   } else {
                     this.sprite.y = this.origPos.y + this.animationParams.distance
                   }
+                  checkForFieldStateChange()
                 },
                 onOverwrite: this.endOfDropAnimation,
                 onComplete: bounce
