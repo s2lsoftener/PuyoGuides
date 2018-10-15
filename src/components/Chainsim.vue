@@ -606,12 +606,14 @@ export default {
       this.fieldObjects.editBubble = new Sprite(resources['/img/edit_bubble.png'].texture)
       this.fieldObjects.editBubble.x = 17
       this.fieldObjects.editBubble.y = 580
-      this.app.stage.addChild(this.fieldObjects.editBubble)
+      // this.app.stage.addChild(this.fieldObjects.editBubble)
 
       this.finishedLoading()
     },
     finishedLoading: function () {
       this.spritesheetLoaded = true
+      this.app.renderer.view.style.width = 200
+      this.app.renderer.view.style.height = 400
     },
     // Simulation core
     editFieldData: function (cell) {
