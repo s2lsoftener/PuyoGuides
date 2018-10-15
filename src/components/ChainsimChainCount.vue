@@ -54,7 +54,7 @@ export default {
         this.chainCountSprites.secondDigit.texture = this.chainCountSprites[`spacer.png`]
       }
 
-      TweenMax.to(this.chainCountContainer, 0.3, {
+      TweenMax.to(this.chainCountContainer, 0.2, {
         pixi: {
           y: '-=10px'
         },

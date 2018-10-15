@@ -93,8 +93,8 @@ export default {
       shadowData: [['0', '0', '0', '0', '0', '0'], // Placeholder field data for testing purposes
         ['0', '0', '0', '0', '0', '0'],
         ['0', '0', '0', '0', '0', '0'],
-        ['0', '0', '0', 'B', 'R', 'P'],
-        ['0', '0', '0', '0', '0', 'G'],
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0'],
         ['0', '0', '0', '0', '0', '0'],
         ['0', '0', '0', '0', '0', '0'],
         ['0', '0', '0', '0', '0', '0'],
@@ -108,8 +108,6 @@ export default {
       dropDistances: [], // numeric 2D matrix that contains how far Puyos need to drop during their drop animations
       clearPuyosResult: [],
       dropPuyosResult: [],
-      windowHeight: 0,
-      scaling: 1,
       spriteMatrix: [[]],
       shadowSpriteMatrix: [[]],
       cursorString: '000000000000111010010101000010101010000101100101000000010101010010010001101010',
@@ -254,7 +252,7 @@ export default {
           width: 608,
           height: 854, // 842
           antialias: true,
-          transparent: true,
+          transparent: false,
           backgroundColor: 0x061639,
           resolution: 1
         })
@@ -340,6 +338,7 @@ export default {
         loader.add('/img/arrow.png')
         loader.add('/img/cursor.png')
         loader.add('/img/chain_font.json')
+        loader.add('/img/edit_bubble.png')
         this.canvasLoaded = true
         loader.load(setup)
       } else {
@@ -603,6 +602,11 @@ export default {
       this.fieldControls.edit.interactive = true
       this.fieldControls.edit.buttonMode = true
       this.app.stage.addChild(this.fieldControls.edit)
+
+      this.fieldObjects.editBubble = new Sprite(resources['/img/edit_bubble.png'].texture)
+      this.fieldObjects.editBubble.x = 17
+      this.fieldObjects.editBubble.y = 580
+      this.app.stage.addChild(this.fieldObjects.editBubble)
 
       this.finishedLoading()
     },
