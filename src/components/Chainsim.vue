@@ -65,9 +65,16 @@ export default {
           height: 854
         }
       },
+      scaleFactor: 0.4,
 
-      // Chainsim State data
-      fieldState: 'idle', // idle -> dropping -> popping -> idle/dropping
+      // Simulator control states
+      chainAutoPlay: true,
+      needToReset: false,
+      simulationSpeed: 1,
+      isMouseDown: false,
+      fieldState: 'idle', // idle -> dropping -> popping -> chainEnded/dropping
+
+      // Chainsim variables
       fieldSettings: {},
       fieldData: [['0', '0', '0', '0', '0', '0'], // Placeholder field data for testing purposes
         ['0', '0', '0', '0', '0', '0'],
@@ -117,9 +124,6 @@ export default {
       spriteMatrix: [[]],
       shadowSpriteMatrix: [[]],
       cursorString: '000000000000111010010101000010101010000101100101000000010101010010010001101010',
-      simulationSpeed: 1,
-      chainAutoPlay: true,
-      needToReset: false,
 
       // Scoring
       score: 0,
@@ -140,9 +144,6 @@ export default {
       fieldControls: {},
       chainCountSprites: {},
       chainCountContainer: {},
-
-      // Editor controls
-      isMouseDown: false,
 
       // Canvas loading stuff
       loadingText: 'Loading canvas...',
@@ -316,7 +317,6 @@ export default {
   methods: {
     setMouseDown: function (bool) {
       this.isMouseDown = bool // true, false
-      console.log(bool)
     },
     // Canvas methods
     loadCanvas: function () { // Chains ino makeFieldSprites
@@ -353,8 +353,8 @@ export default {
         loader.load(setup)
       }
 
-      this.$refs.game.childNodes[1].style.width = `${this.defaultDimensions.simple.width / 2}px`
-      this.$refs.game.childNodes[1].style.width = `${this.defaultDimensions.simple.height / 2}px`
+      this.$refs.game.childNodes[1].style.width = `${this.defaultDimensions.simple.width * this.scaleFactor}px`
+      this.$refs.game.childNodes[1].style.width = `${this.defaultDimensions.simple.height * this.scaleFactor}px`
     },
     makeFieldSprites: function () { // Chains into makeScoreDisplay
       // Make field sprites available
@@ -682,7 +682,7 @@ export default {
 
       // If there's no pops to do, set fieldState to 'idle'. Otherwise, set 'popping'
       if (clearResult.popData.poppingGroups.length === 0) {
-        this.fieldState = 'idle'
+        this.fieldState = 'chainStopped'
         this.fieldHistory.push(JSON.parse(JSON.stringify(this.fieldData)))
         console.log('Set fieldState to "idle"')
       } else {
@@ -731,7 +731,9 @@ export default {
     // Simulation controls
     controlField: function (control) { // expects a string
       if (control === 'reset') {
-        if (this.fieldState !== 'idle') {
+        if (this.fieldState === 'chainStopped') {
+          this.resetField()
+        } else if (this.fieldState !== 'idle') {
           this.needToReset = true
         }
       } else if (control === 'back') {
@@ -807,11 +809,19 @@ export default {
         this.chainAutoPlay = false
         this.simulationSpeed = 1
         this.dropPuyos()
+      } else if (this.fieldState === 'chainStopped') {
+        this.chainAutoPlay = false
+        this.simulationSpeed = 1
+        this.dropPuyos()
       }
     },
     playChain: function () {
       if (this.fieldState === 'idle') {
         this.fieldHistory.push(JSON.parse(JSON.stringify(this.fieldData)))
+        this.chainAutoPlay = true
+        this.simulationSpeed = 1
+        this.dropPuyos()
+      } else if (this.fieldState === 'chainStopped') {
         this.chainAutoPlay = true
         this.simulationSpeed = 1
         this.dropPuyos()
@@ -823,11 +833,16 @@ export default {
         this.chainAutoPlay = true
         this.simulationSpeed = 5
         this.dropPuyos()
+      } else if (this.fieldState === 'chainStopped') {
+        this.chainAutoPlay = true
+        this.simulationSpeed = 5
+        this.dropPuyos()
       }
     }
   },
   mounted () {
     this.loadCanvas()
+    TweenMax.ticker.fps(30) // reduce lag
   },
   watch: {
     isPopping: function (newVal, oldVal) {
@@ -855,7 +870,7 @@ export default {
           if (this.chainAutoPlay === true) {
             this.clearPuyos()
           } else {
-            this.fieldState = 'idle'
+            this.fieldState = 'chainStopped'
           }
         }
       }

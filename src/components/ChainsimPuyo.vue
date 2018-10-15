@@ -26,13 +26,11 @@ export default {
       this.$emit('end-dropping', { x: this.indexCol, y: this.indexRow, bool: false })
     },
     setNewPuyoOnMouseDown: function () {
-      console.log('setNewPuyoOnMouseDown')
-      this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
+      // this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
     },
     setNewPuyoOnMove: function () {
       if (this.isMouseDown === true) {
-        console.log('setNewPuyoOnMove')
-        this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
+        // this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
       }
     }
   },
@@ -268,12 +266,17 @@ export default {
               TweenMax.to(this.sprite, duration, {
                 useFrames: true,
                 onUpdate: () => {
-                  if (this.sprite.y + speed < this.origPos.y + this.animationParams.distance) {
+                  if (this.sprite.y + speed + (speed + acceleration * (time + 1)) < this.origPos.y + this.animationParams.distance) {
+                    this.sprite.y += speed
+                    speed += Math.round(acceleration * time)
+                    time += 1
                     this.sprite.y += speed
                     speed += Math.round(acceleration * time)
                     time += 1
                   } else {
                     this.sprite.y = this.origPos.y + this.animationParams.distance
+                    TweenMax.killTweensOf(this.sprite)
+                    bounce()
                   }
                   checkForFieldStateChange()
                 },
