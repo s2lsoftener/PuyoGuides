@@ -353,10 +353,8 @@ export default {
         loader.load(setup)
       }
 
-      let rescale = 0.54
-      this.app.stage.scale.set(rescale, rescale)
-      this.app.renderer.view.width = this.defaultDimensions.simple.width * rescale
-      this.app.renderer.view.height = this.defaultDimensions.simple.height * rescale
+      this.$refs.game.childNodes[1].style.width = `${this.defaultDimensions.simple.width / 2}px`
+      this.$refs.game.childNodes[1].style.width = `${this.defaultDimensions.simple.height / 2}px`
     },
     makeFieldSprites: function () { // Chains into makeScoreDisplay
       // Make field sprites available
