@@ -59,6 +59,12 @@ export default {
     return {
       // Chainsim display mode. Simple, full (editor buttons, garbage tray).
       displayMode: 'simple',
+      defaultDimensions: {
+        simple: {
+          width: 608,
+          height: 854
+        }
+      },
 
       // Chainsim State data
       fieldState: 'idle', // idle -> dropping -> popping -> idle/dropping
@@ -249,8 +255,8 @@ export default {
     app: function () {
       if (this.displayMode === 'simple') {
         return new PIXI.Application({
-          width: 608,
-          height: 854, // 842
+          width: this.defaultDimensions.simple.width,
+          height: this.defaultDimensions.simple.height, // 842
           antialias: true,
           transparent: false,
           backgroundColor: 0x061639,
@@ -346,6 +352,11 @@ export default {
         this.canvasLoaded = true
         loader.load(setup)
       }
+
+      let rescale = 0.54
+      this.app.stage.scale.set(rescale, rescale)
+      this.app.renderer.view.width = this.defaultDimensions.simple.width * rescale
+      this.app.renderer.view.height = this.defaultDimensions.simple.height * rescale
     },
     makeFieldSprites: function () { // Chains into makeScoreDisplay
       // Make field sprites available
@@ -612,8 +623,6 @@ export default {
     },
     finishedLoading: function () {
       this.spritesheetLoaded = true
-      this.app.renderer.view.style.width = 200
-      this.app.renderer.view.style.height = 400
     },
     // Simulation core
     editFieldData: function (cell) {
