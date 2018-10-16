@@ -44,18 +44,18 @@ export default {
       } else {
         this.vy = 0
       }
-      this.vy += this.animationParams.acceleration * this.frame
+      this.vy += this.animationParams.acceleration * (this.frame + (1 - this.delta))
     },
     bounce: function () {
-      this.bounceFrame += 1 * (this.simulationSpeed + (1 - this.delta))
+      this.bounceFrame += 1 + (1 - this.delta)
       if (this.bounceFrame <= 8) {
-        this.sprite.scale.x += 0.025 * this.simulationSpeed
-        this.sprite.scale.y -= 0.025 * this.simulationSpeed
-        this.sprite.y += 0.75 * this.simulationSpeed
+        this.sprite.scale.x += 0.025 * (this.simulationSpeed * (1 + (1 - this.delta)))
+        this.sprite.scale.y -= 0.025 * (this.simulationSpeed * (1 + (1 - this.delta)))
+        this.sprite.y += 0.75 * (this.simulationSpeed * (1 + (1 - this.delta)))
       } else if (this.bounceFrame <= 16) {
-        this.sprite.scale.x -= 0.025 * this.simulationSpeed
-        this.sprite.scale.y += 0.025 * this.simulationSpeed
-        this.sprite.y -= 0.75 * this.simulationSpeed
+        this.sprite.scale.x -= 0.025 * (this.simulationSpeed * (1 + (1 - this.delta)))
+        this.sprite.scale.y += 0.025 * (this.simulationSpeed * (1 + (1 - this.delta)))
+        this.sprite.y -= 0.75 * (this.simulationSpeed * (1 + (1 - this.delta)))
       } else {
         this.sprite.scale.x = 1
         this.sprite.scale.y = 1
@@ -64,7 +64,7 @@ export default {
       }
     },
     popping: function () {
-      this.poppingFrame += 1 * (this.simulationSpeed + (1 - this.delta))
+      this.poppingFrame += 1 + (1 - this.delta)
 
       if (this.poppingFrame <= 30) {
         if ((this.poppingFrame >= 1 && this.poppingFrame < 2) ||
