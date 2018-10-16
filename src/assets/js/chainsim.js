@@ -412,13 +412,48 @@ const mapToStringArray = function (map) {
   return newMap
 }
 
+const stringTo2dArray = function (string, rows, cols) {
+  let array = []
+  for (let y = 0; y < rows; y++) {
+    array[y] = []
+    for (let x = 0; x < cols; x++) {
+      array[y][x] = string[y * 6 + x]
+    }
+  }
+  return array
+}
+
+const flatten2dTo1d = function (matrix2d) {
+  let array = []
+  for (let y = 0; y < matrix2d.length; y++) {
+    for (let x = 0; x < matrix2d[0].length; x++) {
+      array.push(matrix2d[y][x])
+    }
+  }
+  return array
+}
+
+const uniformMatrix = function (item, rows, cols) {
+  let array = []
+  for (let y = 0; y < rows; y++) {
+    array[y] = []
+    for (let x = 0; x < cols; x++) {
+      array[y][x] = item
+    }
+  }
+  return array
+}
+
 // export {Constants, Puyo, Field, Simulate}
 const Chainsim = {
   Constants: Constants,
   Puyo: Puyo,
   Field: Field,
   Simulate: Simulate,
-  mapToStringArray: mapToStringArray
+  mapToStringArray: mapToStringArray,
+  stringTo2dArray: stringTo2dArray,
+  uniformMatrix: uniformMatrix,
+  flatten2dTo1d: flatten2dTo1d
 }
 
 export default Chainsim

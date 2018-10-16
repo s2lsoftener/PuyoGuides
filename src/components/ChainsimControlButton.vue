@@ -1,7 +1,7 @@
 <script>
 export default {
   name: 'ChainsimControlButton',
-  props: ['spritesheetLoaded', 'button', 'fieldSprites', 'buttonName'],
+  props: ['gameLoaded', 'button', 'fieldSprites', 'buttonName'],
   render: function (h) {
     return h() // Render nothing, avoid error output.
   },
@@ -18,7 +18,7 @@ export default {
     }
   },
   mounted () {
-    if (this.spritesheetLoaded === true) {
+    if (this.gameLoaded === true) {
       this.button
         .on('pointerdown', this.onButtonDown)
         .on('pointerup', this.onButtonUp)
@@ -26,7 +26,7 @@ export default {
     }
   },
   watch: { // Fallback in case the component initalizes before the spritesheets finish loading.
-    spritesheetLoaded: function () {
+    gameLoaded: function () {
       this.button
         .on('pointerdown', this.onButtonDown)
         .on('pointerup', this.onButtonUp)

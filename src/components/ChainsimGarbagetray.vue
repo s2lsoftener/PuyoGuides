@@ -1,13 +1,14 @@
 <script>
 export default {
   name: 'ChainsimGarbagetray',
-  props: ['garbage', 'spritesheet', 'spritesheetLoaded', 'garbageDisplay'],
+  props: ['garbage', 'puyoSprites', 'gameLoaded', 'garbageDisplay', 'frame'],
   render: function (h) {
     return h() // Render nothing, avoid error output.
   },
   data () {
     return {
-      icons: [null, null, null, null, null, null]
+      icons: [null, null, null, null, null, null],
+      oldGarbageValue: 0
     }
   },
   methods: {
@@ -73,18 +74,56 @@ export default {
       }
     }
   },
-  watch: {
-    spritesheetLoaded: function () {
+  mounted () {
+    if (this.gameLoaded === true) {
       this.countGarbage(this.garbage, 0)
       for (let i = 0; i < 6; i++) {
-        this.garbageDisplay[i].texture = this.spritesheet[`${this.icons[i]}.png`]
+        this.garbageDisplay[i].texture = this.puyoSprites[`${this.icons[i]}.png`]
+      }
+    }
+    this.oldGarbageValue = this.garbage
+  },
+  watch: {
+    gameLoaded: function () {
+      this.countGarbage(this.garbage, 0)
+      for (let i = 0; i < 6; i++) {
+        this.garbageDisplay[i].texture = this.puyoSprites[`${this.icons[i]}.png`]
       }
     },
     garbage: function () {
       this.icons = [null, null, null, null, null, null]
       this.countGarbage(this.garbage, 0) // second parameter is i, the index for icons (array)
       for (let i = 0; i < 6; i++) {
-        this.garbageDisplay[i].texture = this.spritesheet[`${this.icons[i]}.png`]
+        this.garbageDisplay[i].texture = this.puyoSprites[`${this.icons[i]}.png`]
+      }
+      this.toggleAnimation = false
+
+      // Center icons in tray
+      for (let i = 0; i < 6; i++) {
+        this.garbageDisplay[i].x = (this.garbageDisplay[2].x + this.garbageDisplay[3].x) / 2
+      }
+
+      this.$nextTick(() => {
+        this.toggleAnimation = true
+      })
+    },
+    frame: function () {
+      if (this.toggleAnimation === true) {
+        for (let i = 0; i < 3; i++) {
+          if (this.garbageDisplay[i].x - 12 > this.garbageDisplay[i].origX) {
+            this.garbageDisplay[i].x -= 12
+          } else {
+            this.garbageDisplay[i].x = this.garbageDisplay[i].origX
+          }
+        }
+
+        for (let i = 3; i < 6; i++) {
+          if (this.garbageDisplay[i].x + 12 < this.garbageDisplay[i].origX) {
+            this.garbageDisplay[i].x += 12
+          } else {
+            this.garbageDisplay[i].x = this.garbageDisplay[i].origX
+          }
+        }
       }
     }
   }

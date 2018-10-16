@@ -7,14 +7,18 @@ import Chainsim from '@/assets/js/chainsim'
 
 export default {
   name: 'ChainsimPuyo',
-  props: ['index', 'Simulator', 'fieldState', 'fieldData', 'sprite', 'spritesheet', 'resources',
-    'spritesheetLoaded', 'simulationSpeed', 'coordArray', 'needToReset', 'isMouseDown'],
+  props: ['index', 'Simulator', 'gameState', 'fieldData', 'sprite', 'puyoSprites',
+    'gameLoaded', 'simulationSpeed', 'coordArray', 'needToReset', 'isMouseDown', 'frame'],
   render: function (h) {
     return h() // Render nothing, avoid error output.
   },
   data () {
     return {
-      dropDistTiming: [10, 15, 19, 22, 25, 28, 31, 33, 35, 37, 39, 41, 43] // https://puyonexus.com/wiki/Puyo_Puyo_Tsu/Frame_Data_Tables#Free_falling_puyo_after_pair_split
+      puyoState: 'idle', // idle, freefall, bouncing, popping
+      vy: 0, // velocity
+      bounceFrame: 0,
+      poppingFrame: 0,
+      poppingVisible: false
     }
   },
   methods: {
@@ -31,6 +35,60 @@ export default {
     setNewPuyoOnMove: function () {
       if (this.isMouseDown === true) {
         // this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
+      }
+    },
+    freeFall: function () {
+      this.sprite.y += this.vy
+      this.vy += this.animationParams.acceleration * this.frame
+    },
+    bounce: function () {
+      this.bounceFrame += 1 * this.simulationSpeed
+      if (this.bounceFrame <= 8) {
+        this.sprite.scale.x += 0.025 * this.simulationSpeed
+        this.sprite.scale.y -= 0.025 * this.simulationSpeed
+        this.sprite.y += 0.75 * this.simulationSpeed
+      } else if (this.bounceFrame <= 16) {
+        this.sprite.scale.x -= 0.025 * this.simulationSpeed
+        this.sprite.scale.y += 0.025 * this.simulationSpeed
+        this.sprite.y -= 0.75 * this.simulationSpeed
+      } else {
+        this.sprite.scale.x = 1
+        this.sprite.scale.y = 1
+        this.puyoState = 'idle'
+        this.endOfDropAnimation()
+      }
+    },
+    popping: function () {
+      this.poppingFrame += 1 * this.simulationSpeed
+
+      if (this.poppingFrame <= 30) {
+        if ((this.poppingFrame >= 1 && this.poppingFrame < 2) ||
+            (this.poppingFrame >= 4 && this.poppingFrame < 6) ||
+            (this.poppingFrame >= 8 && this.poppingFrame < 10) ||
+            (this.poppingFrame >= 12 && this.poppingFrame < 14) ||
+            (this.poppingFrame >= 16 && this.poppingFrame < 18) ||
+            (this.poppingFrame >= 20 && this.poppingFrame < 22) ||
+            (this.poppingFrame >= 24 && this.poppingFrame < 26) ||
+            (this.poppingFrame >= 28 && this.poppingFrame <= 30)) {
+          this.poppingVisible = false
+        } else if ((this.poppingFrame >= 2 && this.poppingFrame < 4) ||
+                   (this.poppingFrame >= 6 && this.poppingFrame < 8) ||
+                   (this.poppingFrame >= 10 && this.poppingFrame < 12) ||
+                   (this.poppingFrame >= 14 && this.poppingFrame < 16) ||
+                   (this.poppingFrame >= 18 && this.poppingFrame < 20) ||
+                   (this.poppingFrame >= 22 && this.poppingFrame < 24) ||
+                   (this.poppingFrame >= 26 && this.poppingFrame < 28)) {
+          this.poppingVisible = true
+        }
+
+        if (this.poppingVisible === true) {
+          this.sprite.alpha = 1
+        } else {
+          this.sprite.alpha = 0
+        }
+      } else {
+        this.puyoState = 'idle'
+        this.endOfPopAnimation()
       }
     }
   },
@@ -166,7 +224,7 @@ export default {
       let d = this.cellsToDrop * this.Simulator.Field.cellHeight // Distance to drop, pixels
       let a = 0.1875 / 16 * this.Simulator.Field.cellHeight // acceleration pixels/frames^2
       let vi = 1 / 16 * this.Simulator.Field.cellHeight // Initial speed, in pixel
-      let tf = (Math.sqrt(2 * a * d + vi ** 2) - vi) / a // Duration of animation, in seconds (seconds!)
+      let tf = (Math.sqrt(2 * a * d + vi ** 2) - vi) / a // Duration of animation
 
       return {
         distance: d,
@@ -177,178 +235,55 @@ export default {
     }
   },
   mounted () {
-    this.sprite.texture = this.spritesheet[this.spriteToLoad]
+    this.sprite.texture = this.puyoSprites[this.spriteToLoad]
     this.sprite.interactive = true
     this.sprite
       .on('pointerdown', this.setNewPuyoOnMouseDown)
       .on('pointerover', this.setNewPuyoOnMove)
+    this.vy = this.animationParams.initialVelocity
   },
   watch: {
-    spriteToLoad: function () {
-      this.sprite.texture = this.spritesheet[this.spriteToLoad]
+    gameLoaded: function () {
+      this.sprite.texture = this.puyoSprites[this.spriteToLoad]
       this.sprite.interactive = true
       this.sprite
         .on('pointerdown', this.setNewPuyoOnMouseDown)
         .on('pointerover', this.setNewPuyoOnMove)
     },
-    fieldState: {
-      handler: function () {
-        if (this.fieldState === 'idle') {
-          TweenMax.to(this.sprite, 0, { useFrames: false, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 } })
-        } else if (this.fieldState === 'popping' && this.needsPopping === true) {
-          if (this.simulationSpeed <= 4) {
-            let flashRate = Math.round(2 / this.simulationSpeed)
-            let flashSpeed = (this.simulationSpeed > 4 ? 0 : 1)
-
-            let checkForFieldStateChange = () => {
-              if (this.fieldState === 'idle') {
-                TweenMax.killTweensOf(this.sprite)
-                TweenMax.to(this.sprite, 0, {
-                  useFrames: false,
-                  overwrite: 'concurrent',
-                  onOverwrite: this.endOfDropAnimation,
-                  onComplete: this.endOfDropAnimation,
-                  pixi: {
-                    y: this.origPos.y,
-                    alpha: 1,
-                    scaleX: 1,
-                    scaleY: 1
-                  }
-                })
-              }
-            }
-
-            // Define popping animation
-            let popPuyos = () => {
-              TweenMax.to(this.sprite, (flashSpeed / 60), {
-                pixi: { alpha: 0 },
-                useFrames: false,
-                yoyo: true,
-                repeat: 10,
-                repeatDelay: (flashRate / 60),
-                onRepeat: checkForFieldStateChange,
-                onOverwrite: this.endOfPopAnimation,
-                onComplete: this.endOfPopAnimation
-              })
-            }
-
-            // Reset transforms, then pop
-            TweenMax.to(this.sprite, 0, { useFrames: false, overwrite: 'concurrent', pixi: { y: this.origPos.y, alpha: 1, scaleX: 1, scaleY: 1 }, onComplete: popPuyos })
-          } else {
-            this.endOfPopAnimation()
-          }
-        } else if (this.fieldState === 'dropping' && this.needsDropping === true) {
-          if (this.simulationSpeed <= 4) {
-            let duration = Math.floor(this.animationParams.duration)
-            let speed = Math.round(this.animationParams.initialVelocity)
-            let acceleration = this.animationParams.acceleration
-            let time = 0
-
-            let checkForFieldStateChange = () => {
-              if (this.fieldState === 'idle') {
-                TweenMax.killTweensOf(this.sprite)
-                TweenMax.to(this.sprite, 0, {
-                  useFrames: false,
-                  overwrite: 'concurrent',
-                  onOverwrite: this.endOfDropAnimation,
-                  onComplete: this.endOfDropAnimation,
-                  pixi: {
-                    y: this.origPos.y,
-                    alpha: 1,
-                    scaleX: 1,
-                    scaleY: 1
-                  }
-                })
-              }
-            }
-
-            let puyoFall = () => {
-              TweenMax.to(this.sprite, duration, {
-                useFrames: true,
-                onUpdate: () => {
-                  if (this.sprite.y + speed + (speed + acceleration * (time + 1)) < this.origPos.y + this.animationParams.distance) {
-                    this.sprite.y += speed
-                    speed += Math.round(acceleration * time)
-                    time += 1
-                    this.sprite.y += speed
-                    speed += Math.round(acceleration * time)
-                    time += 1
-                  } else {
-                    this.sprite.y = this.origPos.y + this.animationParams.distance
-                    TweenMax.killTweensOf(this.sprite)
-                    bounce()
-                  }
-                  checkForFieldStateChange()
-                },
-                onOverwrite: this.endOfDropAnimation,
-                onComplete: bounce
-              })
-            }
-
-            let bounce = () => { // eslint-disable-line no-unused-vars
-              let yChange = '+=' + (0.1 * this.Simulator.Field.cellHeight) + 'px'
-              let bounceSpeed = Math.round(8 / this.simulationSpeed)
-              TweenMax.to(this.sprite, (bounceSpeed / 60), {
-                useFrames: false,
-                pixi: {
-                  scaleX: '1.2',
-                  scaleY: '0.8',
-                  y: yChange
-                },
-                yoyo: true,
-                repeat: 1,
-                onOverwrite: this.endOfDropAnimation,
-                onComplete: this.endOfDropAnimation
-              })
-            }
-
-            // Reset transforms, then drop.
-            if (this.simulationSpeed <= 4) {
-              TweenMax.to(this.sprite, 0, {
-                useFrames: false,
-                overwrite: 'concurrent',
-                pixi: {
-                  y: this.origPos.y,
-                  alpha: 1,
-                  scaleX: 1,
-                  scaleY: 1
-                },
-                onComplete: puyoFall
-              })
-            } else {
-              TweenMax.to(this.sprite, 0, {
-                useFrames: false,
-                overwrite: 'concurrent',
-                pixi: {
-                  y: this.origPos.y + this.cellsToDrop * this.Simulator.Field.cellHeight,
-                  alpha: 1,
-                  scaleX: 1,
-                  scaleY: 1
-                },
-                onComplete: this.endOfDropAnimation
-              })
-            }
-          } else {
-            this.endOfDropAnimation()
-          }
-        }
-      },
-      deep: true
+    spriteToLoad: function () {
+      this.sprite.texture = this.puyoSprites[this.spriteToLoad]
     },
-    fieldData: {
-      handler: function () {
-        TweenMax.to(this.sprite, 0, {
-          useFrames: false,
-          overwrite: 'concurrent',
-          pixi: {
-            y: this.origPos.y,
-            alpha: 1,
-            scaleX: 1,
-            scaleY: 1
-          }
-        })
-      },
-      deep: true
+    frame: function () {
+      if (this.gameState === 'dropping' &&
+          this.needsDropping === true &&
+          this.puyoState === 'freefall') {
+        if (this.sprite.y + this.vy < this.origPos.y + this.animationParams.distance) {
+          this.freeFall()
+        } else {
+          this.sprite.y = this.origPos.y + this.animationParams.distance
+          this.puyoState = 'bouncing'
+        }
+      } else if (this.gameState === 'dropping' &&
+                 this.needsDropping === true &&
+                 this.puyoState === 'bouncing') {
+        this.bounce()
+      } else if (this.gameState === 'popping' &&
+                 this.needsPopping === true &&
+                 this.puyoState === 'popping') {
+        this.popping()
+      }
+    },
+    gameState: function (newVal, oldVal) {
+      this.sprite.y = this.origPos.y
+      this.sprite.alpha = 1
+      this.vy = 0
+      this.bounceFrame = 0
+      this.poppingFrame = 0
+      if (newVal === 'dropping' && this.needsDropping === true) {
+        this.puyoState = 'freefall'
+      } else if (newVal === 'popping' && this.needsPopping === true) {
+        this.puyoState = 'popping'
+      }
     }
   }
 }

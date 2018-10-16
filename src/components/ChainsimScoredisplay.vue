@@ -3,7 +3,7 @@ import * as PIXI from 'pixi.js' // eslint-disable-line no-unused-vars
 
 export default {
   name: 'ChainsimScoredisplay',
-  props: ['scoreDisplay', 'score', 'fieldSprites', 'spritesheetLoaded'],
+  props: ['scoreDisplay', 'score', 'fieldSprites', 'gameLoaded'],
   render: function (h) {
     return h() // Render nothing, avoid error output.
   },
@@ -23,17 +23,20 @@ export default {
     }
   },
   mounted () {
-    console.log('Score display')
-    console.log(this.spritesheetLoaded)
+    if (this.gameLoaded === true) {
+      for (let i = 0; i < 8; i++) {
+        this.scoreDisplay[i].texture = this.fieldSprites[`score_${this.scoreString[i]}.png`]
+      }
+    }
   },
   watch: {
-    spritesheetLoaded: function () {
+    gameLoaded: function () {
       for (let i = 0; i < 8; i++) {
         this.scoreDisplay[i].texture = this.fieldSprites[`score_${this.scoreString[i]}.png`]
       }
     },
     scoreString: function () {
-      if (this.spritesheetLoaded === true) {
+      if (this.gameLoaded === true) {
         for (let i = 0; i < 8; i++) {
           this.scoreDisplay[i].texture = this.fieldSprites[`score_${this.scoreString[i]}.png`]
         }
