@@ -153,6 +153,7 @@ export default {
       needToReset: false,
       isMouseDown: false,
       frame: 0,
+      delta: 0,
       stopGame: false
     }
   },
@@ -400,7 +401,8 @@ export default {
     },
     gameLoop: function (delta) {
       if (this.stopGame === false) {
-        this.frame += this.simulationSpeed
+        this.frame += this.simulationSpeed + delta
+        this.delta = delta
       }
     },
     setMouseDown: function (bool) {
