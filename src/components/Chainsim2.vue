@@ -20,6 +20,9 @@
       :frame="frame" :delta="delta" />
 
       <chainsim-scoredisplay :scoreDisplay="scoreDisplay" :score="score" :gameLoaded="gameLoaded" :fieldSprites="fieldSprites" />
+
+      <chainsim-chain-count :chainLength="chainLength" :chainCountSprites="chainCountSprites" :gameLoaded="gameLoaded"
+      :chainCountDisplay="chainCountDisplay" :frame="frame" :delta="delta" />
     </div>
     <button @click="dropPuyos">dropPuyos()</button>
     <button @click="stopGame = !stopGame">stop updates</button>
@@ -36,6 +39,7 @@ import ChainsimPuyo from './ChainsimPuyo'
 import ChainsimControlButton from './ChainsimControlButton'
 import ChainsimGarbagetray from './ChainsimGarbagetray'
 import ChainsimScoredisplay from './ChainsimScoredisplay'
+import ChainsimChainCount from './ChainsimChainCount'
 
 let uniformMatrix = Chainsim.uniformMatrix // Generates a 2D matrix all filled with one value
 let stringTo2dArray = Chainsim.stringTo2dArray // Converts 1D string to 2D matrix
@@ -51,7 +55,8 @@ export default {
     ChainsimPuyo,
     ChainsimControlButton,
     ChainsimGarbagetray,
-    ChainsimScoredisplay
+    ChainsimScoredisplay,
+    ChainsimChainCount
   },
   data () {
     return {
@@ -193,6 +198,7 @@ export default {
         this.initPuyoDisplay()
         this.initGarbageDisplay()
         this.initFieldControls()
+        this.initChainCounter()
 
         // Marked game as loaded
         this.gameLoaded = true
@@ -399,6 +405,31 @@ export default {
       this.fieldDisplay.editBubble.x = 17
       this.fieldDisplay.editBubble.y = 580
       // this.app.stage.addChild(this.fieldDisplay.editBubble)
+    },
+    initChainCounter: function () {
+      let startX = 412
+      let startY = 612
+
+      this.chainCountSprites.firstDigit = new Sprite(this.chainCountSprites['chain_1.png'])
+      this.chainCountSprites.firstDigit.x = startX
+      this.chainCountSprites.firstDigit.y = startY
+      this.chainCountSprites.firstDigit.scale.set(0.85, 0.85)
+
+      this.chainCountSprites.secondDigit = new Sprite(this.chainCountSprites['chain_0.png'])
+      this.chainCountSprites.secondDigit.x = startX + 40
+      this.chainCountSprites.secondDigit.y = startY
+      this.chainCountSprites.secondDigit.scale.set(0.85, 0.85)
+
+      this.chainCountSprites.chainText = new Sprite(this.chainCountSprites['chain_text.png'])
+      this.chainCountSprites.chainText.x = startX + 84
+      this.chainCountSprites.chainText.y = startY + 10
+      this.chainCountSprites.chainText.scale.set(0.85, 0.85)
+
+      this.chainCountDisplay = new PIXI.Container()
+      this.chainCountDisplay.addChild(this.chainCountSprites.firstDigit)
+      this.chainCountDisplay.addChild(this.chainCountSprites.secondDigit)
+      this.chainCountDisplay.addChild(this.chainCountSprites.chainText)
+      this.app.stage.addChild(this.chainCountDisplay)
     },
     gameLoop: function (delta) {
       if (this.stopGame === false) {

@@ -1,15 +1,18 @@
 <script>
-import { TweenMax } from 'gsap/all' // eslint-disable-line no-unused-vars
+import * as BezierEasing from 'bezier-easing'
 
 export default {
   name: 'ChainsimChainCount',
-  props: ['chainLength', 'chainCountSprites', 'spritesheetLoaded', 'chainCountContainer'],
+  props: ['chainLength', 'chainCountSprites', 'gameLoaded', 'chainCountDisplay', 'frame', 'delta'],
   render: function (h) {
     return h() // Render nothing, avoid error output.
   },
   data () {
     return {
-      container: {}
+      container: {},
+      toggleAnimation: false,
+      counterFrame: 0,
+      origY: 0
     }
   },
   computed: {
@@ -19,17 +22,21 @@ export default {
         string = '0' + string
       }
       return string
+    },
+    easing: function () {
+      return BezierEasing(0.42, 1.03, 0.78, 1)
     }
   },
   mounted () {
-    if (this.spritesheetLoaded === true) {
+    if (this.gameLoaded === true) {
       this.chainCountSprites.firstDigit.alpha = 0
       this.chainCountSprites.secondDigit.alpha = 0
       this.chainCountSprites.chainText.alpha = 0
     }
+    this.origY = this.chainCountDisplay.y
   },
   watch: {
-    spritesheetLoaded: function () {
+    gameLoaded: function () {
       this.chainCountSprites.firstDigit.alpha = 0
       this.chainCountSprites.secondDigit.alpha = 0
       this.chainCountSprites.chainText.alpha = 0
@@ -38,6 +45,8 @@ export default {
       this.chainCountSprites.firstDigit.alpha = 0
       this.chainCountSprites.secondDigit.alpha = 0
       this.chainCountSprites.chainText.alpha = 0
+      this.toggleAnimation = false
+      console.log(this.toggleAnimation)
 
       if (this.chainLengthString[0] !== '0') {
         this.chainCountSprites.firstDigit.alpha = 1
@@ -54,13 +63,24 @@ export default {
         this.chainCountSprites.secondDigit.texture = this.chainCountSprites[`spacer.png`]
       }
 
-      TweenMax.to(this.chainCountContainer, 0.2, {
-        pixi: {
-          y: '-=10px'
-        },
-        repeat: 1,
-        yoyo: true
+      this.$nextTick(() => {
+        console.log('turn on animation')
+        this.toggleAnimation = true
+        this.counterFrame = 0
+        console.log(this.toggleAnimation)
       })
+    },
+    frame: function () {
+      if (this.toggleAnimation === true) {
+        this.counterFrame += 1 + (1 - this.delta)
+        if (this.counterFrame / 30 <= 1) {
+          this.chainCountDisplay.y = this.origY - (10 * this.easing(this.counterFrame / 30))
+        } else if (this.counterFrame / 30 <= 2) {
+          this.chainCountDisplay.y = this.origY - (10 * this.easing(2 - this.counterFrame / 30))
+        } else {
+          this.chainCountDisplay.y = this.origY
+        }
+      }
     }
   }
 }

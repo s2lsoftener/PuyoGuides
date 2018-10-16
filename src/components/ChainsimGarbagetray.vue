@@ -8,7 +8,7 @@ export default {
   data () {
     return {
       icons: [null, null, null, null, null, null],
-      oldGarbageValue: 0
+      toggleAnimation: false
     }
   },
   methods: {
