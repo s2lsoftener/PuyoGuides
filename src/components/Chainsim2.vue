@@ -24,9 +24,6 @@
       <chainsim-chain-count :chainLength="chainLength" :chainCountSprites="chainCountSprites" :gameLoaded="gameLoaded"
       :chainCountDisplay="chainCountDisplay" :frame="frame" :delta="delta" />
     </div>
-    <button @click="dropPuyos">dropPuyos()</button>
-    <button @click="stopGame = !stopGame">stop updates</button>
-    <button @click="simulationSpeed = 5">FAST</button>
     <br><p>{{ gameState }}</p>
     <p>{{ delta }}</p>
   </div>
@@ -124,6 +121,7 @@ export default {
         }
       },
       app: undefined, // PIXI.js Application
+      scaleFactor: 0.4,
 
       // Texture data
       texturesToLoad: [
@@ -199,6 +197,10 @@ export default {
         this.initGarbageDisplay()
         this.initFieldControls()
         this.initChainCounter()
+
+        // resize canvas
+        this.$refs.game.childNodes[0].style.width = `${this.modeSettings.simple.width * this.scaleFactor}px`
+        this.$refs.game.childNodes[0].style.width = `${this.modeSettings.simple.height * this.scaleFactor}px`
 
         // Marked game as loaded
         this.gameLoaded = true

@@ -73,10 +73,10 @@ export default {
     frame: function () {
       if (this.toggleAnimation === true) {
         this.counterFrame += 1 + (1 - this.delta)
-        if (this.counterFrame / 30 <= 1) {
-          this.chainCountDisplay.y = this.origY - (10 * this.easing(this.counterFrame / 30))
-        } else if (this.counterFrame / 30 <= 2) {
-          this.chainCountDisplay.y = this.origY - (10 * this.easing(2 - this.counterFrame / 30))
+        if (this.counterFrame / 15 <= 1) {
+          this.chainCountDisplay.y = this.origY - (10 * this.easing(this.counterFrame / 15))
+        } else if (this.counterFrame / 15 <= 2) {
+          this.chainCountDisplay.y = this.origY - (10 * this.easing(2 - this.counterFrame / 15))
         } else {
           this.chainCountDisplay.y = this.origY
         }
