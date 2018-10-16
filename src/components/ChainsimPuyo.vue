@@ -8,7 +8,8 @@ import Chainsim from '@/assets/js/chainsim'
 export default {
   name: 'ChainsimPuyo',
   props: ['index', 'Simulator', 'gameState', 'fieldData', 'sprite', 'puyoSprites',
-    'gameLoaded', 'simulationSpeed', 'coordArray', 'needToReset', 'isMouseDown', 'frame'],
+    'gameLoaded', 'simulationSpeed', 'coordArray', 'needToReset', 'isMouseDown', 'frame',
+    'delta'],
   render: function (h) {
     return h() // Render nothing, avoid error output.
   },
@@ -38,11 +39,15 @@ export default {
       }
     },
     freeFall: function () {
-      this.sprite.y += this.vy
+      if (this.vy >= 0) {
+        this.sprite.y += this.vy
+      } else {
+        this.vy = 0
+      }
       this.vy += this.animationParams.acceleration * this.frame
     },
     bounce: function () {
-      this.bounceFrame += 1 * this.simulationSpeed
+      this.bounceFrame += 1 * (this.simulationSpeed + (1 - this.delta))
       if (this.bounceFrame <= 8) {
         this.sprite.scale.x += 0.025 * this.simulationSpeed
         this.sprite.scale.y -= 0.025 * this.simulationSpeed
@@ -59,7 +64,7 @@ export default {
       }
     },
     popping: function () {
-      this.poppingFrame += 1 * this.simulationSpeed
+      this.poppingFrame += 1 * (this.simulationSpeed + (1 - this.delta))
 
       if (this.poppingFrame <= 30) {
         if ((this.poppingFrame >= 1 && this.poppingFrame < 2) ||

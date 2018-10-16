@@ -1,7 +1,7 @@
 <script>
 export default {
   name: 'ChainsimGarbagetray',
-  props: ['garbage', 'puyoSprites', 'gameLoaded', 'garbageDisplay', 'frame'],
+  props: ['garbage', 'puyoSprites', 'gameLoaded', 'garbageDisplay', 'frame', 'delta'],
   render: function (h) {
     return h() // Render nothing, avoid error output.
   },
@@ -111,7 +111,7 @@ export default {
       if (this.toggleAnimation === true) {
         for (let i = 0; i < 3; i++) {
           if (this.garbageDisplay[i].x - 12 > this.garbageDisplay[i].origX) {
-            this.garbageDisplay[i].x -= 12
+            this.garbageDisplay[i].x -= 12 + this.delta
           } else {
             this.garbageDisplay[i].x = this.garbageDisplay[i].origX
           }
@@ -119,7 +119,7 @@ export default {
 
         for (let i = 3; i < 6; i++) {
           if (this.garbageDisplay[i].x + 12 < this.garbageDisplay[i].origX) {
-            this.garbageDisplay[i].x += 12
+            this.garbageDisplay[i].x += 12 + this.delta
           } else {
             this.garbageDisplay[i].x = this.garbageDisplay[i].origX
           }

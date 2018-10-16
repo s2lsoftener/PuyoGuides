@@ -9,7 +9,7 @@
       :Simulator="Simulator" :gameState="gameState" :fieldData="fieldData" :sprite="puyoDisplay[index]"
       :puyoSprites="puyoSprites" :gameLoaded="gameLoaded"
       :simulationSpeed="simulationSpeed" :coordArray="coordArray" :needToReset="needToReset"
-      :isMouseDown="isMouseDown" :frame="frame"
+      :isMouseDown="isMouseDown" :frame="frame" :delta="delta"
       v-on:end-popping="togglePoppingCell" v-on:end-dropping="toggleDroppingCell" v-on:edit-puyo-field="editFieldData" />
 
       <chainsim-control-button v-for="(sprite, index) in fieldControls" :key="`Control_${index}`"
@@ -17,7 +17,7 @@
       v-on:controlField="controlField" />
 
       <chainsim-garbagetray :garbage="garbage" :puyoSprites="puyoSprites" :gameLoaded="gameLoaded" :garbageDisplay="garbageDisplay"
-      :frame="frame" />
+      :frame="frame" :delta="delta" />
 
       <chainsim-scoredisplay :scoreDisplay="scoreDisplay" :score="score" :gameLoaded="gameLoaded" :fieldSprites="fieldSprites" />
     </div>
@@ -25,6 +25,7 @@
     <button @click="stopGame = !stopGame">stop updates</button>
     <button @click="simulationSpeed = 5">FAST</button>
     <br><p>{{ gameState }}</p>
+    <p>{{ delta }}</p>
   </div>
 </template>
 
@@ -401,7 +402,7 @@ export default {
     },
     gameLoop: function (delta) {
       if (this.stopGame === false) {
-        this.frame += this.simulationSpeed + delta
+        this.frame += this.simulationSpeed
         this.delta = delta
       }
     },
