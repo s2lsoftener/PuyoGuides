@@ -12,6 +12,10 @@
       :isMouseDown="isMouseDown" :frame="frame" :delta="delta"
       v-on:end-popping="togglePoppingCell" v-on:end-dropping="toggleDroppingCell" v-on:edit-puyo-field="editFieldData" />
 
+      <chainsim-shadow-puyo v-for="(sprite, index) in shadowDisplay" :key="`Shadow_${index}`" :index="index"
+      :Simulator="Simulator" :gameState="gameState" :shadowData="shadowData" :sprite="shadowDisplay[index]"
+      :puyoSprites="puyoSprites" :gameLoaded="gameLoaded" />
+
       <chainsim-control-button v-for="(sprite, index) in fieldControls" :key="`Control_${index}`"
       :gameLoaded="gameLoaded" :fieldSprites="fieldSprites" :button="sprite" :buttonName="index"
       v-on:controlField="controlField" />
@@ -23,6 +27,14 @@
 
       <chainsim-chain-count :chainLength="chainLength" :chainCountSprites="chainCountSprites" :gameLoaded="gameLoaded"
       :chainCountDisplay="chainCountDisplay" :frame="frame" :delta="delta" />
+
+      <chainsim-cursor v-for="(sprite, index) in cursorDisplay" :key="`Cursor_${index}`"
+      :gameLoaded="gameLoaded" :cursorData="cursorData" :sprite="cursorDisplay[index]" :index="index"
+      :frame="frame" :delta="delta" :Simulator="Simulator" />
+
+      <chainsim-arrow v-for="(sprite, index) in arrowDisplay" :key="`Arrow_${index}`"
+      :gameLoaded="gameLoaded" :arrowData="arrowData" :sprite="arrowDisplay[index]" :index="index"
+      :frame="frame" :delta="delta" :Simulator="Simulator" />
     </div>
     <br><p>{{ gameState }}</p>
     <p>{{ frame }}</p>
@@ -38,6 +50,9 @@ import ChainsimControlButton from './ChainsimControlButton'
 import ChainsimGarbagetray from './ChainsimGarbagetray'
 import ChainsimScoredisplay from './ChainsimScoredisplay'
 import ChainsimChainCount from './ChainsimChainCount'
+import ChainsimShadowPuyo from './ChainsimShadowPuyo'
+import ChainsimCursor from './ChainsimCursor'
+import ChainsimArrow from './ChainsimArrow'
 
 let uniformMatrix = Chainsim.uniformMatrix // Generates a 2D matrix all filled with one value
 let stringTo2dArray = Chainsim.stringTo2dArray // Converts 1D string to 2D matrix
@@ -54,7 +69,10 @@ export default {
     ChainsimControlButton,
     ChainsimGarbagetray,
     ChainsimScoredisplay,
-    ChainsimChainCount
+    ChainsimChainCount,
+    ChainsimShadowPuyo,
+    ChainsimCursor,
+    ChainsimArrow
   },
   data () {
     return {
@@ -83,6 +101,7 @@ export default {
       fieldHistory: [], // Allows rewinding of a chain that's popping
       shadowData: [[]], // 2D string array denoting where transparent Puyos should go
       cursorData: [[]], // 2D numeric array to place a cursor (with an optional number)
+      arrowData: [[]], // arrows ugh
       clearPuyosResult: [[]], // 2D string array. Result from clearPuyos(); assigned to fieldData
       dropPuyosResult: [[]], // 2D string array. Result from dropPuyos(); assigned to fieldData
 
@@ -144,6 +163,8 @@ export default {
       shadowDisplay: [],
       scoreDisplay: [],
       garbageDisplay: [],
+      cursorDisplay: [],
+      arrowDisplay: [],
       chainCountDisplay: {},
       fieldDisplay: {},
 
@@ -169,6 +190,9 @@ export default {
   methods: {
     initData: function () {
       this.fieldData = stringTo2dArray(this.importedData.fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.shadowData = stringTo2dArray(this.importedData.shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.cursorData = stringTo2dArray(this.importedData.cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.arrowData = stringTo2dArray(this.importedData.arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dropDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
@@ -198,6 +222,9 @@ export default {
         this.initGarbageDisplay()
         this.initFieldControls()
         this.initChainCounter()
+        this.initShadowDisplay()
+        this.initCursorDisplay()
+        this.initArrowDisplay()
 
         // resize canvas
         this.$refs.game.childNodes[0].style.width = `${this.modeSettings.simple.width * this.scaleFactor}px`
@@ -433,6 +460,49 @@ export default {
       this.chainCountDisplay.addChild(this.chainCountSprites.secondDigit)
       this.chainCountDisplay.addChild(this.chainCountSprites.chainText)
       this.app.stage.addChild(this.chainCountDisplay)
+    },
+    initShadowDisplay: function () {
+      let spriteArray = []
+      for (let y = 0; y < this.fieldData.length; y++) {
+        spriteArray[y] = []
+        for (let x = 0; x < this.fieldData[0].length; x++) {
+          spriteArray[y][x] = new Sprite()
+          spriteArray[y][x].anchor.set(0.5)
+          spriteArray[y][x].alpha = 0.4
+          spriteArray[y][x].x = this.coordArray[y][x].x
+          spriteArray[y][x].y = this.coordArray[y][x].y
+          this.app.stage.addChild(spriteArray[y][x])
+          this.shadowDisplay.push(spriteArray[y][x])
+        }
+      }
+    },
+    initCursorDisplay: function () {
+      let spriteArray = []
+      for (let y = 0; y < this.fieldData.length; y++) {
+        spriteArray[y] = []
+        for (let x = 0; x < this.fieldData[0].length; x++) {
+          spriteArray[y][x] = new Sprite(resources['/img/cursor.png'].texture)
+          spriteArray[y][x].anchor.set(0.5)
+          spriteArray[y][x].x = this.coordArray[y][x].x
+          spriteArray[y][x].y = this.coordArray[y][x].y
+          this.app.stage.addChild(spriteArray[y][x])
+          this.cursorDisplay.push(spriteArray[y][x])
+        }
+      }
+    },
+    initArrowDisplay: function () {
+      let spriteArray = []
+      for (let y = 0; y < this.fieldData.length; y++) {
+        spriteArray[y] = []
+        for (let x = 0; x < this.fieldData[0].length; x++) {
+          spriteArray[y][x] = new Sprite(resources['/img/arrow.png'].texture)
+          spriteArray[y][x].anchor.set(0.5)
+          spriteArray[y][x].x = this.coordArray[y][x].x
+          spriteArray[y][x].y = this.coordArray[y][x].y
+          this.app.stage.addChild(spriteArray[y][x])
+          this.arrowDisplay.push(spriteArray[y][x])
+        }
+      }
     },
     gameLoop: function (delta) {
       if (this.stopGame === false) {

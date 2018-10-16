@@ -4,7 +4,7 @@ import Chainsim from '@/assets/js/chainsim'
 
 export default {
   name: 'ChainsimShadowPuyo',
-  props: ['index', 'Simulator', 'fieldState', 'shadowData', 'sprite', 'spritesheet', 'resources'],
+  props: ['index', 'Simulator', 'fieldState', 'shadowData', 'sprite', 'puyoSprites', 'gameLoaded'],
   render: function (h) {
     return h() // Render nothing, avoid error output.
   },
@@ -51,7 +51,12 @@ export default {
     }
   },
   mounted () {
-    this.sprite.texture = this.spritesheet[this.spriteToLoad]
+    this.sprite.texture = this.puyoSprites[this.spriteToLoad]
+  },
+  watch: {
+    gameLoaded: function () {
+      this.sprite.texture = this.puyoSprites[this.spriteToLoad]
+    }
   }
 }
 </script>
