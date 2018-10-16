@@ -25,7 +25,8 @@
       :chainCountDisplay="chainCountDisplay" :frame="frame" :delta="delta" />
     </div>
     <br><p>{{ gameState }}</p>
-    <p>{{ delta }}</p>
+    <p>{{ frame }}</p>
+    <button @click="stopGame = !stopGame">Stop</button>
   </div>
 </template>
 

@@ -39,23 +39,21 @@ export default {
       }
     },
     freeFall: function () {
-      if (this.vy >= 0) {
-        this.sprite.y += this.vy
-      } else {
-        this.vy = 0
+      this.sprite.y += this.vy
+      for (let i = 0; i < Math.round(this.delta); i++) {
+        this.vy += this.animationParams.acceleration * this.frame
       }
-      this.vy += this.animationParams.acceleration * (this.frame + (1 - this.delta))
     },
     bounce: function () {
-      this.bounceFrame += 1 + (1 - this.delta)
+      this.bounceFrame += this.delta
       if (this.bounceFrame <= 8) {
-        this.sprite.scale.x += 0.025 * (this.simulationSpeed * (1 + (1 - this.delta)))
-        this.sprite.scale.y -= 0.025 * (this.simulationSpeed * (1 + (1 - this.delta)))
-        this.sprite.y += 0.75 * (this.simulationSpeed * (1 + (1 - this.delta)))
+        this.sprite.scale.x += 0.025 * this.simulationSpeed
+        this.sprite.scale.y -= 0.025 * this.simulationSpeed
+        this.sprite.y += 0.75 * this.simulationSpeed
       } else if (this.bounceFrame <= 16) {
-        this.sprite.scale.x -= 0.025 * (this.simulationSpeed * (1 + (1 - this.delta)))
-        this.sprite.scale.y += 0.025 * (this.simulationSpeed * (1 + (1 - this.delta)))
-        this.sprite.y -= 0.75 * (this.simulationSpeed * (1 + (1 - this.delta)))
+        this.sprite.scale.x -= 0.025 * this.simulationSpeed
+        this.sprite.scale.y += 0.025 * this.simulationSpeed
+        this.sprite.y -= 0.75 * this.simulationSpeed
       } else {
         this.sprite.scale.x = 1
         this.sprite.scale.y = 1
@@ -64,9 +62,9 @@ export default {
       }
     },
     popping: function () {
-      this.poppingFrame += 1 + (1 - this.delta)
+      this.poppingFrame += this.delta
 
-      if (this.poppingFrame <= 30) {
+      if (this.poppingFrame <= 20) {
         if ((this.poppingFrame >= 1 && this.poppingFrame < 2) ||
             (this.poppingFrame >= 4 && this.poppingFrame < 6) ||
             (this.poppingFrame >= 8 && this.poppingFrame < 10) ||
@@ -271,6 +269,8 @@ export default {
       } else if (this.gameState === 'dropping' &&
                  this.needsDropping === true &&
                  this.puyoState === 'bouncing') {
+        console.log(this.frame)
+        console.log(this.cellsToDrop)
         this.bounce()
       } else if (this.gameState === 'popping' &&
                  this.needsPopping === true &&
@@ -281,7 +281,7 @@ export default {
     gameState: function (newVal, oldVal) {
       this.sprite.y = this.origPos.y
       this.sprite.alpha = 1
-      this.vy = 0
+      this.vy = this.animationParams.initialVelocity
       this.bounceFrame = 0
       this.poppingFrame = 0
       if (newVal === 'dropping' && this.needsDropping === true) {
