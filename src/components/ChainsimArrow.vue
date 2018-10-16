@@ -1,4 +1,5 @@
 <script>
+// import * as BezierEasing from 'bezier-easing'
 export default {
   name: 'ChainsimArrow',
   props: ['index', 'Simulator', 'arrowData', 'sprite', 'frame', 'delta', 'gameLoaded'],
@@ -7,8 +8,7 @@ export default {
   },
   data () {
     return {
-      timer: 0,
-      fullSize: true
+      timer: 0
     }
   },
   methods: {
@@ -33,15 +33,24 @@ export default {
     },
     arrowDirection: function () {
       if (this.arrowData[this.indexRow][this.indexCol] === 'U') {
-        return 180
+        return 'U'
       } else if (this.arrowData[this.indexRow][this.indexCol] === 'L') {
-        return 90
+        return 'L'
       } else if (this.arrowData[this.indexRow][this.indexCol] === 'R') {
-        return 270
+        return 'R'
       } else if (this.arrowData[this.indexRow][this.indexCol] === 'D') {
-        return 0
+        return 'D'
       } else {
-        return 0
+        return null
+      }
+    },
+    arrowRotation: function () {
+      switch (this.arrowDirection) {
+        case 'R': return Math.PI * (3 / 2)
+        case 'U': return Math.PI
+        case 'L': return Math.PI * (1 / 2)
+        case 'D': return 0
+        case null: return 0
       }
     }
   },
@@ -52,7 +61,7 @@ export default {
       } else {
         this.sprite.alpha = 0
       }
-      this.sprite.rotation = this.arrowDirection
+      this.sprite.rotation = this.arrowRotation
     }
   },
   watch: {
@@ -62,7 +71,7 @@ export default {
       } else {
         this.sprite.alpha = 0
       }
-      this.sprite.rotation = this.arrowDirection
+      this.sprite.rotation = this.arrowRotation
     },
     arrowVisible: function () {
       if (this.arrowVisible === true) {

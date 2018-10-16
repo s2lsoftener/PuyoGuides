@@ -499,6 +499,7 @@ export default {
           spriteArray[y][x].anchor.set(0.5)
           spriteArray[y][x].x = this.coordArray[y][x].x
           spriteArray[y][x].y = this.coordArray[y][x].y
+          spriteArray[y][x].scale.set(0.9, 0.9)
           this.app.stage.addChild(spriteArray[y][x])
           this.arrowDisplay.push(spriteArray[y][x])
         }
