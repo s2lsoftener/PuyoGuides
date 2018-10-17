@@ -3,8 +3,9 @@
     <div id="nav">
       <router-link to="/">Home</router-link> |
       <router-link to="/about">About</router-link> |
-      <router-link to="/simulator">Simulator</router-link> |
-      <router-link to="/simulatornew">Simulator 2</router-link>
+      <!-- <router-link to="/simulator">Simulator</router-link> |
+      <router-link to="/simulatornew">Simulator 2</router-link> -->
+      <router-link to="/imcrying">Simulator 3</router-link>
     </div>
     <router-view/>
   </div>

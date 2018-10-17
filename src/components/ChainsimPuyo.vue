@@ -31,11 +31,11 @@ export default {
       this.$emit('end-dropping', { x: this.indexCol, y: this.indexRow, bool: false })
     },
     setNewPuyoOnMouseDown: function () {
-      // this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
+      this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
     },
     setNewPuyoOnMove: function () {
       if (this.isMouseDown === true) {
-        // this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
+        this.$emit('edit-puyo-field', { x: this.indexCol, y: this.indexRow, puyo: this.currentTool })
       }
     },
     freeFall: function () {
