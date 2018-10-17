@@ -169,6 +169,8 @@ export default {
       arrowDisplay: [],
       chainCountDisplay: {},
       fieldDisplay: {},
+      cellTimer: [[]],
+      puyoStates: [[]],
 
       /* Loader details */
       loadingText: 'Loading...',
@@ -204,10 +206,16 @@ export default {
       this.dropDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.clearPuyosResult = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dropPuyosResult = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.cellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
     },
     initGame: function () {
       this.app = new PIXI.Application(this.modeSettings[this.displayMode])
+      // this.app.stage.scale.set(0.5, 0.5)
+      // this.app.renderer.resize(this.modeSettings.simple.width / 2, this.modeSettings.simple.height / 2)
       this.$refs.game.appendChild(this.app.view)
+      this.$refs.game.childNodes[0].style.width = `${this.modeSettings.simple.width * this.scaleFactor}px`
+      this.$refs.game.childNodes[0].style.height = `${this.modeSettings.simple.height * this.scaleFactor}px`
 
       let setup = () => {
         // Mark textures as loaded
@@ -234,7 +242,7 @@ export default {
 
         // resize canvas
         this.$refs.game.childNodes[0].style.width = `${this.modeSettings.simple.width * this.scaleFactor}px`
-        this.$refs.game.childNodes[0].style.width = `${this.modeSettings.simple.height * this.scaleFactor}px`
+        this.$refs.game.childNodes[0].style.height = `${this.modeSettings.simple.height * this.scaleFactor}px`
 
         // Marked game as loaded
         this.gameLoaded = true
@@ -602,9 +610,9 @@ export default {
     },
     gameLoop: function (delta) {
       if (this.gameState === 'idle') {
-        this.stateEditField()
+        this.stateEditField(delta)
       } else if (this.gameState === 'dropping') {
-        this.stateDropPuyos()
+        this.stateDropPuyos(delta)
       }
     },
     stateEditField: function (delta) {
@@ -612,13 +620,37 @@ export default {
     },
     stateDropPuyos: function (delta) {
       let t = this.frame
-      for (let y = 0; y < this.Field.totalRows; y++) {
-        for (let x = 0; x < this.Field.columns; x++) {
-          if (this.puyoDisplay[y][x].y < this.coordArray[y][x].y + this.dropDistances[y][x] * this.Field.cellHeight) {
-            this.puyoDisplay[y][x].y += this.Field.map[y][x].vy
-            this.Field.map[y][x].vy += 0.1875 / 16 * 60 * t
-          } else {
-            console.log('stop!')
+      for (let i = 0; i < Math.round(delta); i++) { // Repeat the logic based on skipped frames
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            if (this.dropDistances[y][x] > 0) {
+              if (this.puyoStates[y][x] === 'idle') {
+                this.puyoStates[y].splice(x, 1, 'dropping')
+              } else if (this.puyoStates[y][x] === 'dropping') {
+                if (this.puyoDisplay[y][x].y + this.Field.map[y][x].vy < this.coordArray[y][x].y + this.dropDistances[y][x] * this.Field.cellHeight) {
+                  this.puyoDisplay[y][x].y += this.Field.map[y][x].vy
+                  this.Field.map[y][x].vy += 0.1875 / 16 * 60 * t
+                } else {
+                  this.puyoStates[y].splice(x, 1, 'bouncing')
+                  this.puyoDisplay[y][x].y = this.coordArray[y][x].y + this.dropDistances[y][x] * this.Field.cellHeight + this.Field.cellHeight / 2
+                  this.puyoDisplay[y][x].anchor.set(0.5, 1)
+                }
+              } else if (this.puyoStates[y][x] === 'bouncing') {
+                this.cellTimer[y][x] += 1
+                if (this.cellTimer[y][x] <= 8) {
+                  this.puyoDisplay[y][x].scale.y -= 0.2 / 8
+                  this.puyoDisplay[y][x].scale.x += 0.2 / 8
+                } else if (this.cellTimer[y][x] <= 16) {
+                  this.puyoDisplay[y][x].scale.y += 0.2 / 8
+                  this.puyoDisplay[y][x].scale.x -= 0.2 / 8
+                } else {
+                  this.puyoDisplay[y][x].anchor.set(0.5, 0.5)
+                  this.puyoDisplay[y][x].y = this.coordArray[y][x].y + this.dropDistances[y][x] * this.Field.cellHeight
+                  this.puyoStates[y].splice(x, 1, 'idle')
+                  this.toggleDroppingCell( {x: x, y: y, bool: false} )
+                }
+              }
+            }
           }
         }
       }
