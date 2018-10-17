@@ -616,9 +616,9 @@ export default {
         popAnimationArray[y] = []
         for (let x = 0; x < this.Field.columns; x++) {
           if (this.Field.map[y][x].toPop === true) {
-            popAnimationArray[y][x] = true
+            popAnimationArray[y].splice(x, 1, true)
           } else {
-            popAnimationArray[y][x] = false
+            popAnimationArray[y].splice(x, 1, false)
           }
         }
       }

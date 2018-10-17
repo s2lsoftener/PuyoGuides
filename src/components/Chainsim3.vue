@@ -25,9 +25,10 @@
       :chainCountDisplay="chainCountDisplay" :frame="frame" :delta="delta" />
     </div>
     <br><p>{{ gameState }}</p>
-    <p>Current frame: {{ frame }}</p>
+    <p>Current frame: {{ frame }}, stopGame: {{ stopGame }}</p>
     <p>isDropping: {{ isDropping }}</p>
-    <p>isPopping: {{ isPopping }}</p>
+    <p>isPopping: {{ isPopping }}</p><br><br>
+    <button @click="stopGame = !stopGame">Pause</button><br><br>
     <button @click="setDropData">Set drop data</button>
     <button @click="gameState = 'dropping'">DropPuyos?</button> <br> <br>
     <button @click="setPopData">Set Pop data</button>
@@ -189,7 +190,7 @@ export default {
       frame: 0,
       delta: 0,
       stopGame: false,
-      chainAutoPlay: true
+      chainAutoPlay: false
 
       // PIXI App States
     }
@@ -241,6 +242,7 @@ export default {
         this.initGarbageDisplay()
         this.initFieldControls()
         this.initChainCounter()
+        this.boardInteractivity()
         // this.initShadowDisplay()
         // this.initCursorDisplay()
         // this.initArrowDisplay()
@@ -374,8 +376,26 @@ export default {
         for (let x = 0; x < this.Field.columns; x++) {
           this.puyoDisplay[y][x].x = this.coordArray[y][x].x
           this.puyoDisplay[y][x].y = this.coordArray[y][x].y
+          this.puyoDisplay[y][x].spritename = `${this.colorNameData[y][x]}_${this.connectionData[y][x]}.png`
           this.puyoDisplay[y][x].texture = this.puyoSprites[`${this.colorNameData[y][x]}_${this.connectionData[y][x]}.png`]
           this.puyoDisplay[y][x].anchor.set(0.5, 0.5)
+        }
+      }
+    },
+    boardInteractivity: function () {
+      let me = this
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        for (let x = 0; x < this.Field.columns; x++) {
+          this.puyoDisplay[y][x].interactive = true
+          this.puyoDisplay[y][x].editPuyo = function () {
+            me.fieldData[y].splice(x, 1, 'R')
+            me.updatePuyoSprites()
+          }
+          this.puyoDisplay[y][x].helpme = function () {
+            console.log('Moused over')
+          }
+          this.puyoDisplay[y][x].on('pointerdown', this.puyoDisplay[y][x].editPuyo)
+          this.puyoDisplay[y][x].on('pointerover', this.puyoDisplay[y][x].helpme)
         }
       }
     },
@@ -387,6 +407,8 @@ export default {
           if (y < this.Field.hiddenRows) {
             array[y][x] = 'n'
           } else if (this.dropDistances[y][x] > 0) {
+            array[y][x] = 'n'
+          } else if (this.fieldData[y][x] === Puyo.None) {
             array[y][x] = 'n'
           } else {
             let check = {}
@@ -545,7 +567,9 @@ export default {
       this.fieldDisplay.editBubble = new Sprite(resources['/img/edit_bubble.png'].texture)
       this.fieldDisplay.editBubble.x = 17
       this.fieldDisplay.editBubble.y = 580
-      // this.app.stage.addChild(this.fieldDisplay.editBubble)
+      this.fieldDisplay.editBubble.interactive = true
+
+      this.app.stage.addChild(this.fieldDisplay.editBubble)
     },
     initChainCounter: function () {
       let startX = 412
@@ -630,6 +654,9 @@ export default {
     },
     stateDropPuyos: function (delta) {
       let t = this.frame
+      if (this.stopGame === true) {
+        delta = 0
+      }
       for (let i = 0; i < Math.round(delta); i++) { // Repeat the logic based on skipped frames
         for (let y = 0; y < this.Field.totalRows; y++) {
           for (let x = 0; x < this.Field.columns; x++) {
@@ -669,10 +696,15 @@ export default {
       }
 
       // Advance frame
-      this.frame += 1
+      if (this.stopGame === false) {
+        this.frame += 1
+      }
     },
     statePopPuyos: function (delta) {
       let t = this.frame
+      if (this.stopGame === true) {
+        delta = 0
+      }
       for (let i = 0; i < Math.round(delta); i++) { // Repeat the logic if frames were skipped
         for (let y = 0; y < this.Field.totalRows; y++) {
           for (let x = 0; x < this.Field.columns; x++) {
@@ -686,7 +718,10 @@ export default {
               this.cellTimer[y][x] += 1
               if (this.cellTimer[y][x] >= 24) {
                 console.log('need to finish popping')
+                this.puyoStates[y].splice(x, 1, 'checkDrops')
                 this.poppingCells[y].splice(x, 1, false)
+                this.puyoDisplay[y][x].alpha = 1
+                this.cellTimer[y].splice(x, 1, 0)
               }
             } else {
               this.puyoStates[y].splice(x, 1, 'checkDrops')
@@ -699,7 +734,9 @@ export default {
       }
 
       // Advance frame
-      this.frame += 1
+      if (this.stopGame === false) {
+        this.frame += 1
+      }
     },
     setDropData: function () {
       let dropResult = Chainsim.Simulate.dropPuyos(this.Field)
@@ -723,33 +760,8 @@ export default {
     },
     setPopData: function () {
       let clearResult = Chainsim.Simulate.clearPuyos(this.Field)
-
-      // Create an array that tracks which cells are animating.
-      let popAnimationArray = []
-      for (let y = 0; y < this.Field.totalRows; y++) {
-        popAnimationArray[y] = []
-        for (let x = 0; x < this.Field.columns; x++) {
-          if (this.Field.map[y][x].toPop === true) {
-            popAnimationArray[y][x] = true
-          } else {
-            popAnimationArray[y][x] = false
-          }
-        }
-      }
-      this.poppingCells = popAnimationArray
+      this.poppingCells = clearResult.animationMatrix
       this.clearPuyosResult = Chainsim.mapToStringArray(clearResult.newField.map)
-
-      // // If there's no pops to do, set gameState to 'idle'. Otherwise, set 'popping'
-      // if (clearResult.popData.poppingGroups.length === 0) {
-      //   this.gameState = 'chainStopped'
-      //   this.fieldHistory.push(JSON.parse(JSON.stringify(this.fieldData)))
-      //   console.log('Set gameState to "idle"')
-      // } else {
-      //   this.calculateScore(clearResult.popData)
-      //   this.gameState = 'popping'
-      //   this.fieldHistory.push(JSON.parse(JSON.stringify(this.fieldData)))
-      //   console.log('Set gameState to "popping"')
-      // }
     },
     setMouseDown: function (bool) {
       this.isMouseDown = bool // true, false
@@ -818,35 +830,6 @@ export default {
         this.needToReset = false
       })
     },
-    // dropPuyos: function () {
-    //   let dropResult = Chainsim.Simulate.dropPuyos(this.Field)
-    //   let anyToDrop = false
-
-    //   // Create an array that tracks which cells are in their drop animations.
-    //   let dropAnimationArray = []
-    //   for (let y = 0; y < this.Field.totalRows; y++) {
-    //     dropAnimationArray[y] = []
-    //     for (let x = 0; x < this.Field.columns; x++) {
-    //       if (dropResult.dropDistances[y][x] > 0) {
-    //         dropAnimationArray[y][x] = true
-    //         anyToDrop = true
-    //       } else {
-    //         dropAnimationArray[y][x] = false
-    //       }
-    //     }
-    //   }
-
-    //   this.droppingCells = dropAnimationArray
-    //   this.dropDistances = dropResult.dropDistances
-    //   this.dropPuyosResult = Chainsim.mapToStringArray(dropResult.dropResult)
-
-    //   if (anyToDrop === false) {
-    //     this.clearPuyos()
-    //   } else {
-    //     this.gameState = 'dropping' // When child component hears 'dropping', it'll trigger drop animations.
-    //     console.log('Set gameState to "dropping"')
-    //   }
-    // },
     clearPuyos: function () {
       let clearResult = Chainsim.Simulate.clearPuyos(this.Field)
 
@@ -915,22 +898,20 @@ export default {
     },
     playStep: function () {
       if (this.gameState === 'idle') {
-        this.fieldHistory.push(JSON.parse(JSON.stringify(this.fieldData)))
         this.chainAutoPlay = false
-        this.dropPuyos()
+        this.gameState = 'dropping'
       } else if (this.gameState === 'chainStopped') {
         this.chainAutoPlay = false
-        this.dropPuyos()
+        this.gameState = 'dropping'
       }
     },
     playChain: function () {
       if (this.gameState === 'idle') {
-        this.fieldHistory.push(JSON.parse(JSON.stringify(this.fieldData)))
         this.chainAutoPlay = true
-        this.dropPuyos()
+        this.gameState = 'dropping'
       } else if (this.gameState === 'chainStopped') {
         this.chainAutoPlay = true
-        this.dropPuyos()
+        this.gameState = 'dropping'
       }
     }
   },
@@ -989,6 +970,9 @@ export default {
         this.setDropData()
         this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
         this.updatePuyoSprites()
+        if (this.isDropping === false) {
+          this.gameState = 'popping'
+        }
       } else if (newVal === 'popping') {
         this.setPopData()
         this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
@@ -1017,6 +1001,7 @@ export default {
         } else {
           this.fieldData = this.dropPuyosResult
           console.log('Dropped the new puyo field')
+          this.updatePuyoSprites()
           if (this.chainAutoPlay === true) {
             this.gameState = 'popping'
           } else {
