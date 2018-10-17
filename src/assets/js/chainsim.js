@@ -35,6 +35,8 @@ const Puyo = function (color, x, y) {
   this.yDiff = this.newY - this.y
   this.toPop = false
   this.toDrop = false
+  this.vy = 0
+  this.accel = 0.1875 / 16 * 60
 }
 
 Puyo.prototype = {

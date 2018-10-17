@@ -26,7 +26,8 @@
     </div>
     <br><p>{{ gameState }}</p>
     <p>{{ frame }}</p>
-    <button @click="stopGame = !stopGame">Stop</button>
+    <button @click="setDropData">Set drop data</button>
+    <button @click="gameState = 'dropping'">DropPuyos?</button>
   </div>
 </template>
 
@@ -191,51 +192,6 @@ export default {
     this.initGame()
   },
   methods: {
-    setDropTimings: function () {
-      let array = []
-      let a = (0.1875 / 16 * 60) * (1 / 2) * (1 / 3)
-      let v = 3.75
-      let d
-      let t
-      let term1
-      let term2
-
-      for (let y = 0; y < this.Field.totalRows; y++) {
-        array[y] = []
-        for (let x = 0; x < this.Field.columns; x++) {
-          d = this.dropDistances[y][x] * this.Field.cellHeight
-          term1 = (0.38157 / a) * Math.cbrt(9 * (a ** 2) * d + 1.7321 * Math.sqrt(27 * (a ** 4) * (d ** 2) + 4 * (a ** 3) * (v ** 3)))
-          term2 = (0.87358 * v) / (Math.cbrt(9 * (a ** 2) * d + 1.7321 * Math.sqrt(27 * (a ** 4) * (d ** 2) + 4 * (a ** 3) * (v ** 3))))
-          t = Math.floor(term1 - term2)
-          array[y][x] = t
-        }
-      }
-      this.dropTimings = array
-      // let term1 = (0.38157 / a) * Math.cbrt(9 * (a ** 2) * d + 1.7321 * Math.sqrt(27 * (a ** 4) * (d ** 2) + 4 * (a ** 3) * (v ** 3)))
-      // let term2 = (0.87358 * v) / (Math.cbrt(9 * (a ** 2) * d + 1.7321 * Math.sqrt(27 * (a ** 4) * (d ** 2) + 4 * (a ** 3) * (v ** 3))))
-      // let t = Math.round(term1 - term2) // time it takes to travel through this distance
-    },
-    setDropData: function () {
-      let dropResult = Chainsim.Simulate.dropPuyos(this.Field)
-
-      // Create an array that tracks which cells are in their drop animations.
-      let dropAnimationArray = []
-      for (let y = 0; y < this.Field.totalRows; y++) {
-        dropAnimationArray[y] = []
-        for (let x = 0; x < this.Field.columns; x++) {
-          if (dropResult.dropDistances[y][x] > 0) {
-            dropAnimationArray[y][x] = true
-          } else {
-            dropAnimationArray[y][x] = false
-          }
-        }
-      }
-
-      this.droppingCells = dropAnimationArray
-      this.dropDistances = dropResult.dropDistances
-      this.dropPuyosResult = Chainsim.mapToStringArray(dropResult.dropResult)
-      this.setDropTimings()
-    },
     initData: function () {
       this.fieldData = stringTo2dArray(this.importedData.fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.shadowData = stringTo2dArray(this.importedData.shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
@@ -248,8 +204,6 @@ export default {
       this.dropDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.clearPuyosResult = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dropPuyosResult = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.determineConnections()
-      this.determineColorNames()
     },
     initGame: function () {
       this.app = new PIXI.Application(this.modeSettings[this.displayMode])
@@ -401,6 +355,8 @@ export default {
       this.updatePuyoSprites()
     },
     updatePuyoSprites: function () {
+      this.determineConnections()
+      this.determineColorNames()
       for (let y = 0; y < this.Field.totalRows; y++) {
         for (let x = 0; x < this.Field.columns; x++) {
           this.puyoDisplay[y][x].texture = this.puyoSprites[`${this.colorNameData[y][x]}_${this.connectionData[y][x]}.png`]
@@ -645,10 +601,48 @@ export default {
       }
     },
     gameLoop: function (delta) {
-      this.gameState(delta)
+      if (this.gameState === 'idle') {
+        this.stateEditField()
+      } else if (this.gameState === 'dropping') {
+        this.stateDropPuyos()
+      }
     },
     stateEditField: function (delta) {
+      // Nothing
+    },
+    stateDropPuyos: function (delta) {
+      let t = this.frame
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        for (let x = 0; x < this.Field.columns; x++) {
+          if (this.puyoDisplay[y][x].y < this.coordArray[y][x].y + this.dropDistances[y][x] * this.Field.cellHeight) {
+            this.puyoDisplay[y][x].y += this.Field.map[y][x].vy
+            this.Field.map[y][x].vy += 0.1875 / 16 * 60 * t
+          } else {
+            console.log('stop!')
+          }
+        }
+      }
+      this.frame += 1
+    },
+    setDropData: function () {
+      let dropResult = Chainsim.Simulate.dropPuyos(this.Field)
 
+      // Create an array that tracks which cells are in their drop animations.
+      let dropAnimationArray = []
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        dropAnimationArray[y] = []
+        for (let x = 0; x < this.Field.columns; x++) {
+          if (dropResult.dropDistances[y][x] > 0) {
+            dropAnimationArray[y][x] = true
+          } else {
+            dropAnimationArray[y][x] = false
+          }
+        }
+      }
+
+      this.droppingCells = dropAnimationArray
+      this.dropDistances = dropResult.dropDistances
+      this.dropPuyosResult = Chainsim.mapToStringArray(dropResult.dropResult)
     },
     setMouseDown: function (bool) {
       this.isMouseDown = bool // true, false
@@ -879,11 +873,6 @@ export default {
         }
       }
       return false // If none of the cells are dropping, return false. Animations complete.
-    }
-  },
-  watch: {
-    puyoSpriteNames: function () {
-      console.log('noticed!')
     }
   }
 }
