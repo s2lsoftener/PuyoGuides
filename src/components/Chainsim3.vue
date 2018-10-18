@@ -748,7 +748,7 @@ export default {
         for (let x = 0; x < this.Field.columns; x++) {
           this.puyoDisplay[y][x].interactive = true
           this.puyoDisplay[y][x].editPuyo = function () {
-            me.fieldData[y].splice(x, 1, 'R')
+            me.fieldData[y].splice(x, 1, me.editorCurrentTool.puyo)
             me.updatePuyoSprites()
           }
           this.puyoDisplay[y][x].on('pointerdown', this.puyoDisplay[y][x].editPuyo)
@@ -1133,8 +1133,8 @@ export default {
     animateChainCounter: function () {
       let t = this.timers.chainLength
       this.timers.chainLength += 1
-      if (this.timers.chainLength <= 16) {
-        this.chainCountDisplay.y = this.chainCountDisplay.origY - 16 * ((-1 / 64) * (t - 8) ** 2 + 1) // parabola
+      if (this.timers.chainLength <= 20) {
+        this.chainCountDisplay.y = this.chainCountDisplay.origY - 16 * ((-1 / 100) * (t - 10) ** 2 + 1) // parabola
       } else {
         this.chainCountDisplay.y = this.chainCountDisplay.origY
         this.app.ticker.remove(this.animateChainCounter)
