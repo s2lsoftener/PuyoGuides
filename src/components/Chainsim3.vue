@@ -52,9 +52,9 @@ import * as BezierEasing from 'bezier-easing'
 const uniformMatrix = Chainsim.uniformMatrix // Generates a 2D matrix all filled with one value
 const stringTo2dArray = Chainsim.stringTo2dArray // Converts 1D string to 2D matrix
 
-const loader = PIXI.loader
-const resources = PIXI.loader.resources
-const Sprite = PIXI.Sprite
+const loader = PIXI.loader // eslint-disable-line no-unused-vars
+const resources = PIXI.loader.resources // eslint-disable-line no-unused-vars
+const Sprite = PIXI.Sprite // eslint-disable-line no-unused-vars
 
 const Puyo = {
   Red: Chainsim.Constants.Puyo.Red, // R
@@ -149,7 +149,10 @@ export default {
         }
       },
       app: undefined, // PIXI.js Application
+      stage: undefined,
       renderer: undefined,
+      ticker: undefined,
+      interaction: undefined,
       scaleFactor: 0.45,
 
       // Texture data
@@ -241,68 +244,85 @@ export default {
       // this.$refs.game.appendChild(this.app.view)
       // this.$refs.game.childNodes[0].style.width = `${this.modeSettings.simple.width * this.scaleFactor}px`
       // this.$refs.game.childNodes[0].style.height = `${this.modeSettings.simple.height * this.scaleFactor}px`
-      this.app = {}
-      this.app.renderer = new PIXI.WebGLRenderer(this.modeSettings.simple.width, this.modeSettings.simple.height, {
-        antialias: true,
-        transparent: false,
-        backgroundColor: 0x061639,
-        resolution: 1
+      // this.app = {}
+      // this.app.renderer = new PIXI.WebGLRenderer(this.modeSettings.simple.width, this.modeSettings.simple.height, {
+      //   antialias: true,
+      //   transparent: false,
+      //   backgroundColor: 0x061639,
+      //   resolution: 1
+      // })
+      // this.$refs.game.appendChild(this.app.renderer.view)
+      // this.app.stage = new PIXI.Container()
+      // this.app.renderer.render(this.app.stage)
+
+      this.renderer = new PIXI.WebGLRenderer(600, 800)
+      this.$refs.game.appendChild(this.renderer.view)
+      this.stage = new PIXI.Container()
+
+      this.ticker = new PIXI.ticker.Ticker()
+      this.ticker.add(() => {
+        this.renderer.render(this.stage)
       })
-      this.$refs.game.appendChild(this.app.renderer.view)
-      this.app.stage = new PIXI.Container()
-      this.app.renderer.render(this.app.stage)
+      this.ticker.start()
 
-      let setup = () => {
-        // Mark textures as loaded
-        this.texturesLoaded = this.texturesToLoad.every((texture) => {
-          return resources[texture] !== undefined
-        })
+      let arle = PIXI.Sprite.fromImage('/img/arle_bg.png')
+      this.stage.addChild(arle)
 
-        // Assign loaded spritesheets to vue data
-        this.fieldSprites = resources['/img/field.json'].textures
-        this.puyoSprites = resources['/img/puyo.json'].textures
-        this.chainCountSprites = resources['/img/chain_font.json'].textures
-
-        // Place sprites on the field
-        this.initFieldDisplay()
-        this.initScoreDisplay()
-        this.initGameOverX()
-        this.initPuyoDisplay()
-        // this.initShadowDisplay()
-        // this.initCursorDisplay()
-        // this.initArrowDisplay()
-        this.initGarbageDisplay()
-        this.initFieldControls()
-        this.initChainCounter()
-        this.initToolDisplay()
-        this.boardInteractivity()
-
-        // Marked game as loaded
-        this.gameLoaded = true
-
-        // Run the game loop
-        this.app.ticker = new PIXI.ticker.Ticker()
-        this.app.ticker.add(delta => this.gameLoop(delta))
-      }
-
-      let loadProgressHandler = (loader, resource) => {
-        console.log(`Loading: ${resource.url}`)
-        console.log(`Progress: ${Math.floor(loader.progress)}%`)
-      }
-
-      // Check if textures have already been loaded
-      this.texturesLoaded = this.texturesToLoad.every((texture) => {
-        return resources[texture] !== undefined
+      this.ticker.add(function (delta) {
+        arle.rotation += 0.1 * delta
       })
-      if (this.texturesLoaded === false) {
-        loader
-          .add(this.texturesToLoad)
-          .on('progress', loadProgressHandler)
-          .load(setup)
-      } else {
-        loader
-          .load(setup)
-      }
+
+      // let setup = () => {
+      //   // Mark textures as loaded
+      //   this.texturesLoaded = this.texturesToLoad.every((texture) => {
+      //     return resources[texture] !== undefined
+      //   })
+
+      //   // Assign loaded spritesheets to vue data
+      //   this.fieldSprites = resources['/img/field.json'].textures
+      //   this.puyoSprites = resources['/img/puyo.json'].textures
+      //   this.chainCountSprites = resources['/img/chain_font.json'].textures
+
+      //   // Place sprites on the field
+      //   this.initFieldDisplay()
+      //   this.initScoreDisplay()
+      //   this.initGameOverX()
+      //   this.initPuyoDisplay()
+      //   // this.initShadowDisplay()
+      //   // this.initCursorDisplay()
+      //   // this.initArrowDisplay()
+      //   this.initGarbageDisplay()
+      //   this.initFieldControls()
+      //   this.initChainCounter()
+      //   this.initToolDisplay()
+      //   this.boardInteractivity()
+
+      //   // Marked game as loaded
+      //   this.gameLoaded = true
+
+      //   // Run the game loop
+      //   this.app.ticker = new PIXI.ticker.Ticker()
+      //   this.app.ticker.add(delta => this.gameLoop(delta))
+      // }
+
+      // let loadProgressHandler = (loader, resource) => {
+      //   console.log(`Loading: ${resource.url}`)
+      //   console.log(`Progress: ${Math.floor(loader.progress)}%`)
+      // }
+
+      // // Check if textures have already been loaded
+      // this.texturesLoaded = this.texturesToLoad.every((texture) => {
+      //   return resources[texture] !== undefined
+      // })
+      // if (this.texturesLoaded === false) {
+      //   loader
+      //     .add(this.texturesToLoad)
+      //     .on('progress', loadProgressHandler)
+      //     .load(setup)
+      // } else {
+      //   loader
+      //     .load(setup)
+      // }
     },
     initFieldDisplay: function () {
       // Character Background
