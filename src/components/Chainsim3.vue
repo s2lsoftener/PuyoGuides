@@ -160,7 +160,11 @@ export default {
         '/img/cursor.png',
         '/img/chain_font.json',
         '/img/edit_bubble.png',
-        '/img/touch_disabler.png'
+        '/img/touch_disabler.png',
+        '/img/picker_arrow_left.png',
+        '/img/picker_arrow_right.png',
+        '/img/editor_x.png',
+        '/img/current_tool.png'
       ],
       puyoSprites: {},
       fieldSprites: {},
@@ -178,7 +182,9 @@ export default {
       fieldDisplay: {},
       cellTimer: [[]],
       puyoStates: [[]],
-      editorTools: {},
+      editorTools: [],
+      editorSelectors: [],
+      editorWindow: {},
 
       /* Loader details */
       loadingText: 'Loading...',
@@ -197,7 +203,10 @@ export default {
       timers: {
         editBubble: 0,
         toolIntroFade: 0
-      }
+      },
+
+      // Editor
+      currentTool: [3, 5]
     }
   },
   mounted () {
@@ -628,6 +637,7 @@ export default {
       }
     },
     initToolDisplay: function () {
+      // "Speech bubble"
       this.fieldDisplay.editBubble = new Sprite(resources['/img/edit_bubble.png'].texture)
       this.fieldDisplay.editBubble.x = 520
       this.fieldDisplay.editBubble.y = 584
@@ -636,18 +646,22 @@ export default {
       this.fieldDisplay.editBubble.visible = false
       this.app.stage.addChild(this.fieldDisplay.editBubble)
 
-      let nameToolsPage1 = [[this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png'], this.puyoSprites['purple_n.png']],
-        [this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png'], this.puyoSprites['purple_n.png']]]
+      let nameToolsPage1 = [[this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png'], resources['/img/editor_x.png'].texture],
+        [this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png']]]
+      let selectorToolsPage1 = []
       let spritesToolsPage1 = []
       let startX = 56
       let startY = 668
 
-      this.editorTools.page1 = new PIXI.Container()
-      this.editorTools.page2 = new PIXI.Container()
+      this.editorTools[0] = new PIXI.Container()
+      this.editorSelectors[0] = new PIXI.Container()
+      this.editorTools[1] = new PIXI.Container()
+      this.editorSelectors[1] = new PIXI.Container()
 
       for (let y = 0; y < nameToolsPage1.length; y++) {
         spritesToolsPage1[y] = []
-        for (let x = 0; x < nameToolsPage1[0].length; x++) {
+        selectorToolsPage1[y] = []
+        for (let x = 0; x < nameToolsPage1[y].length; x++) {
           let horizontalPadding = 0
           let verticalPadding = 0
           if (x > 0) {
@@ -657,14 +671,43 @@ export default {
             verticalPadding = 8
           }
           spritesToolsPage1[y][x] = new Sprite(nameToolsPage1[y][x])
-          spritesToolsPage1[y][x].x = startX + (spritesToolsPage1[y][x].width + horizontalPadding) * x
-          spritesToolsPage1[y][x].y = startY + (spritesToolsPage1[y][x].height + verticalPadding) * y
-          this.editorTools.page1.addChild(spritesToolsPage1[y][x])
+          selectorToolsPage1[y][x] = new Sprite(resources['/img/cursor.png'].texture)
+
+          if (y === 0) {
+            spritesToolsPage1[y][x].x = startX + (spritesToolsPage1[y][x].width + horizontalPadding) * x
+            spritesToolsPage1[y][x].y = startY + (spritesToolsPage1[y][x].height + verticalPadding) * y
+            selectorToolsPage1[y][x].x = startX + (selectorToolsPage1[y][x].width + horizontalPadding) * x
+            selectorToolsPage1[y][x].y = startY + (selectorToolsPage1[y][x].height + verticalPadding) * y
+            
+          } else {
+            spritesToolsPage1[y][x].x = startX + (spritesToolsPage1[y][x].width + horizontalPadding) * x + 32
+            spritesToolsPage1[y][x].y = startY + (spritesToolsPage1[y][x].height + verticalPadding) * y
+            selectorToolsPage1[y][x].x = startX + (selectorToolsPage1[y][x].width + horizontalPadding) * x + 32
+            selectorToolsPage1[y][x].y = startY + (selectorToolsPage1[y][x].height + verticalPadding) * y
+          }
+          this.editorTools[0].addChild(spritesToolsPage1[y][x])
+          this.editorSelectors[0].addChild(selectorToolsPage1[y][x])
         }
       }
 
-      this.app.stage.addChild(this.editorTools.page1)
-      this.editorTools.page1.visible = false
+      this.editorWindow.left = new Sprite(resources['/img/picker_arrow_left.png'].texture)
+      this.editorWindow.left.x = 0
+      this.editorWindow.left.y = 600
+      this.editorWindow.left.interactive = true
+      this.editorWindow.left.visible = false
+      this.app.stage.addChild(this.editorWindow.left)
+
+      this.editorWindow.right = new Sprite(resources['/img/picker_arrow_right.png'].texture)
+      this.editorWindow.right.x = 552
+      this.editorWindow.right.y = 600
+      this.editorWindow.right.interactive = true
+      this.editorWindow.right.visible = false
+      this.app.stage.addChild(this.editorWindow.right)
+
+      this.app.stage.addChild(this.editorTools[0])
+      this.app.stage.addChild(this.editorSelectors[0])
+      this.editorTools[0].visible = false
+      this.editorSelectors[0].visible = false
     },
     boardInteractivity: function () {
       let me = this
@@ -690,6 +733,8 @@ export default {
       } else {
         this.app.ticker.remove(this.openToolbox)
         this.app.ticker.add(this.displayTools)
+        this.editorWindow.left.visible = true
+        this.editorWindow.right.visible = true
         this.timers.toolIntroFade = 0
         console.log(t)
       }
@@ -701,23 +746,29 @@ export default {
       let delay = 2
       let delayArray = []
       let alphaArray = []
-      this.editorTools.page1.visible = true
+      this.editorTools[0].visible = true
 
-      if (t <= delay * this.editorTools.page1.children.length + fadeSpeed) {
-        for (let i in this.editorTools.page1.children) {
+      if (t <= delay * this.editorTools[0].children.length + fadeSpeed) {
+        for (let i = 0; i < this.editorTools[0].children.length; i++) {
           delayArray.push(0 - i * delay)
         }
-
-        for (let i in this.editorTools.page1.children) {
+        for (let i = 0; i < this.editorTools[0].children.length; i++) {
           alphaArray.push((delayArray[i] + t) / fadeSpeed)
-          if (i < 6) {
-            this.editorTools.page1.children[i].alpha = alphaArray[i]
+          console.log(this.editorSelectors[0].children[0].alpha)
+          if (i < 7) {
+            this.editorTools[0].children[i].alpha = alphaArray[i]
           } else {
-            this.editorTools.page1.children[i].alpha = alphaArray[i] * 0.17
+            this.editorTools[0].children[i].alpha = alphaArray[i] * 0.17
           }
         }
       } else {
         this.app.ticker.remove(this.displayTools)
+        this.editorSelectors[0].visible = true
+        for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
+          if (i !== this.currentTool[0]) {
+            this.editorSelectors[0].children[i].alpha = 0
+          }
+        }
         console.log('removed tool ticker')
       }
     },
@@ -725,7 +776,10 @@ export default {
       let duration = 15 // frames
       this.timers.editBubble -= delta
       let t = this.timers.editBubble
-      this.editorTools.page1.visible = false
+      this.editorTools[0].visible = false
+      this.editorWindow.left.visible = false
+      this.editorWindow.right.visible = false
+      this.editorSelectors[0].visible = false
       this.app.ticker.remove(this.displayTools)
 
       if (this.timers.editBubble >= 0) {
