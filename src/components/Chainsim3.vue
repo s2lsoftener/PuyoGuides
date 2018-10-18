@@ -206,7 +206,12 @@ export default {
       },
 
       // Editor
-      currentTool: [3, 5]
+      editorCurrentTool: {
+        page: 1,
+        item: 0,
+        puyo: 'R',
+        layer: 'main'
+      }
     }
   },
   mounted () {
@@ -646,10 +651,12 @@ export default {
       this.fieldDisplay.editBubble.visible = false
       this.app.stage.addChild(this.fieldDisplay.editBubble)
 
+      let me = this
       let nameToolsPage1 = [[this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png'], resources['/img/editor_x.png'].texture],
         [this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png']]]
       let selectorToolsPage1 = []
       let spritesToolsPage1 = []
+      let colorsPage1 = ['R', 'G', 'B', 'Y', 'P', '0', 'R', 'G', 'B', 'Y', 'P']
       let startX = 56
       let startY = 668
 
@@ -662,6 +669,7 @@ export default {
         spritesToolsPage1[y] = []
         selectorToolsPage1[y] = []
         for (let x = 0; x < nameToolsPage1[y].length; x++) {
+          // Placement variables
           let horizontalPadding = 0
           let verticalPadding = 0
           if (x > 0) {
@@ -670,9 +678,31 @@ export default {
           if (y > 0) {
             verticalPadding = 8
           }
+
+          // Init sprite
           spritesToolsPage1[y][x] = new Sprite(nameToolsPage1[y][x])
+          spritesToolsPage1[y][x].interactive = true
+          spritesToolsPage1[y][x].buttonMode = true
+          spritesToolsPage1[y][x].puyoIndex = y * 7 + x
+          spritesToolsPage1[y][x].puyoColor = colorsPage1[y * 7 + x]
+          if (y * 7 + x < 7) {
+            spritesToolsPage1[y][x].targetLayer = 'main'
+          } else {
+            spritesToolsPage1[y][x].targetLayer = 'shadow'
+          }
           selectorToolsPage1[y][x] = new Sprite(resources['/img/cursor.png'].texture)
 
+          // Define interactions
+          spritesToolsPage1[y][x].on('click', function () {
+            me.editorCurrentTool.page = 1
+            me.editorCurrentTool.item = this.puyoIndex
+            me.editorCurrentTool.puyo = this.puyoColor
+            me.editorCurrentTool.layer = this.targetLayer
+            me.updateToolboxSelection()
+            console.log(me.editorCurrentTool)
+          })
+
+          // Place sprite
           if (y === 0) {
             spritesToolsPage1[y][x].x = startX + (spritesToolsPage1[y][x].width + horizontalPadding) * x
             spritesToolsPage1[y][x].y = startY + (spritesToolsPage1[y][x].height + verticalPadding) * y
@@ -684,6 +714,8 @@ export default {
             selectorToolsPage1[y][x].x = startX + (selectorToolsPage1[y][x].width + horizontalPadding) * x + 32
             selectorToolsPage1[y][x].y = startY + (selectorToolsPage1[y][x].height + verticalPadding) * y
           }
+
+          // Add sprite to PIXI containers
           this.editorTools[0].addChild(spritesToolsPage1[y][x])
           this.editorSelectors[0].addChild(selectorToolsPage1[y][x])
         }
@@ -765,8 +797,10 @@ export default {
         this.app.ticker.remove(this.displayTools)
         this.editorSelectors[0].visible = true
         for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
-          if (i !== this.currentTool[0]) {
-            this.editorSelectors[0].children[i].alpha = 0
+          if (i !== this.editorCurrentTool.item) {
+            this.editorSelectors[0].children[i].visible = false
+          } else {
+            this.editorSelectors[0].children[i].visible = true
           }
         }
         console.log('removed tool ticker')
@@ -781,7 +815,7 @@ export default {
       let alphaArray = []
       this.editorSelectors[0].visible = true
       for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
-        if (i !== this.currentTool[0]) {
+        if (i !== this.editorCurrentTool.item) {
           this.editorSelectors[0].children[i].visible = false
         } else {
           this.editorSelectors[0].children[i].visible = true
@@ -801,6 +835,15 @@ export default {
         this.app.ticker.remove(this.displaySelection)
         this.editorSelectors[0].visible = true
         console.log('removed tool ticker')
+      }
+    },
+    updateToolboxSelection: function () {
+      for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
+        if (i !== this.editorCurrentTool.item) {
+          this.editorSelectors[0].children[i].visible = false
+        } else {
+          this.editorSelectors[0].children[i].visible = true
+        }
       }
     },
     closeToolbox: function (delta) {
