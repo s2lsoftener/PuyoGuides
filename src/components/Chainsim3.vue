@@ -149,6 +149,7 @@ export default {
         }
       },
       app: undefined, // PIXI.js Application
+      renderer: undefined,
       scaleFactor: 0.45,
 
       // Texture data
@@ -236,10 +237,20 @@ export default {
       this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
     },
     initGame: function () {
-      this.app = new PIXI.Application(this.modeSettings[this.displayMode])
-      this.$refs.game.appendChild(this.app.view)
-      this.$refs.game.childNodes[0].style.width = `${this.modeSettings.simple.width * this.scaleFactor}px`
-      this.$refs.game.childNodes[0].style.height = `${this.modeSettings.simple.height * this.scaleFactor}px`
+      // this.app = new PIXI.Application(this.modeSettings[this.displayMode])
+      // this.$refs.game.appendChild(this.app.view)
+      // this.$refs.game.childNodes[0].style.width = `${this.modeSettings.simple.width * this.scaleFactor}px`
+      // this.$refs.game.childNodes[0].style.height = `${this.modeSettings.simple.height * this.scaleFactor}px`
+      this.app = {}
+      this.app.renderer = new PIXI.WebGLRenderer(this.modeSettings.simple.width, this.modeSettings.simple.height, {
+        antialias: true,
+        transparent: false,
+        backgroundColor: 0x061639,
+        resolution: 1
+      })
+      this.$refs.game.appendChild(this.app.renderer.view)
+      this.app.stage = new PIXI.Container()
+      this.app.renderer.render(this.app.stage)
 
       let setup = () => {
         // Mark textures as loaded
@@ -270,6 +281,7 @@ export default {
         this.gameLoaded = true
 
         // Run the game loop
+        this.app.ticker = new PIXI.ticker.Ticker()
         this.app.ticker.add(delta => this.gameLoop(delta))
       }
 
@@ -881,6 +893,7 @@ export default {
       } else if (this.gameState === 'popping') {
         this.statePopPuyos(delta)
       }
+      this.app.renderer.render(this.app.stage)
     },
     stateEditField: function (delta) {
       // Nothing
