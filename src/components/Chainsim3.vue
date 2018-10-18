@@ -678,7 +678,6 @@ export default {
             spritesToolsPage1[y][x].y = startY + (spritesToolsPage1[y][x].height + verticalPadding) * y
             selectorToolsPage1[y][x].x = startX + (selectorToolsPage1[y][x].width + horizontalPadding) * x
             selectorToolsPage1[y][x].y = startY + (selectorToolsPage1[y][x].height + verticalPadding) * y
-            
           } else {
             spritesToolsPage1[y][x].x = startX + (spritesToolsPage1[y][x].width + horizontalPadding) * x + 32
             spritesToolsPage1[y][x].y = startY + (spritesToolsPage1[y][x].height + verticalPadding) * y
@@ -733,6 +732,7 @@ export default {
       } else {
         this.app.ticker.remove(this.openToolbox)
         this.app.ticker.add(this.displayTools)
+        this.app.ticker.add(this.displaySelection)
         this.editorWindow.left.visible = true
         this.editorWindow.right.visible = true
         this.timers.toolIntroFade = 0
@@ -772,6 +772,37 @@ export default {
         console.log('removed tool ticker')
       }
     },
+    displaySelection: function (delta) {
+      let fadeSpeed = 12
+      this.timers.toolIntroFade += delta
+      let t = this.timers.toolIntroFade
+      let delay = 2
+      let delayArray = []
+      let alphaArray = []
+      this.editorSelectors[0].visible = true
+      for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
+        if (i !== this.currentTool[0]) {
+          this.editorSelectors[0].children[i].visible = false
+        } else {
+          this.editorSelectors[0].children[i].visible = true
+        }
+      }
+
+      if (t <= delay * this.editorSelectors[0].children.length + fadeSpeed) {
+        for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
+          delayArray.push(0 - i * delay)
+        }
+        for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
+          alphaArray.push((delayArray[i] + t) / fadeSpeed)
+          console.log(this.editorSelectors[0].children[0].alpha)
+          this.editorSelectors[0].children[i].alpha = alphaArray[i]
+        }
+      } else {
+        this.app.ticker.remove(this.displaySelection)
+        this.editorSelectors[0].visible = true
+        console.log('removed tool ticker')
+      }
+    },
     closeToolbox: function (delta) {
       let duration = 15 // frames
       this.timers.editBubble -= delta
@@ -780,7 +811,11 @@ export default {
       this.editorWindow.left.visible = false
       this.editorWindow.right.visible = false
       this.editorSelectors[0].visible = false
+      for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
+        this.editorSelectors[0].children[i].visible = false
+      }
       this.app.ticker.remove(this.displayTools)
+      this.app.ticker.remove(this.displaySelection)
 
       if (this.timers.editBubble >= 0) {
         this.fieldDisplay.editBubble.scale.set(this.Easers.editBubble(t / duration), this.Easers.editBubble(t / duration))
