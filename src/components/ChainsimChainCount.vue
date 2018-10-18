@@ -3,7 +3,7 @@ import * as BezierEasing from 'bezier-easing'
 
 export default {
   name: 'ChainsimChainCount',
-  props: ['chainLength', 'chainCountSprites', 'gameLoaded', 'chainCountDisplay', 'frame', 'delta'],
+  props: ['chainLength', 'chainCountSprites', 'gameLoaded', 'chainCountDisplay'],
   render: function (h) {
     return h() // Render nothing, avoid error output.
   },
@@ -61,25 +61,6 @@ export default {
         this.chainCountSprites.chainText.alpha = 1
       } else {
         this.chainCountSprites.secondDigit.texture = this.chainCountSprites[`spacer.png`]
-      }
-
-      this.$nextTick(() => {
-        console.log('turn on animation')
-        this.toggleAnimation = true
-        this.counterFrame = 0
-        console.log(this.toggleAnimation)
-      })
-    },
-    frame: function () {
-      if (this.toggleAnimation === true) {
-        this.counterFrame += this.delta
-        if (this.counterFrame / 15 <= 1) {
-          this.chainCountDisplay.y = this.origY - (10 * this.easing(this.counterFrame / 15))
-        } else if (this.counterFrame / 15 <= 2) {
-          this.chainCountDisplay.y = this.origY - (10 * this.easing(2 - this.counterFrame / 15))
-        } else {
-          this.chainCountDisplay.y = this.origY
-        }
       }
     }
   }

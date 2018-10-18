@@ -202,7 +202,8 @@ export default {
       chainAutoPlay: false,
       timers: {
         editBubble: 0,
-        toolIntroFade: 0
+        toolIntroFade: 0,
+        chainLength: 0
       },
 
       // Editor
@@ -595,6 +596,7 @@ export default {
       this.chainCountDisplay.addChild(this.chainCountSprites.firstDigit)
       this.chainCountDisplay.addChild(this.chainCountSprites.secondDigit)
       this.chainCountDisplay.addChild(this.chainCountSprites.chainText)
+      this.chainCountDisplay.origY = this.chainCountDisplay.y
       this.app.stage.addChild(this.chainCountDisplay)
     },
     initShadowDisplay: function () {
@@ -1128,6 +1130,18 @@ export default {
       this.leftoverGarbagePoints = this.garbagePoints - this.stepGarbage
       this.garbage += this.stepGarbage
     },
+    animateChainCounter: function () {
+      let t = this.timers.chainLength
+      if (this.timers.chainLength <= 16) {
+        this.chainCountDisplay.y = this.chainCountDisplay.origY - 16 * ((-1 / 64) * (t - 8) ** 2 + 1)
+      } else {
+        this.chainCountDisplay.y = this.chainCountDisplay.origY
+        this.app.ticker.remove(this.animateChainCounter)
+        console.log('counter bounce over')
+      }
+
+      this.timers.chainLength += 1
+    },
     playStep: function () {
       if (this.gameState === 'idle') {
         this.chainAutoPlay = false
@@ -1246,6 +1260,11 @@ export default {
           }
         }
       }
+    },
+    chainLength: function () {
+      this.timers.chainLength = 0
+      this.chainCountDisplay.y = this.chainCountDisplay.origY
+      this.app.ticker.add(this.animateChainCounter)
     }
   }
 }
