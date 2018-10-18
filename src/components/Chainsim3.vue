@@ -836,7 +836,7 @@ export default {
       } else {
         this.app.ticker.remove(this.displaySelection)
         this.editorSelectors[0].visible = true
-        console.log('removed tool ticker')
+        console.log('removed selection ticker')
       }
     },
     updateToolboxSelection: function () {
@@ -1130,11 +1130,11 @@ export default {
       this.leftoverGarbagePoints = this.garbagePoints - this.stepGarbage
       this.garbage += this.stepGarbage
     },
-    animateChainCounter: function () {
+    animateChainCounter: function (delta) {
       let t = this.timers.chainLength
-      this.timers.chainLength += 1
-      if (this.timers.chainLength <= 20) {
-        this.chainCountDisplay.y = this.chainCountDisplay.origY - 16 * ((-1 / 100) * (t - 10) ** 2 + 1) // parabola
+      this.timers.chainLength += delta
+      if (this.timers.chainLength <= 30) {
+        this.chainCountDisplay.y = this.chainCountDisplay.origY - 16 * ((-1 / 225) * (t - 15) ** 2 + 1) // parabola
       } else {
         this.chainCountDisplay.y = this.chainCountDisplay.origY
         this.app.ticker.remove(this.animateChainCounter)
