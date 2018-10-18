@@ -693,7 +693,7 @@ export default {
           selectorToolsPage1[y][x] = new Sprite(resources['/img/cursor.png'].texture)
 
           // Define interactions
-          spritesToolsPage1[y][x].on('click', function () {
+          spritesToolsPage1[y][x].on('pointerdown', function () {
             me.editorCurrentTool.page = 1
             me.editorCurrentTool.item = this.puyoIndex
             me.editorCurrentTool.puyo = this.puyoColor
