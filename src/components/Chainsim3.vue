@@ -1132,15 +1132,14 @@ export default {
     },
     animateChainCounter: function () {
       let t = this.timers.chainLength
+      this.timers.chainLength += 1
       if (this.timers.chainLength <= 16) {
-        this.chainCountDisplay.y = this.chainCountDisplay.origY - 16 * ((-1 / 64) * (t - 8) ** 2 + 1)
+        this.chainCountDisplay.y = this.chainCountDisplay.origY - 16 * ((-1 / 64) * (t - 8) ** 2 + 1) // parabola
       } else {
         this.chainCountDisplay.y = this.chainCountDisplay.origY
         this.app.ticker.remove(this.animateChainCounter)
         console.log('counter bounce over')
       }
-
-      this.timers.chainLength += 1
     },
     playStep: function () {
       if (this.gameState === 'idle') {
