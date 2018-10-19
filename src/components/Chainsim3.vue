@@ -203,7 +203,8 @@ export default {
         toolIntroFade: 0,
         chainLength: 0,
         garbageTray: 0,
-        cursor: 0
+        cursor: 0,
+        arrow: 0
       },
 
       // Editor
@@ -576,6 +577,9 @@ export default {
       }
       this.colorNameData = array
       return array
+    },
+    initNextDisplay: function () {
+      // NEXT
     },
     initGarbageDisplay: function () {
       if (this.displayMode === 'full') { // Display mode: full
@@ -1180,6 +1184,7 @@ export default {
         this.animatePopPuyos(delta)
       }
       this.animateCursors(delta)
+      this.animateArrows(delta)
       this.renderer.render(this.stage)
     },
     stateEditField: function (delta) {
@@ -1479,6 +1484,27 @@ export default {
         this.ticker.remove(this.animateGarbageTray)
         console.log('removed garbage tray animation')
       }
+    },
+    animateArrows: function (delta) {
+      let t = this.timers.arrow
+
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        for (let x = 0; x < this.Field.columns; x++) {
+          if (this.arrowData[y][x] === 'R') {
+            this.arrowDisplay[y][x].x = this.coordArray[y][x].x + 8 * Math.cos(t / 30 * Math.PI)
+          }
+          if (this.arrowData[y][x] === 'L') {
+            this.arrowDisplay[y][x].x = this.coordArray[y][x].x - 8 * Math.cos(t / 30 * Math.PI)
+          }
+          if (this.arrowData[y][x] === 'U') {
+            this.arrowDisplay[y][x].y = this.coordArray[y][x].y - 8 * Math.cos(t / 30 * Math.PI)
+          }
+          if (this.arrowData[y][x] === 'D') {
+            this.arrowDisplay[y][x].y = this.coordArray[y][x].y + 8 * Math.cos(t / 30 * Math.PI)
+          }
+        }
+      }
+      this.timers.arrow += delta
     },
     playStep: function () {
       if (this.gameState === 'idle') {
