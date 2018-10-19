@@ -118,7 +118,7 @@ export default {
       modeSettings: {
         simple: {
           width: 608,
-          height: 854,
+          height: 974, // 854
           antialias: true,
           transparent: false,
           backgroundColor: 0x061639,
@@ -155,7 +155,8 @@ export default {
         '/img/picker_arrow_left.png',
         '/img/picker_arrow_right.png',
         '/img/editor_x.png',
-        '/img/current_tool.png'
+        '/img/current_tool.png',
+        '/img/next_background_1p_mask.png'
       ],
       puyoSprites: {},
       fieldSprites: {},
@@ -207,7 +208,7 @@ export default {
         puyo: '0',
         layer: 'main',
         x: 520,
-        y: 700
+        y: 820
       },
       toolCursor: undefined,
       toolPage: 0,
@@ -311,52 +312,57 @@ export default {
       // Character Background
       this.fieldDisplay.charBG = new Sprite(resources['/img/arle_bg.png'].texture)
       this.fieldDisplay.charBG.x = 17
-      this.fieldDisplay.charBG.y = 63
+      this.fieldDisplay.charBG.y = 183
       this.stage.addChild(this.fieldDisplay.charBG)
 
       // Top Border
       this.fieldDisplay.borderTop = new Sprite(this.fieldSprites['field_border_top.png'])
-      this.fieldDisplay.borderTop.y = 12
+      this.fieldDisplay.borderTop.y = 132
       this.stage.addChild(this.fieldDisplay.borderTop)
 
       // Left border, top half
       this.fieldDisplay.borderLeftTop = new Sprite(this.fieldSprites['field_border_left_tophalf.png'])
-      this.fieldDisplay.borderLeftTop.y = 64
+      this.fieldDisplay.borderLeftTop.y = 184
       this.stage.addChild(this.fieldDisplay.borderLeftTop)
 
       // Left border, bottom half
       this.fieldDisplay.borderLeftBottom = new Sprite(this.fieldSprites['field_border_left_bottomhalf.png'])
-      this.fieldDisplay.borderLeftBottom.y = 416
+      this.fieldDisplay.borderLeftBottom.y = 536
       this.stage.addChild(this.fieldDisplay.borderLeftBottom)
 
       // Right border, top half
       this.fieldDisplay.borderRightTop = new Sprite(this.fieldSprites['field_border_right_tophalf.png'])
       this.fieldDisplay.borderRightTop.x = 417
-      this.fieldDisplay.borderRightTop.y = 64
+      this.fieldDisplay.borderRightTop.y = 184
       this.stage.addChild(this.fieldDisplay.borderRightTop)
 
       // Right border, bottom half
       this.fieldDisplay.borderRightBottom = new Sprite(this.fieldSprites['field_border_right_bottomhalf.png'])
       this.fieldDisplay.borderRightBottom.x = 417
-      this.fieldDisplay.borderRightBottom.y = 416
+      this.fieldDisplay.borderRightBottom.y = 536
       this.stage.addChild(this.fieldDisplay.borderRightBottom)
 
       // Bottom border
       this.fieldDisplay.borderBottom = new Sprite(this.fieldSprites['field_border_bottom.png'])
-      this.fieldDisplay.borderBottom.y = 782
+      this.fieldDisplay.borderBottom.y = 902
       this.stage.addChild(this.fieldDisplay.borderBottom)
 
       // Next Window Border
       this.fieldDisplay.nextWindowBorder = new Sprite(this.fieldSprites['next_border_1p.png'])
       this.fieldDisplay.nextWindowBorder.x = 456
-      this.fieldDisplay.nextWindowBorder.y = 40
+      this.fieldDisplay.nextWindowBorder.y = 160
       this.stage.addChild(this.fieldDisplay.nextWindowBorder)
 
       // Next Window Inner
       this.fieldDisplay.nextWindowInner = new Sprite(this.fieldSprites['next_background_1p.png'])
       this.fieldDisplay.nextWindowInner.x = 456
-      this.fieldDisplay.nextWindowInner.y = 40
+      this.fieldDisplay.nextWindowInner.y = 160
       this.stage.addChild(this.fieldDisplay.nextWindowInner)
+
+      // NEXT Puyo Mask
+      this.fieldDisplay.nextWindowMask = new Sprite(resources['/img/next_background_1p_mask.png'].texture)
+      this.fieldDisplay.nextWindowMask.position.set(456, 160)
+      this.stage.addChild(this.fieldDisplay.nextWindowMask)
     },
     initScoreDisplay: function () {
       let startX = 150
@@ -370,7 +376,7 @@ export default {
         spriteArray[i] = new Sprite(this.fieldSprites['score_0.png'])
         spriteArray[i].anchor.set(0.5)
         spriteArray[i].x = startX + spriteArray[i].width * 0.9 * i
-        spriteArray[i].y = 815
+        spriteArray[i].y = 935
         this.stage.addChild(spriteArray[i])
       }
 
@@ -590,20 +596,26 @@ export default {
       }
 
       for (let i = 0; i < 3; i++) {
+        // Make Puyos
         let axisPuyo = new Sprite(this.puyoSprites[`${colors[i * 2 + 0]}_n.png`])
         let freePuyo = new Sprite(this.puyoSprites[`${colors[i * 2 + 1]}_n.png`])
-        this.nextPuyoPairs[i] = new PIXI.Container()
         axisPuyo.y += 60
+
+        this.nextPuyoPairs[i] = new PIXI.Container()
         this.nextPuyoPairs[i].addChild(axisPuyo)
         this.nextPuyoPairs[i].addChild(freePuyo)
+
+        this.nextPuyoPairs[i].pivot.set(this.nextPuyoPairs[i].width / 2, this.nextPuyoPairs[i].height / 2)
+
+        this.nextPuyoPairs[i].mask = this.fieldDisplay.nextWindowMask
       }
 
-      this.nextPuyoPairs[0].position.set(510, 136)
-      this.nextPuyoPairs[1].position.set(556, 246)
-      this.nextPuyoPairs[2].position.set(562, 400)
-      this.nextPuyoPairs.forEach((element) => {
-        element.pivot.set(32, 60)
-      })
+      this.nextPuyoPairs[0].position.set(510, 256)
+      this.nextPuyoPairs[1].position.set(556, 376)
+      this.nextPuyoPairs[1].scale.set(0.8, 0.8)
+      this.nextPuyoPairs[2].position.set(556, 520)
+      this.nextPuyoPairs[2].scale.set(0.8, 0.8)
+
       this.stage.addChild(this.nextPuyoPairs[0])
       this.stage.addChild(this.nextPuyoPairs[1])
       this.stage.addChild(this.nextPuyoPairs[2])
@@ -612,12 +624,12 @@ export default {
       if (this.displayMode === 'full') { // Display mode: full
         this.fieldDisplay.garbageTray = new Sprite(this.fieldSprites['garbage_tray.png'])
         this.fieldDisplay.garbageTray.x = 456
-        this.fieldDisplay.garbageTray.y = 360
+        this.fieldDisplay.garbageTray.y = 480
         this.stage.addChild(this.fieldDisplay.garbageTray)
       } else if (this.displayMode === 'simple') {
         this.fieldDisplay.garbageTray = new Sprite(this.fieldSprites['garbage_tray.png'])
         this.fieldDisplay.garbageTray.x = 316
-        this.fieldDisplay.garbageTray.y = 795
+        this.fieldDisplay.garbageTray.y = 915
         this.fieldDisplay.garbageTray.scale.set(0.7, 0.7)
         this.stage.addChild(this.fieldDisplay.garbageTray)
       }
@@ -629,7 +641,7 @@ export default {
           spriteArray[i] = new Sprite(this.puyoSprites['crown.png'])
           spriteArray[i].x = startX + spriteArray[i].width * i
           spriteArray[i].origX = startX + spriteArray[i].width * i
-          spriteArray[i].y = 350
+          spriteArray[i].y = 470
           this.stage.addChild(spriteArray[i])
         }
         this.garbageDisplay = spriteArray
@@ -641,14 +653,14 @@ export default {
           spriteArray[i].scale.set(0.7, 0.7)
           spriteArray[i].x = startX + spriteArray[i].width * i
           spriteArray[i].origX = startX + spriteArray[i].width * i
-          spriteArray[i].y = 790
+          spriteArray[i].y = 910
           this.stage.addChild(spriteArray[i])
         }
         this.garbageDisplay = spriteArray
       }
     },
     initFieldControls: function () {
-      let startY = 360
+      let startY = 480
       let height
       let i = 0
 
@@ -703,7 +715,7 @@ export default {
     },
     initChainCounter: function () {
       let startX = 412
-      let startY = 612
+      let startY = 732
 
       this.chainCountSprites.firstDigit = new Sprite(this.chainCountSprites['chain_1.png'])
       this.chainCountSprites.firstDigit.x = startX
@@ -892,7 +904,7 @@ export default {
       // "Speech bubble"
       this.fieldDisplay.editBubble = new Sprite(resources['/img/edit_bubble.png'].texture)
       this.fieldDisplay.editBubble.x = 520
-      this.fieldDisplay.editBubble.y = 584
+      this.fieldDisplay.editBubble.y = 704
       this.fieldDisplay.editBubble.anchor.set(0.87, 0)
       this.fieldDisplay.editBubble.scale.set(0, 0)
       this.fieldDisplay.editBubble.interactive = true
@@ -915,7 +927,7 @@ export default {
       let spritesToolsPage0 = []
       let colorsPage0 = ['R', 'G', 'B', 'Y', 'P', 'J', '0', 'R', 'G', 'B', 'Y', 'P', 'J', '0']
       let startX = 56 + 32
-      let startY = 668 + 32
+      let startY = 788 + 32
 
       for (let y = 0; y < nameToolsPage0.length; y++) {
         spritesToolsPage0[y] = []
@@ -1038,7 +1050,7 @@ export default {
       // Place the stuff on the stage
       this.editorWindow.left = new Sprite(resources['/img/picker_arrow_left.png'].texture)
       this.editorWindow.left.x = 0
-      this.editorWindow.left.y = 600
+      this.editorWindow.left.y = 720
       this.editorWindow.left.interactive = true
       this.editorWindow.left.buttonMode = true
       this.editorWindow.left.visible = false
@@ -1059,7 +1071,7 @@ export default {
 
       this.editorWindow.right = new Sprite(resources['/img/picker_arrow_right.png'].texture)
       this.editorWindow.right.x = 552
-      this.editorWindow.right.y = 600
+      this.editorWindow.right.y = 720
       this.editorWindow.right.interactive = true
       this.editorWindow.right.buttonMode = true
       this.editorWindow.right.visible = false
@@ -1213,9 +1225,9 @@ export default {
       this.animateCursors(delta)
       this.animateArrows(delta)
 
-      this.nextPuyoPairs.forEach((pair) => {
-        pair.rotation += 2 * Math.PI / 60
-      })
+      // this.nextPuyoPairs.forEach((pair) => {
+      //   pair.rotation += 2 * Math.PI / 60
+      // })
 
       this.renderer.render(this.stage)
     },
@@ -1570,7 +1582,7 @@ export default {
         for (let x = 0; x < this.Field.columns; x++) {
           coord[y][x] = {
             x: (x * this.Field.cellWidth) + (this.Field.cellWidth / 2) + 25,
-            y: (y * this.Field.cellHeight) + (this.Field.cellHeight / 2) + 4
+            y: (y * this.Field.cellHeight) + (this.Field.cellHeight / 2) + 124
           }
         }
       }
