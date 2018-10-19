@@ -24,15 +24,11 @@
       <chainsim-chain-count :chainLength="chainLength" :chainCountSprites="chainCountSprites" :gameLoaded="gameLoaded"
       :chainCountDisplay="chainCountDisplay" :frame="frame" :delta="delta" />
     </div>
-    <br><p>{{ gameState }}</p>
+    <p>Game State: {{ gameState }}</p>
     <p>Current frame: {{ frame }}, stopGame: {{ stopGame }}</p>
     <p>isDropping: {{ isDropping }}</p>
-    <p>isPopping: {{ isPopping }}</p><br><br>
+    <p>isPopping: {{ isPopping }}</p><br>
     <button @click="stopGame = !stopGame">Pause</button><br><br>
-    <button @click="setDropData">Set drop data</button>
-    <button @click="gameState = 'dropping'">DropPuyos?</button> <br> <br>
-    <button @click="setPopData">Set Pop data</button>
-    <button @click="gameState = 'popping'">Pop Puyos</button>
   </div>
 </template>
 
@@ -162,8 +158,8 @@ export default {
         '/img/puyo.json',
         '/img/arrow.png',
         '/img/arrow_x.png',
-        '/img/cursor_x.png',
         '/img/cursor.png',
+        '/img/cursor_x.png',
         '/img/chain_font.json',
         '/img/edit_bubble.png',
         '/img/touch_disabler.png',
@@ -215,14 +211,15 @@ export default {
 
       // Editor
       editorCurrentTool: {
-        page: 1,
+        page: 0,
         item: 6,
         puyo: '0',
         layer: 'main',
         x: 520,
         y: 700
       },
-      toolCursor: undefined
+      toolCursor: undefined,
+      toolPage: 0
     }
   },
   mounted () {
@@ -783,13 +780,69 @@ export default {
       this.editorTools[1] = new PIXI.Container()
 
       // Set up page 1
-      let nameToolsPage1 = [[this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png'], resources['/img/editor_x.png'].texture],
+      let nameToolsPage0 = [[this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png'], resources['/img/editor_x.png'].texture],
         [this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png'], resources['/img/editor_x.png'].texture]]
-      let spritesToolsPage1 = []
+      let spritesToolsPage0 = []
       let colorsPage1 = ['R', 'G', 'B', 'Y', 'P', 'J', '0', 'R', 'G', 'B', 'Y', 'P', 'J', '0']
       let startX = 56 + 32
       let startY = 668 + 32
 
+      for (let y = 0; y < nameToolsPage0.length; y++) {
+        spritesToolsPage0[y] = []
+        for (let x = 0; x < nameToolsPage0[y].length; x++) {
+          // Placement variables
+          let horizontalPadding = 0
+          let verticalPadding = 0
+          if (x > 0) {
+            horizontalPadding = 8
+          }
+          if (y > 0) {
+            verticalPadding = 8
+          }
+
+          // Init sprite
+          spritesToolsPage0[y][x] = new Sprite(nameToolsPage0[y][x])
+          spritesToolsPage0[y][x].interactive = true
+          spritesToolsPage0[y][x].buttonMode = true
+          spritesToolsPage0[y][x].puyoIndex = y * 7 + x
+          spritesToolsPage0[y][x].puyoColor = colorsPage1[y * 7 + x]
+          if (y * 7 + x < 7) {
+            spritesToolsPage0[y][x].targetLayer = 'main'
+          } else {
+            spritesToolsPage0[y][x].targetLayer = 'shadow'
+          }
+          spritesToolsPage0[y][x].anchor.set(0.5, 0.5)
+
+          // Define interactions
+          spritesToolsPage0[y][x].on('pointerdown', function () {
+            me.editorCurrentTool.page = 0
+            me.editorCurrentTool.item = this.puyoIndex
+            me.editorCurrentTool.puyo = this.puyoColor
+            me.editorCurrentTool.layer = this.targetLayer
+            me.targetLayer(this.targetLayer) // Sets the field's target layer
+            me.editorCurrentTool.x = this.x
+            me.editorCurrentTool.y = this.y
+            me.updateToolboxSelection()
+            console.log(me.editorCurrentTool)
+          })
+
+          // Place sprite
+          if (y === 0) {
+            spritesToolsPage0[y][x].x = startX + (spritesToolsPage0[y][x].width + horizontalPadding) * x
+            spritesToolsPage0[y][x].y = startY + (spritesToolsPage0[y][x].height + verticalPadding) * y
+          } else {
+            spritesToolsPage0[y][x].x = startX + (spritesToolsPage0[y][x].width + horizontalPadding) * x
+            spritesToolsPage0[y][x].y = startY + (spritesToolsPage0[y][x].height + verticalPadding) * y
+          }
+
+          // Add sprite to PIXI containers
+          this.editorTools[0].addChild(spritesToolsPage0[y][x])
+        }
+      }
+
+      let nameToolsPage1 = [[resources['/img/arrow.png'].texture, resources['/img/arrow.png'].texture, resources['/img/arrow.png'].texture, resources['/img/arrow.png'].texture, resources['/img/arrow_x.png'].texture, resources['/img/cursor.png'].texture, resources['/img/cursor_x.png'].texture]]
+      let spritesToolsPage1 = []
+      let fieldCodesPage2 = ['L', 'U', 'R', 'D', '0', '1', '0']
       for (let y = 0; y < nameToolsPage1.length; y++) {
         spritesToolsPage1[y] = []
         for (let x = 0; x < nameToolsPage1[y].length; x++) {
@@ -803,16 +856,25 @@ export default {
             verticalPadding = 8
           }
 
-          // Init sprite
+          // Init sprite. 7 = numPerRow - 1
           spritesToolsPage1[y][x] = new Sprite(nameToolsPage1[y][x])
           spritesToolsPage1[y][x].interactive = true
           spritesToolsPage1[y][x].buttonMode = true
           spritesToolsPage1[y][x].puyoIndex = y * 7 + x
-          spritesToolsPage1[y][x].puyoColor = colorsPage1[y * 7 + x]
+          spritesToolsPage1[y][x].puyoColor = fieldCodesPage2[y * 7 + x]
+
+          if (fieldCodesPage2[y * 7 + x] === 'L') {
+            spritesToolsPage1[y][x].rotation = (3 / 2) * Math.PI
+          } else if (fieldCodesPage2[y * 7 + x] === 'R') {
+            spritesToolsPage1[y][x].rotation = (1 / 2) * Math.PI
+          } else if (fieldCodesPage2[y * 7 + x] === 'D') {
+            spritesToolsPage1[y][x].rotation = Math.PI
+          }
+
           if (y * 7 + x < 7) {
-            spritesToolsPage1[y][x].targetLayer = 'main'
+            spritesToolsPage1[y][x].targetLayer = 'arrow'
           } else {
-            spritesToolsPage1[y][x].targetLayer = 'shadow'
+            spritesToolsPage1[y][x].targetLayer = 'cursor'
           }
           spritesToolsPage1[y][x].anchor.set(0.5, 0.5)
 
@@ -831,91 +893,65 @@ export default {
 
           // Place sprite
           if (y === 0) {
-            spritesToolsPage1[y][x].x = startX + (spritesToolsPage1[y][x].width + horizontalPadding) * x
-            spritesToolsPage1[y][x].y = startY + (spritesToolsPage1[y][x].height + verticalPadding) * y
+            spritesToolsPage1[y][x].x = startX + (64 + horizontalPadding) * x
+            spritesToolsPage1[y][x].y = startY + (60 + verticalPadding) * y
           } else {
-            spritesToolsPage1[y][x].x = startX + (spritesToolsPage1[y][x].width + horizontalPadding) * x
-            spritesToolsPage1[y][x].y = startY + (spritesToolsPage1[y][x].height + verticalPadding) * y
+            spritesToolsPage1[y][x].x = startX + (64 + horizontalPadding) * x
+            spritesToolsPage1[y][x].y = startY + (60 + verticalPadding) * y
           }
 
           // Add sprite to PIXI containers
-          this.editorTools[0].addChild(spritesToolsPage1[y][x])
+          this.editorTools[1].addChild(spritesToolsPage1[y][x])
         }
       }
 
-      let nameToolsPage2 = [[resources['/img/arrow.png'].texture, resources['/img/arrow.png'].texture, resources['/img/arrow.png'].texture, resources['/img/arrow.png'].texture, resources['/img/arrow_x.png'].texture],
-        [resources['/img/cursor.png'].texture], resources['/img/cursor_x.png'].texture]
-      let spritesToolsPage2 = []
-      let fieldCodesPage2 = ['L', 'U', 'R', 'D', '1']
-      for (let y = 0; y < nameToolsPage2.length; y++) {
-        spritesToolsPage1[y] = []
-        for (let x = 0; x < nameToolsPage2[y].length; x++) {
-          // Placement variables
-          let horizontalPadding = 0
-          let verticalPadding = 0
-          if (x > 0) {
-            horizontalPadding = 8
-          }
-          if (y > 0) {
-            verticalPadding = 8
-          }
-
-          // Init sprite
-          spritesToolsPage1[y][x] = new Sprite(nameToolsPage1[y][x])
-          spritesToolsPage1[y][x].interactive = true
-          spritesToolsPage1[y][x].buttonMode = true
-          spritesToolsPage1[y][x].puyoIndex = y * 7 + x
-          spritesToolsPage1[y][x].puyoColor = colorsPage1[y * 7 + x]
-          if (y * 7 + x < 7) {
-            spritesToolsPage1[y][x].targetLayer = 'main'
-          } else {
-            spritesToolsPage1[y][x].targetLayer = 'shadow'
-          }
-          spritesToolsPage1[y][x].anchor.set(0.5, 0.5)
-
-          // Define interactions
-          spritesToolsPage1[y][x].on('pointerdown', function () {
-            me.editorCurrentTool.page = 1
-            me.editorCurrentTool.item = this.puyoIndex
-            me.editorCurrentTool.puyo = this.puyoColor
-            me.editorCurrentTool.layer = this.targetLayer
-            me.targetLayer(this.targetLayer) // Sets the field's target layer
-            me.editorCurrentTool.x = this.x
-            me.editorCurrentTool.y = this.y
-            me.updateToolboxSelection()
-            console.log(me.editorCurrentTool)
-          })
-
-          // Place sprite
-          if (y === 0) {
-            spritesToolsPage1[y][x].x = startX + (spritesToolsPage1[y][x].width + horizontalPadding) * x
-            spritesToolsPage1[y][x].y = startY + (spritesToolsPage1[y][x].height + verticalPadding) * y
-          } else {
-            spritesToolsPage1[y][x].x = startX + (spritesToolsPage1[y][x].width + horizontalPadding) * x
-            spritesToolsPage1[y][x].y = startY + (spritesToolsPage1[y][x].height + verticalPadding) * y
-          }
-
-          // Add sprite to PIXI containers
-          this.editorTools[0].addChild(spritesToolsPage1[y][x])
-        }
-      }
-
+      // Place the stuff on the stage
       this.editorWindow.left = new Sprite(resources['/img/picker_arrow_left.png'].texture)
       this.editorWindow.left.x = 0
       this.editorWindow.left.y = 600
       this.editorWindow.left.interactive = true
+      this.editorWindow.left.buttonMode = true
       this.editorWindow.left.visible = false
+      this.editorWindow.left.on('pointerdown', function () {
+        if (me.toolPage === 0) {
+          me.toolPage = 1
+          me.editorTools[0].visible = false
+          me.editorTools[1].visible = true
+          me.updateToolboxSelection()
+        } else if (me.toolPage === 1) {
+          me.toolPage = 0
+          me.editorTools[0].visible = true
+          me.editorTools[1].visible = false
+          me.updateToolboxSelection()
+        }
+      })
       this.stage.addChild(this.editorWindow.left)
 
       this.editorWindow.right = new Sprite(resources['/img/picker_arrow_right.png'].texture)
       this.editorWindow.right.x = 552
       this.editorWindow.right.y = 600
       this.editorWindow.right.interactive = true
+      this.editorWindow.right.buttonMode = true
       this.editorWindow.right.visible = false
+      this.editorWindow.right.on('pointerdown', function () {
+        if (me.toolPage === 0) {
+          me.toolPage = 1
+          me.editorTools[0].visible = false
+          me.editorTools[1].visible = true
+          me.updateToolboxSelection()
+        } else if (me.toolPage === 1) {
+          me.toolPage = 0
+          me.editorTools[0].visible = true
+          me.editorTools[1].visible = false
+          me.updateToolboxSelection()
+        }
+      })
       this.stage.addChild(this.editorWindow.right)
 
-      this.stage.addChild(this.editorTools[0])
       this.editorTools[0].visible = false
+      this.stage.addChild(this.editorTools[0])
+      this.editorTools[1].visible = false
+      this.stage.addChild(this.editorTools[1])
     },
     openToolbox: function (delta) {
       let duration = 15 // frames
@@ -940,21 +976,21 @@ export default {
       let delay = 2
       let delayArray = []
       let alphaArray = []
-      this.editorTools[0].visible = true
+      this.editorTools[this.toolPage].visible = true
       this.updateToolboxSelection()
 
-      if (t <= delay * this.editorTools[0].children.length + fadeSpeed) {
-        for (let i = 0; i < this.editorTools[0].children.length; i++) {
+      if (t <= delay * this.editorTools[this.toolPage].children.length + fadeSpeed) {
+        for (let i = 0; i < this.editorTools[this.toolPage].children.length; i++) {
           delayArray.push(0 - i * delay)
         }
-        for (let i = 0; i < this.editorTools[0].children.length; i++) {
+        for (let i = 0; i < this.editorTools[this.toolPage].children.length; i++) {
           alphaArray.push((delayArray[i] + t) / fadeSpeed)
 
           // Fade in the Puyos.
           if (i < 7) {
-            this.editorTools[0].children[i].alpha = alphaArray[i]
+            this.editorTools[this.toolPage].children[i].alpha = alphaArray[i]
           } else {
-            this.editorTools[0].children[i].alpha = alphaArray[i] * 0.17
+            this.editorTools[this.toolPage].children[i].alpha = alphaArray[i] * 0.17
           }
 
           // Fade in the selector
@@ -969,8 +1005,12 @@ export default {
       }
     },
     updateToolboxSelection: function () {
-      this.toolCursor.visible = true
-      this.toolCursor.position.set(this.editorCurrentTool.x, this.editorCurrentTool.y)
+      if (this.editorCurrentTool.page === this.toolPage) {
+        this.toolCursor.visible = true
+        this.toolCursor.position.set(this.editorCurrentTool.x, this.editorCurrentTool.y)
+      } else {
+        this.toolCursor.visible = false
+      }
     },
     targetLayer: function (layer) {
       // Disable interactions for Puyos that aren't on the targetted layer.
@@ -994,7 +1034,7 @@ export default {
       let duration = 15 // frames
       this.timers.editBubble -= delta
       let t = this.timers.editBubble
-      this.editorTools[0].visible = false
+      this.editorTools[this.toolPage].visible = false
       this.editorWindow.left.visible = false
       this.editorWindow.right.visible = false
       this.toolCursor.visible = false
@@ -1172,6 +1212,7 @@ export default {
       } else if (control === 'play') {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
+          this.simulationSpeed = 1
         } else if (this.gameState === 'popping' || this.gameState === 'dropping') {
           this.simulationSpeed = 24
         }
@@ -1180,6 +1221,8 @@ export default {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
           this.simulationSpeed = 1
+        } else if ((this.gameState === 'popping' || this.gameState === 'dropping') && this.simulationSpeed === 8) {
+          this.simulationSpeed = 64
         } else if (this.gameState === 'popping' || this.gameState === 'dropping') {
           this.simulationSpeed = 8
         } else if (this.gameState === 'chainStopped') {
