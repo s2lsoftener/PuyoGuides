@@ -1222,7 +1222,7 @@ export default {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
           this.simulationSpeed = 1
         } else if ((this.gameState === 'popping' || this.gameState === 'dropping') && this.simulationSpeed === 8) {
-          this.simulationSpeed = 64
+          this.simulationSpeed = 24
         } else if (this.gameState === 'popping' || this.gameState === 'dropping') {
           this.simulationSpeed = 8
         } else if (this.gameState === 'chainStopped') {
