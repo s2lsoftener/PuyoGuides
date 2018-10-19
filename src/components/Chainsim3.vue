@@ -5,13 +5,6 @@
       <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
     </div>
     <div v-if="gameLoaded"> <!-- ensures that the v-for loops execute -->
-      <!-- <chainsim-puyo v-for="(sprite, index) in puyoDisplay" :key="`Puyo_${index}`" :index="index"
-      :Simulator="Simulator" :gameState="gameState" :fieldData="fieldData" :sprite="puyoDisplay[index]"
-      :puyoSprites="puyoSprites" :gameLoaded="gameLoaded"
-      :simulationSpeed="simulationSpeed" :coordArray="coordArray" :needToReset="needToReset"
-      :isMouseDown="isMouseDown" :frame="frame" :delta="delta"
-      v-on:end-popping="togglePoppingCell" v-on:end-dropping="toggleDroppingCell" v-on:edit-puyo-field="editFieldData" /> -->
-
       <chainsim-control-button v-for="(sprite, index) in fieldControls" :key="`Control_${index}`"
       :gameLoaded="gameLoaded" :fieldSprites="fieldSprites" :button="sprite" :buttonName="index"
       v-on:controlField="controlField" />
@@ -605,9 +598,12 @@ export default {
         this.nextPuyoPairs[i].addChild(freePuyo)
       }
 
-      this.nextPuyoPairs[0].position.set(478, 76)
-      this.nextPuyoPairs[1].position.set(524, 186)
-      this.nextPuyoPairs[2].position.set(530, 340)
+      this.nextPuyoPairs[0].position.set(510, 136)
+      this.nextPuyoPairs[1].position.set(556, 246)
+      this.nextPuyoPairs[2].position.set(562, 400)
+      this.nextPuyoPairs.forEach((element) => {
+        element.pivot.set(32, 60)
+      })
       this.stage.addChild(this.nextPuyoPairs[0])
       this.stage.addChild(this.nextPuyoPairs[1])
       this.stage.addChild(this.nextPuyoPairs[2])
@@ -1216,8 +1212,11 @@ export default {
       }
       this.animateCursors(delta)
       this.animateArrows(delta)
-      this.nextPuyoPairs[0].rotation += 2 * Math.PI / 120
-      this.nextPuyoPairs[0].pivot.set(32, 60)
+
+      this.nextPuyoPairs.forEach((pair) => {
+        pair.rotation += 2 * Math.PI / 60
+      })
+
       this.renderer.render(this.stage)
     },
     stateEditField: function (delta) {
