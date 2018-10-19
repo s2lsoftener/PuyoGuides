@@ -40,9 +40,6 @@ import ChainsimControlButton from './ChainsimControlButton'
 import ChainsimGarbagetray from './ChainsimGarbagetray'
 import ChainsimScoredisplay from './ChainsimScoredisplay'
 import ChainsimChainCount from './ChainsimChainCount'
-import ChainsimShadowPuyo from './ChainsimShadowPuyo'
-import ChainsimCursor from './ChainsimCursor'
-import ChainsimArrow from './ChainsimArrow'
 import * as BezierEasing from 'bezier-easing'
 
 const uniformMatrix = Chainsim.uniformMatrix // Generates a 2D matrix all filled with one value
@@ -70,10 +67,7 @@ export default {
     ChainsimControlButton,
     ChainsimGarbagetray,
     ChainsimScoredisplay,
-    ChainsimChainCount,
-    ChainsimShadowPuyo,
-    ChainsimCursor,
-    ChainsimArrow
+    ChainsimChainCount
   },
   data () {
     return {
@@ -278,7 +272,7 @@ export default {
         this.initGameOverX()
         this.initPuyoDisplay()
         this.initShadowDisplay()
-        // this.initCursorDisplay()
+        this.initCursorDisplay()
         // this.initArrowDisplay()
         this.initGarbageDisplay()
         this.initFieldControls()
@@ -410,12 +404,20 @@ export default {
             me.isMouseDown = true
             if (me.editorCurrentTool.layer === 'main' && me.gameState === 'idle') {
               me.fieldData[y].splice(x, 1, me.editorCurrentTool.puyo)
+              if (me.shadowData[y][x] !== '0') {
+                me.shadowData[y].splice(x, 1, '0') // Remove shadow puyo at this position
+                me.updateShadowSprite(x, y)
+              }
               me.updatePuyoSprites()
             }
           }
           this.puyoDisplay[y][x].mouseOver = function () {
             if (me.isMouseDown === true && me.editorCurrentTool.layer === 'main' && me.gameState === 'idle') {
               me.fieldData[y].splice(x, 1, me.editorCurrentTool.puyo)
+              if (me.shadowData[y][x] !== '0') {
+                me.shadowData[y].splice(x, 1, '0') // Remove shadow puyo at this position
+                me.updateShadowSprite(x, y)
+              }
               me.updatePuyoSprites()
             }
           }
@@ -440,6 +442,7 @@ export default {
           this.puyoDisplay[y][x].spritename = `${this.colorNameData[y][x]}_${this.connectionData[y][x]}.png`
           this.puyoDisplay[y][x].texture = this.puyoSprites[`${this.colorNameData[y][x]}_${this.connectionData[y][x]}.png`]
           this.puyoDisplay[y][x].anchor.set(0.5, 0.5)
+          this.puyoDisplay[y][x].scale.set(1, 1)
         }
       }
       console.log('updated sprites')
@@ -463,6 +466,13 @@ export default {
       }
       this.shadowDisplay[y][x].texture = this.puyoSprites[`${color}_n.png`]
       console.log('Updated the shadow sprite.')
+    },
+    updateCursorSprite: function (x, y) {
+      if (this.cursorData[y][x] === '1') {
+        this.cursorDisplay[y][x].alpha = 1
+      } else {
+        this.cursorDisplay[y][x].alpha = 0
+      }
     },
     determineConnections: function () {
       let array = []
@@ -708,13 +718,17 @@ export default {
             me.isMouseDown = true
             if (me.editorCurrentTool.layer === 'shadow' && me.gameState === 'idle') {
               me.shadowData[y].splice(x, 1, me.editorCurrentTool.puyo)
+              me.fieldData[y].splice(x, 1, '0') // Remove main puyo at this position
               me.updateShadowSprite(x, y)
+              me.updatePuyoSprites()
             }
           }
           this.shadowDisplay[y][x].mouseOver = function () {
             if (me.isMouseDown === true && me.editorCurrentTool.layer === 'shadow' && me.gameState === 'idle') {
               me.shadowData[y].splice(x, 1, me.editorCurrentTool.puyo)
+              me.fieldData[y].splice(x, 1, '0') // Remove main puyo at this position
               me.updateShadowSprite(x, y)
+              me.updatePuyoSprites()
             }
           }
           this.shadowDisplay[y][x].mouseUp = function () {
@@ -737,7 +751,36 @@ export default {
           spriteArray[y][x].x = this.coordArray[y][x].x
           spriteArray[y][x].y = this.coordArray[y][x].y
           this.stage.addChild(spriteArray[y][x])
-          this.cursorDisplay.push(spriteArray[y][x])
+        }
+      }
+      this.cursorDisplay = spriteArray
+
+      let me = this
+      for (let y = 0; y < this.fieldData.length; y++) {
+        for (let x = 0; x < this.fieldData[0].length; x++) {
+          this.updateCursorSprite(x, y)
+
+          this.cursorDisplay[y][x].interactive = false
+          this.cursorDisplay[y][x].editPuyo = function () {
+            me.isMouseDown = true
+            if (me.editorCurrentTool.layer === 'cursor' && me.gameState === 'idle') {
+              me.cursorData[y].splice(x, 1, me.editorCurrentTool.puyo)
+              me.updateCursorSprite(x, y)
+            }
+          }
+          this.cursorDisplay[y][x].mouseOver = function () {
+            if (me.isMouseDown === true && me.editorCurrentTool.layer === 'cursor' && me.gameState === 'idle') {
+              me.cursorData[y].splice(x, 1, me.editorCurrentTool.puyo)
+              me.updateCursorSprite(x, y)
+            }
+          }
+          this.cursorDisplay[y][x].mouseUp = function () {
+            me.isMouseDown = false
+          }
+          this.cursorDisplay[y][x].on('pointerdown', this.cursorDisplay[y][x].editPuyo)
+          this.cursorDisplay[y][x].on('pointerover', this.cursorDisplay[y][x].mouseOver)
+          this.cursorDisplay[y][x].on('pointerupoutside', this.cursorDisplay[y][x].mouseUp)
+          this.cursorDisplay[y][x].on('pointerup', this.cursorDisplay[y][x].mouseUp)
         }
       }
     },
@@ -783,7 +826,7 @@ export default {
       let nameToolsPage0 = [[this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png'], resources['/img/editor_x.png'].texture],
         [this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png'], resources['/img/editor_x.png'].texture]]
       let spritesToolsPage0 = []
-      let colorsPage1 = ['R', 'G', 'B', 'Y', 'P', 'J', '0', 'R', 'G', 'B', 'Y', 'P', 'J', '0']
+      let colorsPage0 = ['R', 'G', 'B', 'Y', 'P', 'J', '0', 'R', 'G', 'B', 'Y', 'P', 'J', '0']
       let startX = 56 + 32
       let startY = 668 + 32
 
@@ -805,7 +848,7 @@ export default {
           spritesToolsPage0[y][x].interactive = true
           spritesToolsPage0[y][x].buttonMode = true
           spritesToolsPage0[y][x].puyoIndex = y * 7 + x
-          spritesToolsPage0[y][x].puyoColor = colorsPage1[y * 7 + x]
+          spritesToolsPage0[y][x].puyoColor = colorsPage0[y * 7 + x]
           if (y * 7 + x < 7) {
             spritesToolsPage0[y][x].targetLayer = 'main'
           } else {
@@ -842,7 +885,7 @@ export default {
 
       let nameToolsPage1 = [[resources['/img/arrow.png'].texture, resources['/img/arrow.png'].texture, resources['/img/arrow.png'].texture, resources['/img/arrow.png'].texture, resources['/img/arrow_x.png'].texture, resources['/img/cursor.png'].texture, resources['/img/cursor_x.png'].texture]]
       let spritesToolsPage1 = []
-      let fieldCodesPage2 = ['L', 'U', 'R', 'D', '0', '1', '0']
+      let fieldCodesPage1 = ['L', 'U', 'R', 'D', '0', '1', '0']
       for (let y = 0; y < nameToolsPage1.length; y++) {
         spritesToolsPage1[y] = []
         for (let x = 0; x < nameToolsPage1[y].length; x++) {
@@ -861,17 +904,17 @@ export default {
           spritesToolsPage1[y][x].interactive = true
           spritesToolsPage1[y][x].buttonMode = true
           spritesToolsPage1[y][x].puyoIndex = y * 7 + x
-          spritesToolsPage1[y][x].puyoColor = fieldCodesPage2[y * 7 + x]
+          spritesToolsPage1[y][x].puyoColor = fieldCodesPage1[y * 7 + x]
 
-          if (fieldCodesPage2[y * 7 + x] === 'L') {
+          if (fieldCodesPage1[y * 7 + x] === 'L') {
             spritesToolsPage1[y][x].rotation = (3 / 2) * Math.PI
-          } else if (fieldCodesPage2[y * 7 + x] === 'R') {
+          } else if (fieldCodesPage1[y * 7 + x] === 'R') {
             spritesToolsPage1[y][x].rotation = (1 / 2) * Math.PI
-          } else if (fieldCodesPage2[y * 7 + x] === 'D') {
+          } else if (fieldCodesPage1[y * 7 + x] === 'D') {
             spritesToolsPage1[y][x].rotation = Math.PI
           }
 
-          if (y * 7 + x < 7) {
+          if (y * 7 + x < 5) {
             spritesToolsPage1[y][x].targetLayer = 'arrow'
           } else {
             spritesToolsPage1[y][x].targetLayer = 'cursor'
@@ -1019,6 +1062,7 @@ export default {
           for (let x = 0; x < this.Field.columns; x++) {
             this.puyoDisplay[y][x].interactive = true
             this.shadowDisplay[y][x].interactive = false
+            this.cursorDisplay[y][x].interactive = false
           }
         }
       } else if (layer === 'shadow') {
@@ -1026,6 +1070,15 @@ export default {
           for (let x = 0; x < this.Field.columns; x++) {
             this.puyoDisplay[y][x].interactive = false
             this.shadowDisplay[y][x].interactive = true
+            this.cursorDisplay[y][x].interactive = false
+          }
+        }
+      } else if (layer === 'cursor') {
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            this.puyoDisplay[y][x].interactive = false
+            this.shadowDisplay[y][x].interactive = false
+            this.cursorDisplay[y][x].interactive = true
           }
         }
       }
@@ -1182,6 +1235,17 @@ export default {
         this.gameState = 'chainStopped'
       }
     },
+    mergeInShadowLayer: function () {
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        for (let x = 0; x < this.Field.columns; x++) {
+          if (this.shadowData[y][x] !== '0' && this.shadowData[y][x] !== this.fieldData[y][x]) {
+            this.fieldData[y].splice(x, 1, this.shadowData[y][x])
+          }
+        }
+      }
+      this.updatePuyoSprites()
+      console.log('merged shadow layer')
+    },
     setMouseDown: function (bool) {
       this.isMouseDown = bool // true, false
     },
@@ -1212,6 +1276,7 @@ export default {
       } else if (control === 'play') {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
+          this.mergeInShadowLayer()
           this.simulationSpeed = 1
         } else if (this.gameState === 'popping' || this.gameState === 'dropping') {
           this.simulationSpeed = 24
@@ -1220,6 +1285,7 @@ export default {
       } else if (control === 'auto') {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
+          this.mergeInShadowLayer()
           this.simulationSpeed = 1
         } else if ((this.gameState === 'popping' || this.gameState === 'dropping') && this.simulationSpeed === 8) {
           this.simulationSpeed = 24
@@ -1408,6 +1474,7 @@ export default {
     gameState: function (newVal, oldVal) {
       this.frame = 0
       if (newVal === 'dropping') {
+        console.log('Checking drops')
         this.setDropData()
         this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
         this.updatePuyoSprites()
@@ -1415,6 +1482,7 @@ export default {
           this.gameState = 'popping'
         }
       } else if (newVal === 'popping') {
+        console.log('Checking pops')
         this.setPopData()
         this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
         this.updatePuyoSprites()
@@ -1430,12 +1498,14 @@ export default {
         for (let y = 0; y < this.Field.totalRows; y++) {
           for (let x = 0; x < this.Field.columns; x++) {
             this.shadowDisplay[y][x].visible = true
+            this.cursorDisplay[y][x].visible = true
           }
         }
       } else {
         for (let y = 0; y < this.Field.totalRows; y++) {
           for (let x = 0; x < this.Field.columns; x++) {
             this.shadowDisplay[y][x].visible = false
+            this.cursorDisplay[y][x].visible = false
           }
         }
       }
