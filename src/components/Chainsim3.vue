@@ -24,11 +24,12 @@
       <chainsim-chain-count :chainLength="chainLength" :chainCountSprites="chainCountSprites" :gameLoaded="gameLoaded"
       :chainCountDisplay="chainCountDisplay" :frame="frame" :delta="delta" />
     </div>
-    <p>Game State: {{ gameState }}</p>
-    <p>Current frame: {{ frame }}, stopGame: {{ stopGame }}</p>
-    <p>isDropping: {{ isDropping }}</p>
-    <p>isPopping: {{ isPopping }}</p><br>
-    <button @click="stopGame = !stopGame">Pause</button><br><br>
+    <p>Game State: {{ gameState }} || stopGame: {{ stopGame }}</p>
+    <p>isDropping: {{ isDropping }} || isPopping: {{ isPopping }}</p>
+    <p>fieldDataString: {{ fieldDataString }}</p>
+    <p>shadowDataString: {{ shadowDataString }}</p>
+    <p>cursorDataString: {{ cursorDataString }}</p>
+    <p>arrowDataString: {{ arrowDataString }}</p>
   </div>
 </template>
 
@@ -44,6 +45,7 @@ import * as BezierEasing from 'bezier-easing'
 
 const uniformMatrix = Chainsim.uniformMatrix // Generates a 2D matrix all filled with one value
 const stringTo2dArray = Chainsim.stringTo2dArray // Converts 1D string to 2D matrix
+const flatten2dTo1d = Chainsim.flatten2dTo1d // Converts 2D array to 1D array
 
 const loader = PIXI.loader // eslint-disable-line no-unused-vars
 const resources = PIXI.loader.resources // eslint-disable-line no-unused-vars
@@ -200,7 +202,8 @@ export default {
         editBubble: 0,
         toolIntroFade: 0,
         chainLength: 0,
-        garbageTray: 0
+        garbageTray: 0,
+        cursor: 0
       },
 
       // Editor
@@ -273,7 +276,7 @@ export default {
         this.initPuyoDisplay()
         this.initShadowDisplay()
         this.initCursorDisplay()
-        // this.initArrowDisplay()
+        this.initArrowDisplay()
         this.initGarbageDisplay()
         this.initFieldControls()
         this.initChainCounter()
@@ -472,6 +475,23 @@ export default {
         this.cursorDisplay[y][x].alpha = 1
       } else {
         this.cursorDisplay[y][x].alpha = 0
+      }
+    },
+    updateArrowSprite: function (x, y) {
+      if (this.arrowData[y][x] === '0') {
+        this.arrowDisplay[y][x].alpha = 0
+      } else if (this.arrowData[y][x] === 'L') {
+        this.arrowDisplay[y][x].alpha = 1
+        this.arrowDisplay[y][x].rotation = (3 / 2) * Math.PI
+      } else if (this.arrowData[y][x] === 'R') {
+        this.arrowDisplay[y][x].alpha = 1
+        this.arrowDisplay[y][x].rotation = (1 / 2) * Math.PI
+      } else if (this.arrowData[y][x] === 'D') {
+        this.arrowDisplay[y][x].alpha = 1
+        this.arrowDisplay[y][x].rotation = Math.PI
+      } else if (this.arrowData[y][x] === 'U') {
+        this.arrowDisplay[y][x].alpha = 1
+        this.arrowDisplay[y][x].rotation = 0
       }
     },
     determineConnections: function () {
@@ -766,12 +786,16 @@ export default {
             if (me.editorCurrentTool.layer === 'cursor' && me.gameState === 'idle') {
               me.cursorData[y].splice(x, 1, me.editorCurrentTool.puyo)
               me.updateCursorSprite(x, y)
+              me.arrowData[y].splice(x, 1, '0')
+              me.updateArrowSprite(x, y)
             }
           }
           this.cursorDisplay[y][x].mouseOver = function () {
             if (me.isMouseDown === true && me.editorCurrentTool.layer === 'cursor' && me.gameState === 'idle') {
               me.cursorData[y].splice(x, 1, me.editorCurrentTool.puyo)
               me.updateCursorSprite(x, y)
+              me.arrowData[y].splice(x, 1, '0')
+              me.updateArrowSprite(x, y)
             }
           }
           this.cursorDisplay[y][x].mouseUp = function () {
@@ -793,9 +817,41 @@ export default {
           spriteArray[y][x].anchor.set(0.5)
           spriteArray[y][x].x = this.coordArray[y][x].x
           spriteArray[y][x].y = this.coordArray[y][x].y
-          spriteArray[y][x].scale.set(0.9, 0.9)
           this.stage.addChild(spriteArray[y][x])
-          this.arrowDisplay.push(spriteArray[y][x])
+        }
+      }
+      this.arrowDisplay = spriteArray
+
+      let me = this
+      for (let y = 0; y < this.fieldData.length; y++) {
+        for (let x = 0; x < this.fieldData[0].length; x++) {
+          this.updateArrowSprite(x, y)
+
+          this.arrowDisplay[y][x].interactive = false
+          this.arrowDisplay[y][x].editPuyo = function () {
+            me.isMouseDown = true
+            if (me.editorCurrentTool.layer === 'arrow' && me.gameState === 'idle') {
+              me.arrowData[y].splice(x, 1, me.editorCurrentTool.puyo)
+              me.updateArrowSprite(x, y)
+              me.cursorData[y].splice(x, 1, '0')
+              me.updateCursorSprite(x, y)
+            }
+          }
+          this.arrowDisplay[y][x].mouseOver = function () {
+            if (me.isMouseDown === true && me.editorCurrentTool.layer === 'arrow' && me.gameState === 'idle') {
+              me.arrowData[y].splice(x, 1, me.editorCurrentTool.puyo)
+              me.updateArrowSprite(x, y)
+              me.cursorData[y].splice(x, 1, '0')
+              me.updateCursorSprite(x, y)
+            }
+          }
+          this.arrowDisplay[y][x].mouseUp = function () {
+            me.isMouseDown = false
+          }
+          this.arrowDisplay[y][x].on('pointerdown', this.arrowDisplay[y][x].editPuyo)
+          this.arrowDisplay[y][x].on('pointerover', this.arrowDisplay[y][x].mouseOver)
+          this.arrowDisplay[y][x].on('pointerupoutside', this.arrowDisplay[y][x].mouseUp)
+          this.arrowDisplay[y][x].on('pointerup', this.arrowDisplay[y][x].mouseUp)
         }
       }
     },
@@ -1063,6 +1119,7 @@ export default {
             this.puyoDisplay[y][x].interactive = true
             this.shadowDisplay[y][x].interactive = false
             this.cursorDisplay[y][x].interactive = false
+            this.arrowDisplay[y][x].interactive = false
           }
         }
       } else if (layer === 'shadow') {
@@ -1071,6 +1128,7 @@ export default {
             this.puyoDisplay[y][x].interactive = false
             this.shadowDisplay[y][x].interactive = true
             this.cursorDisplay[y][x].interactive = false
+            this.arrowDisplay[y][x].interactive = false
           }
         }
       } else if (layer === 'cursor') {
@@ -1079,6 +1137,16 @@ export default {
             this.puyoDisplay[y][x].interactive = false
             this.shadowDisplay[y][x].interactive = false
             this.cursorDisplay[y][x].interactive = true
+            this.arrowDisplay[y][x].interactive = false
+          }
+        }
+      } else if (layer === 'arrow') {
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            this.puyoDisplay[y][x].interactive = false
+            this.shadowDisplay[y][x].interactive = false
+            this.cursorDisplay[y][x].interactive = false
+            this.arrowDisplay[y][x].interactive = true
           }
         }
       }
@@ -1111,6 +1179,7 @@ export default {
       } else if (this.gameState === 'popping' && this.needToReset === false) {
         this.animatePopPuyos(delta)
       }
+      this.animateCursors(delta)
       this.renderer.render(this.stage)
     },
     stateEditField: function (delta) {
@@ -1203,6 +1272,19 @@ export default {
       if (this.stopGame === false) {
         this.frame += 1
       }
+    },
+    animateCursors: function (delta) {
+      let t = this.timers.cursor
+
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        for (let x = 0; x < this.Field.columns; x++) {
+          Math.cos(t / 30 * Math.PI) >= 0
+            ? this.cursorDisplay[y][x].scale.set(0.9, 0.9)
+            : this.cursorDisplay[y][x].scale.set(1, 1)
+        }
+      }
+
+      this.timers.cursor += delta
     },
     setDropData: function () {
       let dropResult = Chainsim.Simulate.dropPuyos(this.Field)
@@ -1468,6 +1550,18 @@ export default {
       return {
         editBubble: BezierEasing(0.14, 0.18, 0, 1.16)
       }
+    },
+    fieldDataString: function () {
+      return flatten2dTo1d(this.fieldData).join('')
+    },
+    shadowDataString: function () {
+      return flatten2dTo1d(this.shadowData).join('')
+    },
+    cursorDataString: function () {
+      return flatten2dTo1d(this.cursorData).join('')
+    },
+    arrowDataString: function () {
+      return flatten2dTo1d(this.arrowData).join('')
     }
   },
   watch: {
@@ -1499,6 +1593,7 @@ export default {
           for (let x = 0; x < this.Field.columns; x++) {
             this.shadowDisplay[y][x].visible = true
             this.cursorDisplay[y][x].visible = true
+            this.arrowDisplay[y][x].visible = true
           }
         }
       } else {
@@ -1506,6 +1601,7 @@ export default {
           for (let x = 0; x < this.Field.columns; x++) {
             this.shadowDisplay[y][x].visible = false
             this.cursorDisplay[y][x].visible = false
+            this.arrowDisplay[y][x].visible = false
           }
         }
       }
