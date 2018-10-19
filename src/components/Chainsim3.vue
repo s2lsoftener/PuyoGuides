@@ -217,7 +217,11 @@ export default {
         y: 700
       },
       toolCursor: undefined,
-      toolPage: 0
+      toolPage: 0,
+
+      // NEXT
+      nextPuyoData: 'RRBGYY',
+      nextPuyoPairs: [] // PIXI.Containers
     }
   },
   mounted () {
@@ -279,6 +283,7 @@ export default {
         this.initCursorDisplay()
         this.initArrowDisplay()
         this.initGarbageDisplay()
+        this.initNextPuyos()
         this.initFieldControls()
         this.initChainCounter()
         this.initToolDisplay()
@@ -578,8 +583,34 @@ export default {
       this.colorNameData = array
       return array
     },
-    initNextDisplay: function () {
-      // NEXT
+    initNextPuyos: function () {
+      // Get the colors from the input string
+      let colors = []
+      for (let i = 0; i < this.nextPuyoData.length; i++) {
+        switch (this.nextPuyoData[i]) {
+          case 'R': colors.push('red'); break
+          case 'G': colors.push('green'); break
+          case 'B': colors.push('blue'); break
+          case 'Y': colors.push('yellow'); break
+          case 'P': colors.push('purple'); break
+        }
+      }
+
+      for (let i = 0; i < 3; i++) {
+        let axisPuyo = new Sprite(this.puyoSprites[`${colors[i * 2 + 0]}_n.png`])
+        let freePuyo = new Sprite(this.puyoSprites[`${colors[i * 2 + 1]}_n.png`])
+        this.nextPuyoPairs[i] = new PIXI.Container()
+        axisPuyo.y += 60
+        this.nextPuyoPairs[i].addChild(axisPuyo)
+        this.nextPuyoPairs[i].addChild(freePuyo)
+      }
+
+      this.nextPuyoPairs[0].position.set(478, 76)
+      this.nextPuyoPairs[1].position.set(524, 186)
+      this.nextPuyoPairs[2].position.set(530, 340)
+      this.stage.addChild(this.nextPuyoPairs[0])
+      this.stage.addChild(this.nextPuyoPairs[1])
+      this.stage.addChild(this.nextPuyoPairs[2])
     },
     initGarbageDisplay: function () {
       if (this.displayMode === 'full') { // Display mode: full
@@ -1185,6 +1216,8 @@ export default {
       }
       this.animateCursors(delta)
       this.animateArrows(delta)
+      this.nextPuyoPairs[0].rotation += 2 * Math.PI / 120
+      this.nextPuyoPairs[0].pivot.set(32, 60)
       this.renderer.render(this.stage)
     },
     stateEditField: function (delta) {
