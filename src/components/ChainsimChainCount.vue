@@ -1,6 +1,4 @@
 <script>
-import * as BezierEasing from 'bezier-easing'
-
 export default {
   name: 'ChainsimChainCount',
   props: ['chainLength', 'chainCountSprites', 'gameLoaded', 'chainCountDisplay'],
@@ -10,7 +8,6 @@ export default {
   data () {
     return {
       container: {},
-      toggleAnimation: false,
       counterFrame: 0,
       origY: 0
     }
@@ -22,9 +19,6 @@ export default {
         string = '0' + string
       }
       return string
-    },
-    easing: function () {
-      return BezierEasing(0.42, 1.03, 0.78, 1)
     }
   },
   mounted () {
@@ -45,8 +39,6 @@ export default {
       this.chainCountSprites.firstDigit.alpha = 0
       this.chainCountSprites.secondDigit.alpha = 0
       this.chainCountSprites.chainText.alpha = 0
-      this.toggleAnimation = false
-      console.log(this.toggleAnimation)
 
       if (this.chainLengthString[0] !== '0') {
         this.chainCountSprites.firstDigit.alpha = 1

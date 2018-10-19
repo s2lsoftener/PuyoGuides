@@ -98,7 +98,7 @@ export default {
       /* Chainsim logic */
       // Game states
       gameMode: 'editor', // editor, playable
-      gameState: 'idle', // idle/playing -> dropping -> popping -> dropping/chainEnded ||
+      gameState: 'idle', // idle/playing -> dropping -> popping -> dropping/chainEnded || editor
 
       // Field Arrays
       fieldData: [[]], // 2D string array with the main field representation
@@ -207,16 +207,20 @@ export default {
       timers: {
         editBubble: 0,
         toolIntroFade: 0,
-        chainLength: 0
+        chainLength: 0,
+        garbageTray: 0
       },
 
       // Editor
       editorCurrentTool: {
         page: 1,
-        item: 0,
-        puyo: 'R',
-        layer: 'main'
-      }
+        item: 6,
+        puyo: '0',
+        layer: 'main',
+        x: 520,
+        y: 700
+      },
+      toolCursor: undefined
     }
   },
   mounted () {
@@ -240,21 +244,6 @@ export default {
       this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
     },
     initGame: function () {
-      // this.app = new PIXI.Application(this.modeSettings[this.displayMode])
-      // this.$refs.game.appendChild(this.app.view)
-      // this.$refs.game.childNodes[0].style.width = `${this.modeSettings.simple.width * this.scaleFactor}px`
-      // this.$refs.game.childNodes[0].style.height = `${this.modeSettings.simple.height * this.scaleFactor}px`
-      // this.app = {}
-      // this.app.renderer = new PIXI.WebGLRenderer(this.modeSettings.simple.width, this.modeSettings.simple.height, {
-      //   antialias: true,
-      //   transparent: false,
-      //   backgroundColor: 0x061639,
-      //   resolution: 1
-      // })
-      // this.$refs.game.appendChild(this.app.renderer.view)
-      // this.stage = new PIXI.Container()
-      // this.app.renderer.render(this.stage)
-
       // eslint-disable-next-line
       this.renderer = new PIXI.autoDetectRenderer(this.modeSettings.simple.width, this.modeSettings.simple.height, {
         antialias: true,
@@ -273,13 +262,6 @@ export default {
       })
       this.ticker.start()
 
-      // let arle = PIXI.Sprite.fromImage('/img/arle_bg.png')
-      // this.stage.addChild(arle)
-
-      // this.ticker.add(function (delta) {
-      //   arle.rotation += 0.1 * delta
-      // })
-
       let setup = () => {
         // Mark textures as loaded
         this.texturesLoaded = this.texturesToLoad.every((texture) => {
@@ -296,14 +278,13 @@ export default {
         this.initScoreDisplay()
         this.initGameOverX()
         this.initPuyoDisplay()
-        // this.initShadowDisplay()
+        this.initShadowDisplay()
         // this.initCursorDisplay()
         // this.initArrowDisplay()
         this.initGarbageDisplay()
         this.initFieldControls()
         this.initChainCounter()
         this.initToolDisplay()
-        this.boardInteractivity()
 
         // Marked game as loaded
         this.gameLoaded = true
@@ -421,6 +402,33 @@ export default {
         }
       }
       this.puyoDisplay = spriteArray
+
+      let me = this
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        for (let x = 0; x < this.Field.columns; x++) {
+          this.puyoDisplay[y][x].interactive = true
+          this.puyoDisplay[y][x].editPuyo = function () {
+            me.isMouseDown = true
+            if (me.editorCurrentTool.layer === 'main' && me.gameState === 'idle') {
+              me.fieldData[y].splice(x, 1, me.editorCurrentTool.puyo)
+              me.updatePuyoSprites()
+            }
+          }
+          this.puyoDisplay[y][x].mouseOver = function () {
+            if (me.isMouseDown === true && me.editorCurrentTool.layer === 'main' && me.gameState === 'idle') {
+              me.fieldData[y].splice(x, 1, me.editorCurrentTool.puyo)
+              me.updatePuyoSprites()
+            }
+          }
+          this.puyoDisplay[y][x].mouseUp = function () {
+            me.isMouseDown = false
+          }
+          this.puyoDisplay[y][x].on('pointerdown', this.puyoDisplay[y][x].editPuyo)
+          this.puyoDisplay[y][x].on('pointerover', this.puyoDisplay[y][x].mouseOver)
+          this.puyoDisplay[y][x].on('pointerupoutside', this.puyoDisplay[y][x].mouseUp)
+          this.puyoDisplay[y][x].on('pointerup', this.puyoDisplay[y][x].mouseUp)
+        }
+      }
       this.updatePuyoSprites()
     },
     updatePuyoSprites: function () {
@@ -435,6 +443,27 @@ export default {
           this.puyoDisplay[y][x].anchor.set(0.5, 0.5)
         }
       }
+      console.log('updated sprites')
+    },
+    updateShadowSprite: function (x, y) {
+      let color = ''
+      if (this.shadowData[y][x] === Puyo.Red) {
+        color = 'red'
+      } else if (this.shadowData[y][x] === Puyo.Green) {
+        color = 'green'
+      } else if (this.shadowData[y][x] === Puyo.Blue) {
+        color = 'blue'
+      } else if (this.shadowData[y][x] === Puyo.Yellow) {
+        color = 'yellow'
+      } else if (this.shadowData[y][x] === Puyo.Purple) {
+        color = 'purple'
+      } else if (this.shadowData[y][x] === Puyo.Garbage) {
+        color = 'garbage'
+      } else {
+        color = 'spacer'
+      }
+      this.shadowDisplay[y][x].texture = this.puyoSprites[`${color}_n.png`]
+      console.log('Updated the shadow sprite.')
     },
     determineConnections: function () {
       let array = []
@@ -445,7 +474,7 @@ export default {
             array[y][x] = 'n'
           } else if (this.dropDistances[y][x] > 0) {
             array[y][x] = 'n'
-          } else if (this.fieldData[y][x] === Puyo.None) {
+          } else if (this.fieldData[y][x] === Puyo.None || this.fieldData[y][x] === Puyo.Garbage) {
             array[y][x] = 'n'
           } else {
             let check = {}
@@ -640,16 +669,62 @@ export default {
     },
     initShadowDisplay: function () {
       let spriteArray = []
+      let color = ''
       for (let y = 0; y < this.fieldData.length; y++) {
         spriteArray[y] = []
         for (let x = 0; x < this.fieldData[0].length; x++) {
-          spriteArray[y][x] = new Sprite()
+          if (this.shadowData[y][x] === Puyo.Red) {
+            color = 'red'
+          } else if (this.shadowData[y][x] === Puyo.Green) {
+            color = 'green'
+          } else if (this.shadowData[y][x] === Puyo.Blue) {
+            color = 'blue'
+          } else if (this.shadowData[y][x] === Puyo.Yellow) {
+            color = 'yellow'
+          } else if (this.shadowData[y][x] === Puyo.Purple) {
+            color = 'purple'
+          } else if (this.shadowData[y][x] === Puyo.Garbage) {
+            color = 'garbage'
+          } else {
+            color = 'spacer'
+          }
+          spriteArray[y][x] = new Sprite(this.puyoSprites[`${color}_n.png`])
           spriteArray[y][x].anchor.set(0.5)
           spriteArray[y][x].alpha = 0.4
           spriteArray[y][x].x = this.coordArray[y][x].x
           spriteArray[y][x].y = this.coordArray[y][x].y
           this.stage.addChild(spriteArray[y][x])
-          this.shadowDisplay.push(spriteArray[y][x])
+        }
+      }
+      this.shadowDisplay = spriteArray
+
+      let me = this
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        for (let x = 0; x < this.Field.columns; x++) {
+          // Update shadow sprites with their imported colors
+          this.updateShadowSprite(x, y)
+
+          this.shadowDisplay[y][x].interactive = false
+          this.shadowDisplay[y][x].editPuyo = function () {
+            me.isMouseDown = true
+            if (me.editorCurrentTool.layer === 'shadow' && me.gameState === 'idle') {
+              me.shadowData[y].splice(x, 1, me.editorCurrentTool.puyo)
+              me.updateShadowSprite(x, y)
+            }
+          }
+          this.shadowDisplay[y][x].mouseOver = function () {
+            if (me.isMouseDown === true && me.editorCurrentTool.layer === 'shadow' && me.gameState === 'idle') {
+              me.shadowData[y].splice(x, 1, me.editorCurrentTool.puyo)
+              me.updateShadowSprite(x, y)
+            }
+          }
+          this.shadowDisplay[y][x].mouseUp = function () {
+            me.isMouseDown = false
+          }
+          this.shadowDisplay[y][x].on('pointerdown', this.shadowDisplay[y][x].editPuyo)
+          this.shadowDisplay[y][x].on('pointerover', this.shadowDisplay[y][x].mouseOver)
+          this.shadowDisplay[y][x].on('pointerupoutside', this.shadowDisplay[y][x].mouseUp)
+          this.shadowDisplay[y][x].on('pointerup', this.shadowDisplay[y][x].mouseUp)
         }
       }
     },
@@ -683,32 +758,38 @@ export default {
       }
     },
     initToolDisplay: function () {
+      let me = this
+
       // "Speech bubble"
       this.fieldDisplay.editBubble = new Sprite(resources['/img/edit_bubble.png'].texture)
       this.fieldDisplay.editBubble.x = 520
       this.fieldDisplay.editBubble.y = 584
       this.fieldDisplay.editBubble.anchor.set(0.87, 0)
+      this.fieldDisplay.editBubble.scale.set(0, 0)
       this.fieldDisplay.editBubble.interactive = true
       this.fieldDisplay.editBubble.visible = false
       this.stage.addChild(this.fieldDisplay.editBubble)
 
-      let me = this
-      let nameToolsPage1 = [[this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png'], resources['/img/editor_x.png'].texture],
-        [this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png']]]
-      let selectorToolsPage1 = []
-      let spritesToolsPage1 = []
-      let colorsPage1 = ['R', 'G', 'B', 'Y', 'P', 'J', '0', 'R', 'G', 'B', 'Y', 'P', 'J']
-      let startX = 56
-      let startY = 668
+      // Current tool cursor
+      this.toolCursor = new Sprite(resources['/img/current_tool.png'].texture)
+      this.toolCursor.anchor.set(0.5, 0.5)
+      this.toolCursor.visible = false
+      this.stage.addChild(this.toolCursor)
 
+      // Initialize PIXI Containers
       this.editorTools[0] = new PIXI.Container()
-      this.editorSelectors[0] = new PIXI.Container()
       this.editorTools[1] = new PIXI.Container()
-      this.editorSelectors[1] = new PIXI.Container()
+
+      // Set up page 1
+      let nameToolsPage1 = [[this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png'], resources['/img/editor_x.png'].texture],
+        [this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png'], resources['/img/editor_x.png'].texture]]
+      let spritesToolsPage1 = []
+      let colorsPage1 = ['R', 'G', 'B', 'Y', 'P', 'J', '0', 'R', 'G', 'B', 'Y', 'P', 'J', '0']
+      let startX = 56 + 32
+      let startY = 668 + 32
 
       for (let y = 0; y < nameToolsPage1.length; y++) {
         spritesToolsPage1[y] = []
-        selectorToolsPage1[y] = []
         for (let x = 0; x < nameToolsPage1[y].length; x++) {
           // Placement variables
           let horizontalPadding = 0
@@ -731,7 +812,7 @@ export default {
           } else {
             spritesToolsPage1[y][x].targetLayer = 'shadow'
           }
-          selectorToolsPage1[y][x] = new Sprite(resources['/img/cursor.png'].texture)
+          spritesToolsPage1[y][x].anchor.set(0.5, 0.5)
 
           // Define interactions
           spritesToolsPage1[y][x].on('pointerdown', function () {
@@ -739,6 +820,9 @@ export default {
             me.editorCurrentTool.item = this.puyoIndex
             me.editorCurrentTool.puyo = this.puyoColor
             me.editorCurrentTool.layer = this.targetLayer
+            me.targetLayer(this.targetLayer) // Sets the field's target layer
+            me.editorCurrentTool.x = this.x
+            me.editorCurrentTool.y = this.y
             me.updateToolboxSelection()
             console.log(me.editorCurrentTool)
           })
@@ -747,18 +831,13 @@ export default {
           if (y === 0) {
             spritesToolsPage1[y][x].x = startX + (spritesToolsPage1[y][x].width + horizontalPadding) * x
             spritesToolsPage1[y][x].y = startY + (spritesToolsPage1[y][x].height + verticalPadding) * y
-            selectorToolsPage1[y][x].x = startX + (selectorToolsPage1[y][x].width + horizontalPadding) * x
-            selectorToolsPage1[y][x].y = startY + (selectorToolsPage1[y][x].height + verticalPadding) * y
           } else {
-            spritesToolsPage1[y][x].x = startX + (spritesToolsPage1[y][x].width + horizontalPadding) * x + 32
+            spritesToolsPage1[y][x].x = startX + (spritesToolsPage1[y][x].width + horizontalPadding) * x
             spritesToolsPage1[y][x].y = startY + (spritesToolsPage1[y][x].height + verticalPadding) * y
-            selectorToolsPage1[y][x].x = startX + (selectorToolsPage1[y][x].width + horizontalPadding) * x + 32
-            selectorToolsPage1[y][x].y = startY + (selectorToolsPage1[y][x].height + verticalPadding) * y
           }
 
           // Add sprite to PIXI containers
           this.editorTools[0].addChild(spritesToolsPage1[y][x])
-          this.editorSelectors[0].addChild(selectorToolsPage1[y][x])
         }
       }
 
@@ -777,22 +856,7 @@ export default {
       this.stage.addChild(this.editorWindow.right)
 
       this.stage.addChild(this.editorTools[0])
-      this.stage.addChild(this.editorSelectors[0])
       this.editorTools[0].visible = false
-      this.editorSelectors[0].visible = false
-    },
-    boardInteractivity: function () {
-      let me = this
-      for (let y = 0; y < this.Field.totalRows; y++) {
-        for (let x = 0; x < this.Field.columns; x++) {
-          this.puyoDisplay[y][x].interactive = true
-          this.puyoDisplay[y][x].editPuyo = function () {
-            me.fieldData[y].splice(x, 1, me.editorCurrentTool.puyo)
-            me.updatePuyoSprites()
-          }
-          this.puyoDisplay[y][x].on('pointerdown', this.puyoDisplay[y][x].editPuyo)
-        }
-      }
     },
     openToolbox: function (delta) {
       let duration = 15 // frames
@@ -805,7 +869,6 @@ export default {
       } else {
         this.ticker.remove(this.openToolbox)
         this.ticker.add(this.displayTools)
-        this.ticker.add(this.displaySelection)
         this.editorWindow.left.visible = true
         this.editorWindow.right.visible = true
         this.timers.toolIntroFade = 0
@@ -819,6 +882,7 @@ export default {
       let delayArray = []
       let alphaArray = []
       this.editorTools[0].visible = true
+      this.updateToolboxSelection()
 
       if (t <= delay * this.editorTools[0].children.length + fadeSpeed) {
         for (let i = 0; i < this.editorTools[0].children.length; i++) {
@@ -826,61 +890,44 @@ export default {
         }
         for (let i = 0; i < this.editorTools[0].children.length; i++) {
           alphaArray.push((delayArray[i] + t) / fadeSpeed)
+
+          // Fade in the Puyos.
           if (i < 7) {
             this.editorTools[0].children[i].alpha = alphaArray[i]
           } else {
             this.editorTools[0].children[i].alpha = alphaArray[i] * 0.17
           }
+
+          // Fade in the selector
+          if (i === this.editorCurrentTool.item) {
+            this.toolCursor.alpha = alphaArray[i]
+          }
         }
       } else {
         this.ticker.remove(this.displayTools)
-        this.editorSelectors[0].visible = true
-        for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
-          if (i !== this.editorCurrentTool.item) {
-            this.editorSelectors[0].children[i].visible = false
-          } else {
-            this.editorSelectors[0].children[i].visible = true
-          }
-        }
+        this.updateToolboxSelection()
         console.log('removed tool ticker')
       }
     },
-    displaySelection: function (delta) {
-      let fadeSpeed = 12
-      this.timers.toolIntroFade += delta
-      let t = this.timers.toolIntroFade
-      let delay = 2
-      let delayArray = []
-      let alphaArray = []
-      this.editorSelectors[0].visible = true
-      for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
-        if (i !== this.editorCurrentTool.item) {
-          this.editorSelectors[0].children[i].visible = false
-        } else {
-          this.editorSelectors[0].children[i].visible = true
-        }
-      }
-
-      if (t <= delay * this.editorSelectors[0].children.length + fadeSpeed) {
-        for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
-          delayArray.push(0 - i * delay)
-        }
-        for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
-          alphaArray.push((delayArray[i] + t) / fadeSpeed)
-          this.editorSelectors[0].children[i].alpha = alphaArray[i]
-        }
-      } else {
-        this.ticker.remove(this.displaySelection)
-        this.editorSelectors[0].visible = true
-        console.log('removed selection ticker')
-      }
-    },
     updateToolboxSelection: function () {
-      for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
-        if (i !== this.editorCurrentTool.item) {
-          this.editorSelectors[0].children[i].visible = false
-        } else {
-          this.editorSelectors[0].children[i].visible = true
+      this.toolCursor.visible = true
+      this.toolCursor.position.set(this.editorCurrentTool.x, this.editorCurrentTool.y)
+    },
+    targetLayer: function (layer) {
+      // Disable interactions for Puyos that aren't on the targetted layer.
+      if (layer === 'main') {
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            this.puyoDisplay[y][x].interactive = true
+            this.shadowDisplay[y][x].interactive = false
+          }
+        }
+      } else if (layer === 'shadow') {
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            this.puyoDisplay[y][x].interactive = false
+            this.shadowDisplay[y][x].interactive = true
+          }
         }
       }
     },
@@ -891,12 +938,8 @@ export default {
       this.editorTools[0].visible = false
       this.editorWindow.left.visible = false
       this.editorWindow.right.visible = false
-      this.editorSelectors[0].visible = false
-      for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
-        this.editorSelectors[0].children[i].visible = false
-      }
+      this.toolCursor.visible = false
       this.ticker.remove(this.displayTools)
-      this.ticker.remove(this.displaySelection)
 
       if (this.timers.editBubble >= 0) {
         this.fieldDisplay.editBubble.scale.set(this.Easers.editBubble(t / duration), this.Easers.editBubble(t / duration))
@@ -911,22 +954,23 @@ export default {
     gameLoop: function (delta) {
       if (this.gameState === 'idle') {
         this.stateEditField(delta)
-      } else if (this.gameState === 'dropping') {
-        this.stateDropPuyos(delta)
-      } else if (this.gameState === 'popping') {
-        this.statePopPuyos(delta)
+      } else if (this.gameState === 'dropping' && this.needToReset === false) {
+        this.animateDropPuyos(delta)
+      } else if (this.gameState === 'popping' && this.needToReset === false) {
+        this.animatePopPuyos(delta)
       }
       this.renderer.render(this.stage)
     },
     stateEditField: function (delta) {
-      // Nothing
+      //
     },
-    stateDropPuyos: function (delta) {
+    animateDropPuyos: function (delta) {
       let t = this.frame
       if (this.stopGame === true) {
         delta = 0
       }
-      for (let i = 0; i < Math.round(delta); i++) { // Repeat the logic based on skipped frames
+      let speed = delta * this.simulationSpeed
+      for (let i = 0; i < Math.round(speed); i++) { // Repeat the logic based on skipped frames
         for (let y = 0; y < this.Field.totalRows; y++) {
           for (let x = 0; x < this.Field.columns; x++) {
             if (this.dropDistances[y][x] > 0) {
@@ -969,12 +1013,13 @@ export default {
         this.frame += 1
       }
     },
-    statePopPuyos: function (delta) {
+    animatePopPuyos: function (delta) {
       let t = this.frame
       if (this.stopGame === true) {
         delta = 0
       }
-      for (let i = 0; i < Math.round(delta); i++) { // Repeat the logic if frames were skipped
+      let speed = delta * this.simulationSpeed
+      for (let i = 0; i < Math.round(speed); i++) { // Repeat the logic if frames were skipped
         for (let y = 0; y < this.Field.totalRows; y++) {
           for (let x = 0; x < this.Field.columns; x++) {
             if (this.poppingCells[y][x] === true) {
@@ -1034,6 +1079,8 @@ export default {
 
       if (clearResult.popData.poppingGroups.length !== 0) {
         this.calculateScore(clearResult.popData)
+      } else {
+        this.gameState = 'chainStopped'
       }
     },
     setMouseDown: function (bool) {
@@ -1042,11 +1089,23 @@ export default {
     // Simulation controls
     controlField: function (control) { // expects a string
       if (control === 'reset') {
-        if (this.gameState === 'chainStopped') {
-          this.resetField()
-        } else if (this.gameState !== 'idle') {
-          this.needToReset = true
+        // if (this.gameState === 'chainStopped') {
+        //   this.resetField()
+        // } else if (this.gameState !== 'idle') {
+        //   this.needToReset = true
+        // }
+
+        // Stop all tickers, reset timers, and reset the field.
+        this.needToReset = true
+        this.ticker.remove(this.animateChainCounter)
+        this.ticker.remove(this.animateDropPuyos)
+        this.ticker.remove(this.animatePopPuyos)
+        this.ticker.remove(this.animateGarbageTray)
+        this.cellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        for (let key in this.timers) {
+          this.timers[key] = 0
         }
+        this.resetField()
       } else if (control === 'back') {
         console.log(`I didn't make a function for back yet.`)
       } else if (control === 'pause') {
@@ -1054,20 +1113,27 @@ export default {
       } else if (control === 'play') {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
+        } else if (this.gameState === 'popping' || this.gameState === 'dropping') {
+          this.simulationSpeed = 24
         }
         this.playStep()
       } else if (control === 'auto') {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
+          this.simulationSpeed = 1
+        } else if (this.gameState === 'popping' || this.gameState === 'dropping') {
+          this.simulationSpeed = 8
+        } else if (this.gameState === 'chainStopped') {
+          this.simulationSpeed = 1
         }
         this.playChain()
       } else if (control === 'edit') {
-        if (this.gameState !== 'editing') {
+        if (this.gameState !== 'editor') {
           this.ticker.add(this.openToolbox)
           this.ticker.remove(this.closeToolbox)
-          this.gameState = 'editing'
+          this.gameState = 'editor'
           this.fieldDisplay.editBubble.visible = true
-        } else if (this.gameState === 'editing') {
+        } else if (this.gameState === 'editor') {
           this.gameState = 'idle'
           this.ticker.remove(this.openToolbox)
           this.ticker.add(this.closeToolbox)
@@ -1075,22 +1141,9 @@ export default {
       }
     },
     resetField: function () {
-      let poppingCells = []
-      let droppingCells = []
-      let dropDistances = []
-      for (let y = 0; y < this.Field.totalRows; y++) {
-        poppingCells[y] = []
-        droppingCells[y] = []
-        dropDistances[y] = []
-        for (let x = 0; x < this.Field.columns; x++) {
-          poppingCells[y][x] = false
-          droppingCells[y][x] = false
-          dropDistances[y][x] = false
-        }
-      }
-      this.poppingCells = poppingCells
-      this.droppingCells = droppingCells
-      this.dropDistances = dropDistances
+      this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.dropDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.gameState = 'idle'
       this.score = 0
       this.stepScore = 0
@@ -1103,32 +1156,6 @@ export default {
         this.fieldData = this.fieldOriginal
         this.needToReset = false
       })
-    },
-    clearPuyos: function () {
-      let clearResult = Chainsim.Simulate.clearPuyos(this.Field)
-
-      // Create an array that tracks which cells are animating.
-      let popAnimationArray = []
-      for (let y = 0; y < this.Field.totalRows; y++) {
-        popAnimationArray[y] = []
-        for (let x = 0; x < this.Field.columns; x++) {
-          if (this.Field.map[y][x].toPop === true) {
-            popAnimationArray[y][x] = true
-          } else {
-            popAnimationArray[y][x] = false
-          }
-        }
-      }
-      this.poppingCells = popAnimationArray
-      this.clearPuyosResult = Chainsim.mapToStringArray(clearResult.newField.map)
-
-      // If there's no pops to do, set gameState to 'idle'. Otherwise, set 'popping'
-      if (clearResult.popData.poppingGroups.length === 0) {
-        this.gameState = 'chainStopped'
-      } else {
-        this.calculateScore(clearResult.popData)
-        this.gameState = 'popping'
-      }
     },
     calculateScore: function (popData) {
       this.chainLength += 1
@@ -1175,6 +1202,32 @@ export default {
         this.chainCountDisplay.y = this.chainCountDisplay.origY
         this.ticker.remove(this.animateChainCounter)
         console.log('counter bounce over')
+      }
+    },
+    animateGarbageTray: function (delta) {
+      let t = this.timers.garbageTray
+      let centerX = (this.garbageDisplay[2].origX + this.garbageDisplay[3].origX) / 2
+      let duration = 8
+      if (t < 8) {
+        for (let i = 0; i < 6; i++) {
+          this.garbageDisplay[i].x = this.garbageDisplay[i].x + ((this.garbageDisplay[i].origX - centerX) / duration)
+        }
+
+        // Fallback in case it goes too far
+        for (let i = 0; i < 3; i++) {
+          if (this.garbageDisplay[i].x < this.garbageDisplay.origX) {
+            this.garbageDisplay[i].x = this.garbageDisplay.origX
+          }
+        }
+        for (let i = 3; i < 6; i++) {
+          if (this.garbageDisplay[i].x > this.garbageDisplay.origX) {
+            this.garbageDisplay[i].x = this.garbageDisplay.origX
+          }
+        }
+        this.timers.garbageTray += 1
+      } else {
+        this.ticker.remove(this.animateGarbageTray)
+        console.log('removed garbage tray animation')
       }
     },
     playStep: function () {
@@ -1263,6 +1316,26 @@ export default {
         this.setPopData()
         this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
         this.updatePuyoSprites()
+      } else if (newVal === 'idle') {
+        this.ticker.addOnce(() => {
+          console.log('resetting field')
+          this.updatePuyoSprites()
+        })
+      }
+
+      // Hide helper layers if a chain is playing.
+      if (newVal === 'idle' || newVal === 'editor') {
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            this.shadowDisplay[y][x].visible = true
+          }
+        }
+      } else {
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            this.shadowDisplay[y][x].visible = false
+          }
+        }
       }
     },
     isPopping: function (newVal, oldVal) {
@@ -1291,15 +1364,25 @@ export default {
           if (this.chainAutoPlay === true) {
             this.gameState = 'popping'
           } else {
+            this.simulationSpeed = 1
             this.gameState = 'chainStopped'
           }
         }
       }
     },
     chainLength: function () {
+      this.ticker.remove(this.animateChainCounter)
       this.timers.chainLength = 0
       this.chainCountDisplay.y = this.chainCountDisplay.origY
       this.ticker.add(this.animateChainCounter)
+    },
+    garbage: function () {
+      this.ticker.remove(this.animateGarbageTray)
+      this.timers.garbageTray = 0
+      for (let i = 0; i < 6; i++) {
+        this.garbageDisplay[i].x = (this.garbageDisplay[2].origX + this.garbageDisplay[3].origX) / 2
+      }
+      this.ticker.add(this.animateGarbageTray)
     }
   }
 }

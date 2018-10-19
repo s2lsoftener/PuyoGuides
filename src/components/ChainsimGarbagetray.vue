@@ -1,14 +1,13 @@
 <script>
 export default {
   name: 'ChainsimGarbagetray',
-  props: ['garbage', 'puyoSprites', 'gameLoaded', 'garbageDisplay', 'frame', 'delta'],
+  props: ['garbage', 'puyoSprites', 'gameLoaded', 'garbageDisplay'],
   render: function (h) {
     return h() // Render nothing, avoid error output.
   },
   data () {
     return {
-      icons: [null, null, null, null, null, null],
-      toggleAnimation: false
+      icons: ['spacer_n', 'spacer_n', 'spacer_n', 'spacer_n', 'spacer_n', 'spacer_n']
     }
   },
   methods: {
@@ -91,39 +90,11 @@ export default {
       }
     },
     garbage: function () {
-      this.icons = [null, null, null, null, null, null]
+      this.icons = ['spacer_n', 'spacer_n', 'spacer_n', 'spacer_n', 'spacer_n', 'spacer_n']
       this.countGarbage(this.garbage, 0) // second parameter is i, the index for icons (array)
+      console.log(this.garbageDisplay)
       for (let i = 0; i < 6; i++) {
         this.garbageDisplay[i].texture = this.puyoSprites[`${this.icons[i]}.png`]
-      }
-      this.toggleAnimation = false
-
-      // Center icons in tray
-      for (let i = 0; i < 6; i++) {
-        this.garbageDisplay[i].x = (this.garbageDisplay[2].x + this.garbageDisplay[3].x) / 2
-      }
-
-      this.$nextTick(() => {
-        this.toggleAnimation = true
-      })
-    },
-    frame: function () {
-      if (this.toggleAnimation === true) {
-        for (let i = 0; i < 3; i++) {
-          if (this.garbageDisplay[i].x - 12 > this.garbageDisplay[i].origX) {
-            this.garbageDisplay[i].x -= 12 + (12 * (this.delta - 1))
-          } else {
-            this.garbageDisplay[i].x = this.garbageDisplay[i].origX
-          }
-        }
-
-        for (let i = 3; i < 6; i++) {
-          if (this.garbageDisplay[i].x + 12 < this.garbageDisplay[i].origX) {
-            this.garbageDisplay[i].x += 12 + (12 * (this.delta - 1))
-          } else {
-            this.garbageDisplay[i].x = this.garbageDisplay[i].origX
-          }
-        }
       }
     }
   }
