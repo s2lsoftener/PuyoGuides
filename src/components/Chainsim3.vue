@@ -252,10 +252,18 @@ export default {
       //   resolution: 1
       // })
       // this.$refs.game.appendChild(this.app.renderer.view)
-      // this.app.stage = new PIXI.Container()
-      // this.app.renderer.render(this.app.stage)
+      // this.stage = new PIXI.Container()
+      // this.app.renderer.render(this.stage)
 
-      this.renderer = new PIXI.WebGLRenderer(600, 800)
+      // eslint-disable-next-line
+      this.renderer = new PIXI.autoDetectRenderer(this.modeSettings.simple.width, this.modeSettings.simple.height, {
+        antialias: true,
+        transparent: false,
+        backgroundColor: 0x061639,
+        resolution: 1
+      })
+      this.renderer.view.style.width = `${this.modeSettings.simple.width * this.scaleFactor}px`
+      this.renderer.view.style.height = `${this.modeSettings.simple.height * this.scaleFactor}px`
       this.$refs.game.appendChild(this.renderer.view)
       this.stage = new PIXI.Container()
 
@@ -265,115 +273,114 @@ export default {
       })
       this.ticker.start()
 
-      let arle = PIXI.Sprite.fromImage('/img/arle_bg.png')
-      this.stage.addChild(arle)
+      // let arle = PIXI.Sprite.fromImage('/img/arle_bg.png')
+      // this.stage.addChild(arle)
 
-      this.ticker.add(function (delta) {
-        arle.rotation += 0.1 * delta
-      })
-
-      // let setup = () => {
-      //   // Mark textures as loaded
-      //   this.texturesLoaded = this.texturesToLoad.every((texture) => {
-      //     return resources[texture] !== undefined
-      //   })
-
-      //   // Assign loaded spritesheets to vue data
-      //   this.fieldSprites = resources['/img/field.json'].textures
-      //   this.puyoSprites = resources['/img/puyo.json'].textures
-      //   this.chainCountSprites = resources['/img/chain_font.json'].textures
-
-      //   // Place sprites on the field
-      //   this.initFieldDisplay()
-      //   this.initScoreDisplay()
-      //   this.initGameOverX()
-      //   this.initPuyoDisplay()
-      //   // this.initShadowDisplay()
-      //   // this.initCursorDisplay()
-      //   // this.initArrowDisplay()
-      //   this.initGarbageDisplay()
-      //   this.initFieldControls()
-      //   this.initChainCounter()
-      //   this.initToolDisplay()
-      //   this.boardInteractivity()
-
-      //   // Marked game as loaded
-      //   this.gameLoaded = true
-
-      //   // Run the game loop
-      //   this.app.ticker = new PIXI.ticker.Ticker()
-      //   this.app.ticker.add(delta => this.gameLoop(delta))
-      // }
-
-      // let loadProgressHandler = (loader, resource) => {
-      //   console.log(`Loading: ${resource.url}`)
-      //   console.log(`Progress: ${Math.floor(loader.progress)}%`)
-      // }
-
-      // // Check if textures have already been loaded
-      // this.texturesLoaded = this.texturesToLoad.every((texture) => {
-      //   return resources[texture] !== undefined
+      // this.ticker.add(function (delta) {
+      //   arle.rotation += 0.1 * delta
       // })
-      // if (this.texturesLoaded === false) {
-      //   loader
-      //     .add(this.texturesToLoad)
-      //     .on('progress', loadProgressHandler)
-      //     .load(setup)
-      // } else {
-      //   loader
-      //     .load(setup)
-      // }
+
+      let setup = () => {
+        // Mark textures as loaded
+        this.texturesLoaded = this.texturesToLoad.every((texture) => {
+          return resources[texture] !== undefined
+        })
+
+        // Assign loaded spritesheets to vue data
+        this.fieldSprites = resources['/img/field.json'].textures
+        this.puyoSprites = resources['/img/puyo.json'].textures
+        this.chainCountSprites = resources['/img/chain_font.json'].textures
+
+        // Place sprites on the field
+        this.initFieldDisplay()
+        this.initScoreDisplay()
+        this.initGameOverX()
+        this.initPuyoDisplay()
+        // this.initShadowDisplay()
+        // this.initCursorDisplay()
+        // this.initArrowDisplay()
+        this.initGarbageDisplay()
+        this.initFieldControls()
+        this.initChainCounter()
+        this.initToolDisplay()
+        this.boardInteractivity()
+
+        // Marked game as loaded
+        this.gameLoaded = true
+
+        // Run the game loop
+        this.ticker.add(delta => this.gameLoop(delta))
+      }
+
+      let loadProgressHandler = (loader, resource) => {
+        console.log(`Loading: ${resource.url}`)
+        console.log(`Progress: ${Math.floor(loader.progress)}%`)
+      }
+
+      // Check if textures have already been loaded
+      this.texturesLoaded = this.texturesToLoad.every((texture) => {
+        return resources[texture] !== undefined
+      })
+      if (this.texturesLoaded === false) {
+        loader
+          .add(this.texturesToLoad)
+          .on('progress', loadProgressHandler)
+          .load(setup)
+      } else {
+        loader
+          .load(setup)
+      }
     },
     initFieldDisplay: function () {
       // Character Background
       this.fieldDisplay.charBG = new Sprite(resources['/img/arle_bg.png'].texture)
       this.fieldDisplay.charBG.x = 17
       this.fieldDisplay.charBG.y = 63
-      this.app.stage.addChild(this.fieldDisplay.charBG)
+      this.stage.addChild(this.fieldDisplay.charBG)
 
       // Top Border
       this.fieldDisplay.borderTop = new Sprite(this.fieldSprites['field_border_top.png'])
       this.fieldDisplay.borderTop.y = 12
-      this.app.stage.addChild(this.fieldDisplay.borderTop)
+      this.stage.addChild(this.fieldDisplay.borderTop)
 
       // Left border, top half
       this.fieldDisplay.borderLeftTop = new Sprite(this.fieldSprites['field_border_left_tophalf.png'])
       this.fieldDisplay.borderLeftTop.y = 64
-      this.app.stage.addChild(this.fieldDisplay.borderLeftTop)
+      this.stage.addChild(this.fieldDisplay.borderLeftTop)
 
       // Left border, bottom half
       this.fieldDisplay.borderLeftBottom = new Sprite(this.fieldSprites['field_border_left_bottomhalf.png'])
       this.fieldDisplay.borderLeftBottom.y = 416
-      this.app.stage.addChild(this.fieldDisplay.borderLeftBottom)
+      this.stage.addChild(this.fieldDisplay.borderLeftBottom)
 
       // Right border, top half
       this.fieldDisplay.borderRightTop = new Sprite(this.fieldSprites['field_border_right_tophalf.png'])
       this.fieldDisplay.borderRightTop.x = 417
       this.fieldDisplay.borderRightTop.y = 64
-      this.app.stage.addChild(this.fieldDisplay.borderRightTop)
+      this.stage.addChild(this.fieldDisplay.borderRightTop)
 
       // Right border, bottom half
       this.fieldDisplay.borderRightBottom = new Sprite(this.fieldSprites['field_border_right_bottomhalf.png'])
       this.fieldDisplay.borderRightBottom.x = 417
       this.fieldDisplay.borderRightBottom.y = 416
-      this.app.stage.addChild(this.fieldDisplay.borderRightBottom)
+      this.stage.addChild(this.fieldDisplay.borderRightBottom)
 
       // Bottom border
       this.fieldDisplay.borderBottom = new Sprite(this.fieldSprites['field_border_bottom.png'])
       this.fieldDisplay.borderBottom.y = 782
-      this.app.stage.addChild(this.fieldDisplay.borderBottom)
+      this.stage.addChild(this.fieldDisplay.borderBottom)
 
       // Next Window Border
       this.fieldDisplay.nextWindowBorder = new Sprite(this.fieldSprites['next_border_1p.png'])
       this.fieldDisplay.nextWindowBorder.x = 456
       this.fieldDisplay.nextWindowBorder.y = 40
-      this.app.stage.addChild(this.fieldDisplay.nextWindowBorder)
+      this.stage.addChild(this.fieldDisplay.nextWindowBorder)
 
       // Next Window Inner
       this.fieldDisplay.nextWindowInner = new Sprite(this.fieldSprites['next_background_1p.png'])
       this.fieldDisplay.nextWindowInner.x = 456
       this.fieldDisplay.nextWindowInner.y = 40
-      this.app.stage.addChild(this.fieldDisplay.nextWindowInner)
+      this.stage.addChild(this.fieldDisplay.nextWindowInner)
     },
     initScoreDisplay: function () {
       let startX = 150
@@ -388,7 +395,7 @@ export default {
         spriteArray[i].anchor.set(0.5)
         spriteArray[i].x = startX + spriteArray[i].width * 0.9 * i
         spriteArray[i].y = 815
-        this.app.stage.addChild(spriteArray[i])
+        this.stage.addChild(spriteArray[i])
       }
 
       // Set scoreDisplay array
@@ -399,7 +406,7 @@ export default {
       this.fieldDisplay.redX.anchor.set(0.5)
       this.fieldDisplay.redX.x = this.coordArray[1][2].x
       this.fieldDisplay.redX.y = this.coordArray[1][2].y
-      this.app.stage.addChild(this.fieldDisplay.redX)
+      this.stage.addChild(this.fieldDisplay.redX)
     },
     initPuyoDisplay: function () {
       let spriteArray = []
@@ -410,7 +417,7 @@ export default {
           spriteArray[y][x].anchor.set(0.5)
           spriteArray[y][x].x = this.coordArray[y][x].x
           spriteArray[y][x].y = this.coordArray[y][x].y
-          this.app.stage.addChild(spriteArray[y][x])
+          this.stage.addChild(spriteArray[y][x])
         }
       }
       this.puyoDisplay = spriteArray
@@ -517,13 +524,13 @@ export default {
         this.fieldDisplay.garbageTray = new Sprite(this.fieldSprites['garbage_tray.png'])
         this.fieldDisplay.garbageTray.x = 456
         this.fieldDisplay.garbageTray.y = 360
-        this.app.stage.addChild(this.fieldDisplay.garbageTray)
+        this.stage.addChild(this.fieldDisplay.garbageTray)
       } else if (this.displayMode === 'simple') {
         this.fieldDisplay.garbageTray = new Sprite(this.fieldSprites['garbage_tray.png'])
         this.fieldDisplay.garbageTray.x = 316
         this.fieldDisplay.garbageTray.y = 795
         this.fieldDisplay.garbageTray.scale.set(0.7, 0.7)
-        this.app.stage.addChild(this.fieldDisplay.garbageTray)
+        this.stage.addChild(this.fieldDisplay.garbageTray)
       }
 
       if (this.displayMode === 'full') {
@@ -534,7 +541,7 @@ export default {
           spriteArray[i].x = startX + spriteArray[i].width * i
           spriteArray[i].origX = startX + spriteArray[i].width * i
           spriteArray[i].y = 350
-          this.app.stage.addChild(spriteArray[i])
+          this.stage.addChild(spriteArray[i])
         }
         this.garbageDisplay = spriteArray
       } else if (this.displayMode === 'simple') {
@@ -546,7 +553,7 @@ export default {
           spriteArray[i].x = startX + spriteArray[i].width * i
           spriteArray[i].origX = startX + spriteArray[i].width * i
           spriteArray[i].y = 790
-          this.app.stage.addChild(spriteArray[i])
+          this.stage.addChild(spriteArray[i])
         }
         this.garbageDisplay = spriteArray
       }
@@ -561,7 +568,7 @@ export default {
       this.fieldControls.reset.y = startY
       this.fieldControls.reset.interactive = true
       this.fieldControls.reset.buttonMode = true
-      this.app.stage.addChild(this.fieldControls.reset)
+      this.stage.addChild(this.fieldControls.reset)
       height = this.fieldControls.reset.height
 
       this.fieldControls.pause = new Sprite(this.fieldSprites['btn_pause.png'])
@@ -569,7 +576,7 @@ export default {
       this.fieldControls.pause.y = startY + height * i
       this.fieldControls.pause.interactive = true
       this.fieldControls.pause.buttonMode = true
-      this.app.stage.addChild(this.fieldControls.pause)
+      this.stage.addChild(this.fieldControls.pause)
       i += 1
 
       this.fieldControls.play = new Sprite(this.fieldSprites['btn_play.png'])
@@ -577,14 +584,14 @@ export default {
       this.fieldControls.play.y = startY + height * i
       this.fieldControls.play.interactive = true
       this.fieldControls.play.buttonMode = true
-      this.app.stage.addChild(this.fieldControls.play)
+      this.stage.addChild(this.fieldControls.play)
 
       this.fieldControls.auto = new Sprite(this.fieldSprites['btn_auto.png'])
       this.fieldControls.auto.x = 528
       this.fieldControls.auto.y = startY + height * i
       this.fieldControls.auto.interactive = true
       this.fieldControls.auto.buttonMode = true
-      this.app.stage.addChild(this.fieldControls.auto)
+      this.stage.addChild(this.fieldControls.auto)
       i += 1
 
       this.fieldDisplay.disableTouchBehind = new Sprite(resources['/img/touch_disabler.png'].texture)
@@ -592,7 +599,7 @@ export default {
       this.fieldDisplay.disableTouchBehind.y = 0
       this.fieldDisplay.disableTouchBehind.width = this.modeSettings.simple.width
       this.fieldDisplay.disableTouchBehind.height = this.modeSettings.simple.height
-      this.app.stage.addChild(this.fieldDisplay.disableTouchBehind)
+      this.stage.addChild(this.fieldDisplay.disableTouchBehind)
       this.fieldDisplay.disableTouchBehind.interactive = false
       this.fieldDisplay.disableTouchBehind.on('pointerdown', () => {
         this.controlField('edit')
@@ -603,7 +610,7 @@ export default {
       this.fieldControls.edit.y = startY + i * this.fieldControls.edit.height /* + this.fieldControls.edit.height / 3 */
       this.fieldControls.edit.interactive = true
       this.fieldControls.edit.buttonMode = true
-      this.app.stage.addChild(this.fieldControls.edit)
+      this.stage.addChild(this.fieldControls.edit)
     },
     initChainCounter: function () {
       let startX = 412
@@ -629,7 +636,7 @@ export default {
       this.chainCountDisplay.addChild(this.chainCountSprites.secondDigit)
       this.chainCountDisplay.addChild(this.chainCountSprites.chainText)
       this.chainCountDisplay.origY = this.chainCountDisplay.y
-      this.app.stage.addChild(this.chainCountDisplay)
+      this.stage.addChild(this.chainCountDisplay)
     },
     initShadowDisplay: function () {
       let spriteArray = []
@@ -641,7 +648,7 @@ export default {
           spriteArray[y][x].alpha = 0.4
           spriteArray[y][x].x = this.coordArray[y][x].x
           spriteArray[y][x].y = this.coordArray[y][x].y
-          this.app.stage.addChild(spriteArray[y][x])
+          this.stage.addChild(spriteArray[y][x])
           this.shadowDisplay.push(spriteArray[y][x])
         }
       }
@@ -655,7 +662,7 @@ export default {
           spriteArray[y][x].anchor.set(0.5)
           spriteArray[y][x].x = this.coordArray[y][x].x
           spriteArray[y][x].y = this.coordArray[y][x].y
-          this.app.stage.addChild(spriteArray[y][x])
+          this.stage.addChild(spriteArray[y][x])
           this.cursorDisplay.push(spriteArray[y][x])
         }
       }
@@ -670,7 +677,7 @@ export default {
           spriteArray[y][x].x = this.coordArray[y][x].x
           spriteArray[y][x].y = this.coordArray[y][x].y
           spriteArray[y][x].scale.set(0.9, 0.9)
-          this.app.stage.addChild(spriteArray[y][x])
+          this.stage.addChild(spriteArray[y][x])
           this.arrowDisplay.push(spriteArray[y][x])
         }
       }
@@ -683,14 +690,14 @@ export default {
       this.fieldDisplay.editBubble.anchor.set(0.87, 0)
       this.fieldDisplay.editBubble.interactive = true
       this.fieldDisplay.editBubble.visible = false
-      this.app.stage.addChild(this.fieldDisplay.editBubble)
+      this.stage.addChild(this.fieldDisplay.editBubble)
 
       let me = this
       let nameToolsPage1 = [[this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png'], resources['/img/editor_x.png'].texture],
         [this.puyoSprites['red_n.png'], this.puyoSprites['green_n.png'], this.puyoSprites['blue_n.png'], this.puyoSprites['yellow_n.png'], this.puyoSprites['purple_n.png'], this.puyoSprites['garbage_n.png']]]
       let selectorToolsPage1 = []
       let spritesToolsPage1 = []
-      let colorsPage1 = ['R', 'G', 'B', 'Y', 'P', '0', 'R', 'G', 'B', 'Y', 'P']
+      let colorsPage1 = ['R', 'G', 'B', 'Y', 'P', 'J', '0', 'R', 'G', 'B', 'Y', 'P', 'J']
       let startX = 56
       let startY = 668
 
@@ -760,17 +767,17 @@ export default {
       this.editorWindow.left.y = 600
       this.editorWindow.left.interactive = true
       this.editorWindow.left.visible = false
-      this.app.stage.addChild(this.editorWindow.left)
+      this.stage.addChild(this.editorWindow.left)
 
       this.editorWindow.right = new Sprite(resources['/img/picker_arrow_right.png'].texture)
       this.editorWindow.right.x = 552
       this.editorWindow.right.y = 600
       this.editorWindow.right.interactive = true
       this.editorWindow.right.visible = false
-      this.app.stage.addChild(this.editorWindow.right)
+      this.stage.addChild(this.editorWindow.right)
 
-      this.app.stage.addChild(this.editorTools[0])
-      this.app.stage.addChild(this.editorSelectors[0])
+      this.stage.addChild(this.editorTools[0])
+      this.stage.addChild(this.editorSelectors[0])
       this.editorTools[0].visible = false
       this.editorSelectors[0].visible = false
     },
@@ -796,13 +803,12 @@ export default {
       if (this.timers.editBubble <= duration) {
         this.fieldDisplay.editBubble.scale.set(this.Easers.editBubble(t / duration), this.Easers.editBubble(t / duration))
       } else {
-        this.app.ticker.remove(this.openToolbox)
-        this.app.ticker.add(this.displayTools)
-        this.app.ticker.add(this.displaySelection)
+        this.ticker.remove(this.openToolbox)
+        this.ticker.add(this.displayTools)
+        this.ticker.add(this.displaySelection)
         this.editorWindow.left.visible = true
         this.editorWindow.right.visible = true
         this.timers.toolIntroFade = 0
-        console.log(t)
       }
     },
     displayTools: function (delta) {
@@ -820,7 +826,6 @@ export default {
         }
         for (let i = 0; i < this.editorTools[0].children.length; i++) {
           alphaArray.push((delayArray[i] + t) / fadeSpeed)
-          console.log(this.editorSelectors[0].children[0].alpha)
           if (i < 7) {
             this.editorTools[0].children[i].alpha = alphaArray[i]
           } else {
@@ -828,7 +833,7 @@ export default {
           }
         }
       } else {
-        this.app.ticker.remove(this.displayTools)
+        this.ticker.remove(this.displayTools)
         this.editorSelectors[0].visible = true
         for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
           if (i !== this.editorCurrentTool.item) {
@@ -862,11 +867,10 @@ export default {
         }
         for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
           alphaArray.push((delayArray[i] + t) / fadeSpeed)
-          console.log(this.editorSelectors[0].children[0].alpha)
           this.editorSelectors[0].children[i].alpha = alphaArray[i]
         }
       } else {
-        this.app.ticker.remove(this.displaySelection)
+        this.ticker.remove(this.displaySelection)
         this.editorSelectors[0].visible = true
         console.log('removed selection ticker')
       }
@@ -891,14 +895,13 @@ export default {
       for (let i = 0; i < this.editorSelectors[0].children.length; i++) {
         this.editorSelectors[0].children[i].visible = false
       }
-      this.app.ticker.remove(this.displayTools)
-      this.app.ticker.remove(this.displaySelection)
+      this.ticker.remove(this.displayTools)
+      this.ticker.remove(this.displaySelection)
 
       if (this.timers.editBubble >= 0) {
         this.fieldDisplay.editBubble.scale.set(this.Easers.editBubble(t / duration), this.Easers.editBubble(t / duration))
       } else {
-        this.app.ticker.remove(this.closeToolbox)
-        console.log(t)
+        this.ticker.remove(this.closeToolbox)
         this.gameState = 'idle'
         this.timers.editBubble = 0
         this.fieldDisplay.editBubble.visible = false
@@ -913,7 +916,7 @@ export default {
       } else if (this.gameState === 'popping') {
         this.statePopPuyos(delta)
       }
-      this.app.renderer.render(this.app.stage)
+      this.renderer.render(this.stage)
     },
     stateEditField: function (delta) {
       // Nothing
@@ -1060,14 +1063,14 @@ export default {
         this.playChain()
       } else if (control === 'edit') {
         if (this.gameState !== 'editing') {
-          this.app.ticker.add(this.openToolbox)
-          this.app.ticker.remove(this.closeToolbox)
+          this.ticker.add(this.openToolbox)
+          this.ticker.remove(this.closeToolbox)
           this.gameState = 'editing'
           this.fieldDisplay.editBubble.visible = true
         } else if (this.gameState === 'editing') {
           this.gameState = 'idle'
-          this.app.ticker.remove(this.openToolbox)
-          this.app.ticker.add(this.closeToolbox)
+          this.ticker.remove(this.openToolbox)
+          this.ticker.add(this.closeToolbox)
         }
       }
     },
@@ -1170,7 +1173,7 @@ export default {
         this.chainCountDisplay.y = this.chainCountDisplay.origY - 16 * ((-1 / 225) * (t - 15) ** 2 + 1) // parabola
       } else {
         this.chainCountDisplay.y = this.chainCountDisplay.origY
-        this.app.ticker.remove(this.animateChainCounter)
+        this.ticker.remove(this.animateChainCounter)
         console.log('counter bounce over')
       }
     },
@@ -1296,7 +1299,7 @@ export default {
     chainLength: function () {
       this.timers.chainLength = 0
       this.chainCountDisplay.y = this.chainCountDisplay.origY
-      this.app.ticker.add(this.animateChainCounter)
+      this.ticker.add(this.animateChainCounter)
     }
   }
 }
