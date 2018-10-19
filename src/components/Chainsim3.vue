@@ -161,6 +161,8 @@ export default {
         '/img/field.json',
         '/img/puyo.json',
         '/img/arrow.png',
+        '/img/arrow_x.png',
+        '/img/cursor_x.png',
         '/img/cursor.png',
         '/img/chain_font.json',
         '/img/edit_bubble.png',
@@ -791,6 +793,63 @@ export default {
       for (let y = 0; y < nameToolsPage1.length; y++) {
         spritesToolsPage1[y] = []
         for (let x = 0; x < nameToolsPage1[y].length; x++) {
+          // Placement variables
+          let horizontalPadding = 0
+          let verticalPadding = 0
+          if (x > 0) {
+            horizontalPadding = 8
+          }
+          if (y > 0) {
+            verticalPadding = 8
+          }
+
+          // Init sprite
+          spritesToolsPage1[y][x] = new Sprite(nameToolsPage1[y][x])
+          spritesToolsPage1[y][x].interactive = true
+          spritesToolsPage1[y][x].buttonMode = true
+          spritesToolsPage1[y][x].puyoIndex = y * 7 + x
+          spritesToolsPage1[y][x].puyoColor = colorsPage1[y * 7 + x]
+          if (y * 7 + x < 7) {
+            spritesToolsPage1[y][x].targetLayer = 'main'
+          } else {
+            spritesToolsPage1[y][x].targetLayer = 'shadow'
+          }
+          spritesToolsPage1[y][x].anchor.set(0.5, 0.5)
+
+          // Define interactions
+          spritesToolsPage1[y][x].on('pointerdown', function () {
+            me.editorCurrentTool.page = 1
+            me.editorCurrentTool.item = this.puyoIndex
+            me.editorCurrentTool.puyo = this.puyoColor
+            me.editorCurrentTool.layer = this.targetLayer
+            me.targetLayer(this.targetLayer) // Sets the field's target layer
+            me.editorCurrentTool.x = this.x
+            me.editorCurrentTool.y = this.y
+            me.updateToolboxSelection()
+            console.log(me.editorCurrentTool)
+          })
+
+          // Place sprite
+          if (y === 0) {
+            spritesToolsPage1[y][x].x = startX + (spritesToolsPage1[y][x].width + horizontalPadding) * x
+            spritesToolsPage1[y][x].y = startY + (spritesToolsPage1[y][x].height + verticalPadding) * y
+          } else {
+            spritesToolsPage1[y][x].x = startX + (spritesToolsPage1[y][x].width + horizontalPadding) * x
+            spritesToolsPage1[y][x].y = startY + (spritesToolsPage1[y][x].height + verticalPadding) * y
+          }
+
+          // Add sprite to PIXI containers
+          this.editorTools[0].addChild(spritesToolsPage1[y][x])
+        }
+      }
+
+      let nameToolsPage2 = [[resources['/img/arrow.png'].texture, resources['/img/arrow.png'].texture, resources['/img/arrow.png'].texture, resources['/img/arrow.png'].texture, resources['/img/arrow_x.png'].texture],
+        [resources['/img/cursor.png'].texture], resources['/img/cursor_x.png'].texture]
+      let spritesToolsPage2 = []
+      let fieldCodesPage2 = ['L', 'U', 'R', 'D', '1']
+      for (let y = 0; y < nameToolsPage2.length; y++) {
+        spritesToolsPage1[y] = []
+        for (let x = 0; x < nameToolsPage2[y].length; x++) {
           // Placement variables
           let horizontalPadding = 0
           let verticalPadding = 0
