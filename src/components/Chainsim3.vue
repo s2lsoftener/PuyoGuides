@@ -16,11 +16,7 @@
       <chainsim-chain-count :chainLength="chainLength" :chainCountSprites="chainCountSprites" :gameLoaded="gameLoaded"
       :chainCountDisplay="chainCountDisplay" :frame="frame" :delta="delta" />
     </div>
-    <p><button @click="ticker.add(animateNextPuyos)">NEXT</button><button @click="controlField('empty')">Erase Field</button><br>
-    <button @click="mergeInShadowLayer(true)">Merge Shadow Layer</button><br>
-    <button @click="ticker.add(animateDropDumpPuyos); ticker.add(animateDropDumpPuyos)">Drop Dump Puyo</button><br>
-    <button @click="log(droppingDumpCells)">Drop Animation Array</button><br>
-    <button @click="stopGame = !stopGame">Start/Pause</button><br>
+    <p><button @click="stopGame = !stopGame">Pause</button><br>
     {{ frame }} <br>
     <button @click="prevSlide">Previous Slide</button><button @click="nextSlide">Next Slide</button>
     <p>Game State: {{ gameState }} || stopGame: {{ stopGame }}</p>
@@ -62,7 +58,7 @@ const Puyo = {
 
 export default {
   name: 'Chainsim3',
-  props: ['importedData'],
+  props: ['importedData', 'nextQueue'],
   components: {
     ChainsimPuyo,
     ChainsimControlButton,
@@ -227,7 +223,7 @@ export default {
       // NEXT
       nextPuyoData: 'RRBGYYPP',
       nextPuyoPairs: [], // PIXI.Containers
-      nextPosition: 0,
+      nextQueuePosition: 0,
       nextCoord: [
         { x: 510, y: 256 },
         { x: 556, y: 376 },
@@ -284,6 +280,7 @@ export default {
       this.dumpPuyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dumpCellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dumpVelocity = uniformMatrix(3.75, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.nextPuyoData = this.nextQueue
     },
     initGame: function () {
       // eslint-disable-next-line
@@ -552,7 +549,7 @@ export default {
     updateNextPuyoSprites: function () {
       // Get the colors from the input string
       let colors = []
-      for (let i = this.nextPosition; i < this.nextPosition + 6; i++) {
+      for (let i = this.nextQueuePosition; i < this.nextQueuePosition + 6; i++) {
         switch (this.nextPuyoData[i]) {
           case 'R': colors.push('red'); break
           case 'G': colors.push('green'); break
@@ -672,7 +669,7 @@ export default {
     initNextPuyos: function () {
       // Get the colors from the input string
       let colors = []
-      for (let i = this.nextPosition; i < this.nextPosition + 6; i++) {
+      for (let i = this.nextQueuePosition; i < this.nextQueuePosition + 6; i++) {
         switch (this.nextPuyoData[i]) {
           case 'R': colors.push('red'); break
           case 'G': colors.push('green'); break
@@ -1505,7 +1502,6 @@ export default {
       }
     },
     animateDropDumpPuyos: function (delta) {
-      let t = this.frame
       if (this.stopGame === true) {
         delta = 0
       }
@@ -1683,7 +1679,9 @@ export default {
       } else if (control === 'play') {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
-          this.mergeInShadowLayer()
+          if (this.needToChangeSlides === false) {
+            this.mergeInShadowLayer()
+          }
           this.simulationSpeed = 1
         } else if (this.gameState === 'popping' || this.gameState === 'dropping') {
           this.simulationSpeed = 24
@@ -1692,7 +1690,9 @@ export default {
       } else if (control === 'auto') {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
-          this.mergeInShadowLayer()
+          if (this.needToChangeSlides === false) {
+            this.mergeInShadowLayer()
+          }
           this.simulationSpeed = 1
         } else if ((this.gameState === 'popping' || this.gameState === 'dropping') && this.simulationSpeed === 8) {
           this.simulationSpeed = 24
@@ -1879,7 +1879,7 @@ export default {
 
       if (t >= duration) {
         this.ticker.remove(this.animateNextPuyos)
-        this.nextPosition += 2
+        this.nextQueuePosition += 2
         this.timers.next = 0
         this.updateNextPuyoSprites()
         this.updateDumpDisplay()
@@ -1956,13 +1956,23 @@ export default {
       this.leftoverGarbagePoints = 0
       this.chainLength = 0
       this.fieldData = stringTo2dArray(this.importedData[this.currentSlide + 1].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.currentSlide += 1
       this.needToReset = false
       this.needToChangeSlides = false
       this.gameState = 'idle'
+      this.shadowData = stringTo2dArray(this.importedData[this.currentSlide + 1].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.cursorData = stringTo2dArray(this.importedData[this.currentSlide + 1].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.arrowData = stringTo2dArray(this.importedData[this.currentSlide + 1].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.currentSlide += 1
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        for (let x = 0; x < this.Field.columns; x++) {
+          this.updateShadowSprite(x, y)
+          this.updateCursorSprite(x, y)
+          this.updateArrowSprite(x, y)
+        }
+      }
     },
     prevSlide: function () {
-      if (this.currentSlide > 0) {
+      if (this.currentSlide > 0 && this.gameState === 'idle') {
         // Reset to the original field in case the user made some edits.
         this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
         this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
@@ -1975,25 +1985,33 @@ export default {
         this.leftoverGarbagePoints = 0
         this.chainLength = 0
         this.fieldData = stringTo2dArray(this.importedData[this.currentSlide - 1].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-        this.currentSlide -= 1
         this.needToReset = false
         this.needToChangeSlides = false
-        this.gameState = 'idle'
-
+        this.nextQueuePosition -= 2 // Next Queue Position
         for (let y = 0; y < this.Field.totalRows; y++) {
           for (let x = 0; x < this.Field.columns; x++) {
             this.dumpDisplay[y][x].visible = false
           }
         }
-        this.ticker.addOnce(() => {
-          this.updatePuyoSprites()
-        })
+        this.shadowData = stringTo2dArray(this.importedData[this.currentSlide - 1].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.cursorData = stringTo2dArray(this.importedData[this.currentSlide - 1].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.arrowData = stringTo2dArray(this.importedData[this.currentSlide - 1].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+
+        this.currentSlide -= 1
+        this.updatePuyoSprites()
+        this.updateNextPuyoSprites()
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            this.updateShadowSprite(x, y)
+            this.updateCursorSprite(x, y)
+            this.updateArrowSprite(x, y)
+          }
+        }
       }
     },
     nextSlide: function () {
-      if (this.currentSlide < this.importedData.length - 1) {
+      if (this.currentSlide < this.importedData.length - 1 && this.gameState === 'idle') {
         // Reset to the original field in case the user made some edits.
-        this.gameState = 'idle'
         this.fieldData = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
         this.updatePuyoSprites()
         this.ticker.add(this.animateNextPuyos)
@@ -2137,7 +2155,11 @@ export default {
         this.dumpPuyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
         this.updatePuyoSprites()
         if (this.isDropping === false) {
-          this.gameState = 'popping'
+          if (this.needToChangeSlides === true) {
+            this.updateWithNextSlide()
+          } else {
+            this.gameState = 'popping'
+          }
         }
       } else if (newVal === 'popping') {
         console.log('Checking pops')
@@ -2209,6 +2231,17 @@ export default {
               this.simulationSpeed = 1
               this.gameState = 'chainStopped'
             }
+          }
+        }
+      }
+    },
+    needToChangeSlides: function (newVal, oldVal) {
+      if (newVal === true) {
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            this.shadowDisplay[y][x].visible = false
+            this.cursorDisplay[y][x].visible = false
+            this.arrowDisplay[y][x].visible = false
           }
         }
       }
