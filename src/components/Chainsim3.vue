@@ -1951,7 +1951,7 @@ export default {
     },
     nextSlide: function () {
       // Reset to the original field in case the user made some edits.
-      this.fieldData = this.importedData[this.currentSlide].fieldData
+      this.fieldData = this.fieldData = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.updatePuyoSprites()
       this.updateDumpDisplay()
       this.setDumpMatrixDropData()
