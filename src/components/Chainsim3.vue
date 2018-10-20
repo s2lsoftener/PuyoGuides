@@ -1,6 +1,5 @@
 <template>
   <div id="chainsim" @mousedown="setMouseDown(true)" @mouseup="setMouseDown(false)">
-    <p>ugh...</p>
     <div class="game-container">
       <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
     </div>
@@ -17,7 +16,13 @@
       <chainsim-chain-count :chainLength="chainLength" :chainCountSprites="chainCountSprites" :gameLoaded="gameLoaded"
       :chainCountDisplay="chainCountDisplay" :frame="frame" :delta="delta" />
     </div>
-    <p><button @click="ticker.add(animateNextPuyos)">NEXT</button></p>
+    <p><button @click="ticker.add(animateNextPuyos)">NEXT</button><button @click="controlField('empty')">Erase Field</button><br>
+    <button @click="mergeInShadowLayer(true)">Merge Shadow Layer</button><br>
+    <button @click="ticker.add(animateDropDumpPuyos); ticker.add(animateDropDumpPuyos)">Drop Dump Puyo</button><br>
+    <button @click="log(droppingDumpCells)">Drop Animation Array</button><br>
+    <button @click="stopGame = !stopGame">Start/Pause</button><br>
+    {{ frame }} <br>
+    <button>Previous Slide</button><button @click="nextSlide">Next Slide</button>
     <p>Game State: {{ gameState }} || stopGame: {{ stopGame }}</p>
     <p>isDropping: {{ isDropping }} || isPopping: {{ isPopping }}</p>
     <p>fieldData: '{{ fieldDataString }}',
@@ -77,9 +82,9 @@ export default {
         colorBonus: [0, 3, 6, 12, 24],
         groupBonus: [0, 2, 3, 4, 5, 6, 7, 10],
         chainPower: [0, 8, 16, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 480, 512, 544, 576, 608, 640, 672],
-        targetPoint: 70,
-        scaling: 1
+        targetPoint: 70
       },
+      currentSlide: 0,
 
       /* Chainsim logic */
       // Game states
@@ -157,7 +162,8 @@ export default {
         '/img/picker_arrow_right.png',
         '/img/editor_x.png',
         '/img/current_tool.png',
-        '/img/next_background_1p_mask.png'
+        '/img/next_background_1p_mask.png',
+        '/img/rotate_container.png'
       ],
       puyoSprites: {},
       fieldSprites: {},
@@ -166,6 +172,7 @@ export default {
 
       // Displayed objects
       puyoDisplay: [[]],
+      dumpDisplay: [[]],
       shadowDisplay: [],
       scoreDisplay: [],
       garbageDisplay: [],
@@ -202,6 +209,8 @@ export default {
         arrow: 0,
         next: 0
       },
+      needToChangeSlides: false,
+      slideChange: 1,
 
       // Editor
       editorCurrentTool: {
@@ -223,7 +232,20 @@ export default {
         { x: 510, y: 256 },
         { x: 556, y: 376 },
         { x: 556, y: 536 }
-      ]
+      ],
+
+      // Controlled Puyos
+      controlPuyoData: [[]],
+      controlPuyoSprites: [[]],
+      activePair: {
+        data: 'RB'
+      },
+
+      // Dump Matrix
+      dumpCellContainer: undefined,
+      droppingDumpCells: [[]],
+      dropDumpDistances: [[]],
+      mergedDump: false // Set to true once the dropped field has been merged
     }
   },
   mounted () {
@@ -231,12 +253,22 @@ export default {
     this.initGame()
   },
   methods: {
+    log: function (input) {
+      console.log(input)
+    },
     initData: function () {
-      this.fieldData = stringTo2dArray(this.importedData.fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.fieldOriginal = stringTo2dArray(this.importedData.fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.shadowData = stringTo2dArray(this.importedData.shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.cursorData = stringTo2dArray(this.importedData.cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.arrowData = stringTo2dArray(this.importedData.arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.fieldData = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.fieldOriginal = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.shadowData = stringTo2dArray(this.importedData[this.currentSlide].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.cursorData = stringTo2dArray(this.importedData[this.currentSlide].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.arrowData = stringTo2dArray(this.importedData[this.currentSlide].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.controlPuyoData = uniformMatrix('0', 6, this.fieldSettings.columns)
+      this.controlPuyoData = [['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', 'B', '0', '0', '0'],
+        ['0', '0', 'R', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0']]
       this.connectionData = uniformMatrix('n', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.colorNameData = uniformMatrix('spacer', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
@@ -246,6 +278,9 @@ export default {
       this.dropPuyosResult = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.cellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.dumpPuyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.dumpCellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.dumpVelocity = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
     },
     initGame: function () {
       // eslint-disable-next-line
@@ -282,6 +317,9 @@ export default {
         this.initScoreDisplay()
         this.initGameOverX()
         this.initPuyoDisplay()
+        this.initDumpDisplay()
+        this.initControlledPuyos()
+        this.initActivePair()
         this.initShadowDisplay()
         this.initCursorDisplay()
         this.initArrowDisplay()
@@ -862,6 +900,78 @@ export default {
         }
       }
     },
+    initControlledPuyos: function () {
+      let spriteArray = []
+      let nameArray = []
+
+      for (let y = 0; y < this.controlPuyoData.length; y++) {
+        nameArray[y] = []
+        for (let x = 0; x < this.controlPuyoData[0].length; x++) {
+          switch (this.controlPuyoData[y][x]) {
+            case 'R': nameArray[y][x] = 'red'; break
+            case 'G': nameArray[y][x] = 'green'; break
+            case 'B': nameArray[y][x] = 'blue'; break
+            case 'Y': nameArray[y][x] = 'yellow'; break
+            case 'P': nameArray[y][x] = 'purple'; break
+            default: nameArray[y][x] = 'spacer'
+          }
+        }
+      }
+
+      for (let y = 0; y < this.controlPuyoData.length; y++) {
+        spriteArray[y] = []
+        for (let x = 0; x < this.controlPuyoData[0].length; x++) {
+          spriteArray[y][x] = new Sprite(this.puyoSprites[`${nameArray[y][x]}_n.png`])
+          spriteArray[y][x].anchor.set(0.5)
+          spriteArray[y][x].x = this.coordArray[y][x].x
+          spriteArray[y][x].y = this.coordArray[y][x].y - spriteArray[y][x].height * 5
+          spriteArray[y][x].visible = false
+          this.stage.addChild(spriteArray[y][x])
+        }
+      }
+      this.controlPuyoSprites = spriteArray
+    },
+    initActivePair: function () { // One-letter strings
+      // Get the colors from the input string
+      let colors = []
+      for (let i = 0; i < 2; i++) {
+        switch (this.activePair.data[i]) {
+          case 'R': colors.push('red'); break
+          case 'G': colors.push('green'); break
+          case 'B': colors.push('blue'); break
+          case 'Y': colors.push('yellow'); break
+          case 'P': colors.push('purple'); break
+          default: colors.push('spacer')
+        }
+      }
+
+      // Fall back in case the puyos are undefined
+      if (colors[0] === undefined) {
+        colors[0] = 'spacer'
+      }
+      if (colors[1] === undefined) {
+        colors[0] = 'spacer'
+      }
+
+      let axisPuyo = new Sprite(this.puyoSprites[`${colors[0]}_n.png`])
+      let freePuyo = new Sprite(this.puyoSprites[`${colors[1]}_n.png`])
+      axisPuyo.anchor.set(0.5, 0.5)
+      freePuyo.anchor.set(0.5, 0.5)
+      axisPuyo.y += axisPuyo.height
+      this.activePair.sprites = new PIXI.Container()
+      this.activePair.sprites.addChild(axisPuyo)
+      this.activePair.sprites.addChild(freePuyo)
+      this.activePair.sprites.pivot.set(0, 60)
+      this.activePair.sprites.position.set(this.coordArray[0][2].x, this.coordArray[0][2].y - 60)
+      this.stage.addChild(this.activePair.sprites)
+      this.activePair.sprites.visible = false
+
+      this.ticker.add(() => {
+        this.activePair.sprites.rotation += 2 * Math.PI / 180
+        this.activePair.sprites.children[0].rotation -= 2 * Math.PI / 180
+        this.activePair.sprites.children[1].rotation -= 2 * Math.PI / 180
+      })
+    },
     initCursorDisplay: function () {
       let spriteArray = []
       for (let y = 0; y < this.fieldData.length; y++) {
@@ -953,6 +1063,53 @@ export default {
           this.arrowDisplay[y][x].on('pointerover', this.arrowDisplay[y][x].mouseOver)
           this.arrowDisplay[y][x].on('pointerupoutside', this.arrowDisplay[y][x].mouseUp)
           this.arrowDisplay[y][x].on('pointerup', this.arrowDisplay[y][x].mouseUp)
+        }
+      }
+    },
+    initDumpDisplay: function () {
+      // this.setDumpMatrixDropData()
+      let spriteArray = []
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        spriteArray[y] = []
+        for (let x = 0; x < this.Field.columns; x++) {
+          spriteArray[y][x] = new Sprite(this.puyoSprites[`spacer_n.png`])
+          spriteArray[y][x].anchor.set(0.5)
+          spriteArray[y][x].x = this.coordArray[y][x].x
+          spriteArray[y][x].y = this.coordArray[y][x].y - 60 * 13
+          this.stage.addChild(spriteArray[y][x])
+        }
+      }
+      this.dumpDisplay = spriteArray
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        for (let x = 0; x < this.Field.columns; x++) {
+          this.dumpDisplay[y][x].visible = false
+        }
+      }
+    },
+    updateDumpDisplay: function () {
+      let color = ''
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        for (let x = 0; x < this.Field.columns; x++) {
+          switch (this.chainDiff[y][x]) {
+            case 'R': color = 'red'; break
+            case 'G': color = 'green'; break
+            case 'B': color = 'blue'; break
+            case 'Y': color = 'yellow'; break
+            case 'P': color = 'purple'; break
+            case 'J': color = 'garbage'; break
+            default: color = 'spacer'
+          }
+          console.log(color)
+          this.dumpDisplay[y][x].texture = this.puyoSprites[`${color}_n.png`]
+          this.dumpDisplay[y][x].anchor.set(0.5)
+          this.dumpDisplay[y][x].x = this.coordArray[y][x].x
+          this.dumpDisplay[y][x].y = this.coordArray[y][x].y - 60 * 13
+        }
+      }
+
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        for (let x = 0; x < this.Field.columns; x++) {
+          this.dumpDisplay[y][x].visible = true
         }
       }
     },
@@ -1277,6 +1434,9 @@ export default {
         this.stateEditField(delta)
       } else if (this.gameState === 'dropping' && this.needToReset === false) {
         this.animateDropPuyos(delta)
+        if (this.needToChangeSlides === true) {
+          this.animateDropDumpPuyos(delta)
+        }
       } else if (this.gameState === 'popping' && this.needToReset === false) {
         this.animatePopPuyos(delta)
       }
@@ -1328,6 +1488,57 @@ export default {
                   this.droppingCells[y].splice(x, 1, false)
                   this.dropDistances[y].splice(x, 1, 0)
                   this.cellTimer[y].splice(x, 1, 0)
+                  // when I write the watcher, make it reset all the Puyo states to idle before shfiting to popPuyos
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Advance frame
+      if (this.stopGame === false) {
+        this.frame += 1
+      }
+    },
+    animateDropDumpPuyos: function (delta) {
+      let t = this.frame
+      if (this.stopGame === true) {
+        delta = 0
+      }
+      let speed = delta * this.simulationSpeed
+      for (let i = 0; i < Math.round(speed); i++) { // Repeat the logic based on skipped frames
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            if (this.dropDumpDistances[y][x] > 0) {
+              if (this.dumpPuyoStates[y][x] === 'idle' || this.dumpPuyoStates[y][x] === 'checkDrops') {
+                this.dumpPuyoStates[y].splice(x, 1, 'dropping')
+              } else if (this.dumpPuyoStates[y][x] === 'dropping') {
+                console.log(this.dumpDisplay[y][x].y)
+                if (this.dumpDisplay[y][x].y + this.dumpVelocity[y][x] < this.dumpCoordArray[y][x].y + this.dropDumpDistances[y][x] * this.Field.cellHeight) {
+                  this.dumpDisplay[y][x].y += this.dumpVelocity[y][x]
+                  this.dumpVelocity[y][x] += 0.1875 / 16 * 60 * t
+                } else {
+                  this.dumpPuyoStates[y].splice(x, 1, 'bouncing')
+                  this.dumpDisplay[y][x].y = this.dumpCoordArray[y][x].y + this.dropDumpDistances[y][x] * this.Field.cellHeight + this.Field.cellHeight / 2
+                  this.dumpDisplay[y][x].anchor.set(0.5, 1)
+                }
+              } else if (this.dumpPuyoStates[y][x] === 'bouncing') {
+                this.dumpCellTimer[y][x] += 1
+                if (this.dumpCellTimer[y][x] <= 8) {
+                  this.dumpDisplay[y][x].scale.y -= 0.2 / 8
+                  this.dumpDisplay[y][x].scale.x += 0.2 / 8
+                } else if (this.dumpCellTimer[y][x] <= 16) {
+                  this.dumpDisplay[y][x].scale.y += 0.2 / 8
+                  this.dumpDisplay[y][x].scale.x -= 0.2 / 8
+                } else {
+                  this.dumpDisplay[y][x].anchor.set(0.5, 0.5)
+                  this.dumpDisplay[y][x].y = this.dumpCoordArray[y][x].y + this.dropDumpDistances[y][x] * this.Field.cellHeight
+                  this.dumpPuyoStates[y].splice(x, 1, 'checkPops')
+                  this.droppingDumpCells[y].splice(x, 1, false)
+                  this.dropDumpDistances[y].splice(x, 1, 0)
+                  this.dumpCellTimer[y].splice(x, 1, 0)
+                  this.dumpVelocity[y].splice(x, 1, 3.75)
                   // when I write the watcher, make it reset all the Puyo states to idle before shfiting to popPuyos
                 }
               }
@@ -1424,14 +1635,20 @@ export default {
         this.gameState = 'chainStopped'
       }
     },
-    mergeInShadowLayer: function () {
+    mergeInShadowLayer: function (replace) {
       for (let y = 0; y < this.Field.totalRows; y++) {
         for (let x = 0; x < this.Field.columns; x++) {
           if (this.shadowData[y][x] !== '0' && this.shadowData[y][x] !== this.fieldData[y][x]) {
             this.fieldData[y].splice(x, 1, this.shadowData[y][x])
+            if (replace === true) {
+              console.log('Replacing old shadow puyo forever...')
+              this.shadowData[y].splice(x, 1, '0')
+              this.updateShadowSprite(x, y)
+            }
           }
         }
       }
+
       this.updatePuyoSprites()
       console.log('merged shadow layer')
     },
@@ -1441,12 +1658,6 @@ export default {
     // Simulation controls
     controlField: function (control) { // expects a string
       if (control === 'reset') {
-        // if (this.gameState === 'chainStopped') {
-        //   this.resetField()
-        // } else if (this.gameState !== 'idle') {
-        //   this.needToReset = true
-        // }
-
         // Stop all tickers, reset timers, and reset the field.
         this.needToReset = true
         this.ticker.remove(this.animateChainCounter)
@@ -1495,6 +1706,17 @@ export default {
           this.ticker.remove(this.openToolbox)
           this.ticker.add(this.closeToolbox)
         }
+      } else if (control === 'empty') {
+        this.needToReset = true
+        this.ticker.remove(this.animateChainCounter)
+        this.ticker.remove(this.animateDropPuyos)
+        this.ticker.remove(this.animatePopPuyos)
+        this.ticker.remove(this.animateGarbageTray)
+        this.cellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        for (let key in this.timers) {
+          this.timers[key] = 0
+        }
+        this.emptyField()
       }
     },
     resetField: function () {
@@ -1511,6 +1733,34 @@ export default {
       this.chainLength = 0
       this.$nextTick(() => {
         this.fieldData = this.fieldOriginal
+        this.needToReset = false
+      })
+    },
+    emptyField: function () {
+      this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.dropDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.gameState = 'idle'
+      this.score = 0
+      this.stepScore = 0
+      this.garbage = 0
+      this.stepGarbage = 0
+      this.garbagePoints = 0
+      this.leftoverGarbagePoints = 0
+      this.chainLength = 0
+      this.$nextTick(() => {
+        this.fieldData = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.updatePuyoSprites()
+        this.shadowData = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.cursorData = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.arrowData = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            this.updateShadowSprite(x, y)
+            this.updateCursorSprite(x, y)
+            this.updateArrowSprite(x, y)
+          }
+        }
         this.needToReset = false
       })
     },
@@ -1628,7 +1878,6 @@ export default {
         return
       }
       this.timers.next += 1
-      console.log(this.timers.next)
     },
     playStep: function () {
       if (this.gameState === 'idle') {
@@ -1647,9 +1896,100 @@ export default {
         this.chainAutoPlay = true
         this.gameState = 'dropping'
       }
+    },
+    setDumpMatrixDropData: function () {
+      let settings = {
+        columns: 6,
+        visibleRows: 12,
+        hiddenRows: 14,
+        totalRows: 26,
+        puyoToClear: 4
+      }
+      let field = new Chainsim.Field(settings, this.combinedMatrix)
+      let dropResult = Chainsim.Simulate.dropPuyos(field)
+
+      // Create an array that tracks which cells are in their drop animations.
+      let dropAnimationArray = []
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        dropAnimationArray[y] = []
+        for (let x = 0; x < this.Field.columns; x++) {
+          if (dropResult.dropDistances[y][x] > 0) {
+            dropAnimationArray[y][x] = true
+          } else {
+            dropAnimationArray[y][x] = false
+          }
+        }
+      }
+
+      let dropDistanceArray = []
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        dropDistanceArray[y] = []
+        for (let x = 0; x < this.Field.columns; x++) {
+          dropDistanceArray[y][x] = dropResult.dropDistances[y][x]
+        }
+      }
+
+      this.droppingDumpCells = dropAnimationArray
+      this.dropDumpDistances = dropDistanceArray
+    },
+    updateWithNextSlide: function () {
+      this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.dropDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.score = 0
+      this.stepScore = 0
+      this.garbage = 0
+      this.stepGarbage = 0
+      this.garbagePoints = 0
+      this.leftoverGarbagePoints = 0
+      this.chainLength = 0
+      this.fieldData = stringTo2dArray(this.importedData[this.currentSlide + 1].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.currentSlide += 1
+      this.needToReset = false
+      this.needToChangeSlides = false
+      this.gameState = 'idle'
+    },
+    nextSlide: function () {
+      // Reset to the original field in case the user made some edits.
+      this.fieldData = this.importedData[this.currentSlide].fieldData
+      this.updatePuyoSprites()
+      this.updateDumpDisplay()
+      this.setDumpMatrixDropData()
+      this.needToChangeSlides = true
+      this.controlField('play')
     }
   },
   computed: {
+    chainDiff: function () {
+      let oldField = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      let newField = stringTo2dArray(this.importedData[this.currentSlide + 1].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+
+      let diff = []
+      for (let y = 0; y < this.fieldSettings.totalRows; y++) {
+        diff[y] = []
+        for (let x = 0; x < this.fieldSettings.columns; x++) {
+          if (oldField[y][x] === '0' && newField[y][x] !== '0') {
+            diff[y][x] = newField[y][x]
+          } else {
+            diff[y][x] = '0'
+          }
+        }
+      }
+
+      // Compute drop
+      let diffField = new Chainsim.Field(this.fieldSettings, diff)
+      let diffDropped = Chainsim.mapToStringArray(Chainsim.Simulate.dropPuyos(diffField).dropResult)
+      return diffDropped
+    },
+    combinedMatrix: function () {
+      let combinedMatrix = JSON.parse(JSON.stringify(this.chainDiff))
+      let oldField = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        combinedMatrix.push(oldField[y])
+      }
+      return combinedMatrix
+    },
     Field: function () {
       return new Chainsim.Field(this.fieldSettings, this.fieldData)
     },
@@ -1663,6 +2003,19 @@ export default {
           coord[y][x] = {
             x: (x * this.Field.cellWidth) + (this.Field.cellWidth / 2) + 25,
             y: (y * this.Field.cellHeight) + (this.Field.cellHeight / 2) + 124
+          }
+        }
+      }
+      return coord
+    },
+    dumpCoordArray: function () {
+      let coord = []
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        coord[y] = []
+        for (let x = 0; x < this.Field.columns; x++) {
+          coord[y][x] = {
+            x: (x * this.Field.cellWidth) + (this.Field.cellWidth / 2) + 25,
+            y: ((y * this.Field.cellHeight) + (this.Field.cellHeight / 2) + 124) - (60 * this.Field.totalRows)
           }
         }
       }
@@ -1689,6 +2042,19 @@ export default {
             for (let x = 0; x < this.Field.columns; x++) {
               if (this.droppingCells[y][x] === true) {
                 return true // If just one cell is still dropping, return true. Animations are ongoing.
+              }
+            }
+          }
+        }
+      }
+      if (this.needToChangeSlides === true) {
+        if (this.droppingDumpCells.length === this.Field.totalRows) {
+          if (this.droppingDumpCells[0].length === this.Field.columns) {
+            for (let y = 0; y < this.Field.totalRows; y++) {
+              for (let x = 0; x < this.Field.columns; x++) {
+                if (this.droppingDumpCells[y][x] === true) {
+                  return true // If just one cell is still dropping, return true. Animations are ongoing.
+                }
               }
             }
           }
@@ -1734,6 +2100,11 @@ export default {
         this.ticker.addOnce(() => {
           console.log('resetting field')
           this.updatePuyoSprites()
+          for (let y = 0; y < this.Field.totalRows; y++) {
+            for (let x = 0; x < this.Field.columns; x++) {
+              this.dumpDisplay[y][x].visible = false
+            }
+          }
         })
       }
 
@@ -1776,14 +2147,20 @@ export default {
           this.resetField()
           this.needToReset = false
         } else {
-          this.fieldData = this.dropPuyosResult
-          console.log('Dropped the new puyo field')
-          this.updatePuyoSprites()
-          if (this.chainAutoPlay === true) {
-            this.gameState = 'popping'
+          if (this.currentSlide < this.importedData.length - 1 && this.needToChangeSlides === true) {
+            if (this.importedData[this.currentSlide + this.slideChange].autoDrop === true) {
+              this.updateWithNextSlide()
+            }
           } else {
-            this.simulationSpeed = 1
-            this.gameState = 'chainStopped'
+            this.fieldData = this.dropPuyosResult
+            console.log('Dropped the new puyo field')
+            this.updatePuyoSprites()
+            if (this.chainAutoPlay === true) {
+              this.gameState = 'popping'
+            } else {
+              this.simulationSpeed = 1
+              this.gameState = 'chainStopped'
+            }
           }
         }
       }

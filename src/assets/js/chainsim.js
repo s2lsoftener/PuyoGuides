@@ -113,7 +113,6 @@ const Field = function (settings, textArray) {
   this.puyoToClear = 4
   this.fieldWidthPx = this.cellWidth * (this.columns + 2)
   this.fieldHeightPx = this.cellHeight * (this.visibleRows + this.hiddenRows + 2)
-  this.scaling = settings.scaling
 
   let yMax, xMax
   if (textArray.length >= this.totalRows) {
