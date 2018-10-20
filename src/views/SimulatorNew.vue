@@ -1,9 +1,9 @@
 <template>
   <div class="SimulatorNew">
     Chain Simulator Editor and Test Page.
-    <chainsim3
+    <chainsim
     :importedData="importedData" :nextQueue="nextQueue">
-    </chainsim3>
+    </chainsim>
   </div>
 </template>
 

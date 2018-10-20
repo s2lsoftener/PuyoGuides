@@ -1,15 +1,23 @@
 <template>
-  <p>Test component!</p>
+  <div>
+    <p>Test component</p>
+    <div ref="games"></div>
+  </div>
 </template>
 
 <script>
-import * as PIXI from 'https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.7.1/pixi.min.js'
+import '../assets/js/pixi.min.js'
+import Chainsim from '../assets/js/chainsim.js'
+
 export default {
   name: 'testcomponent',
-  methods: {
-    logPixi: function () {
-      console.log(PIXI.Application())
-    }
+  components: {
+
+  },
+  mounted () {
+    let app = new PIXI.Application({width: 256, height: 256})
+    this.$refs.games.appendChild(app.view)
+    console.log(Chainsim)
   }
 }
 </script>
