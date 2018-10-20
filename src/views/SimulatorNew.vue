@@ -9,12 +9,12 @@
 
 <script>
 // @ is an alias to /src
-import Chainsim3 from '@/components/Chainsim3.vue'
+import Chainsim from '@/components/Chainsim.vue'
 
 export default {
   name: 'SimulatorNew',
   components: {
-    Chainsim3
+    Chainsim
   },
   data () {
     return {
