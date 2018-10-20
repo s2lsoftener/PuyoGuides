@@ -17,6 +17,7 @@
       <chainsim-chain-count :chainLength="chainLength" :chainCountSprites="chainCountSprites" :gameLoaded="gameLoaded"
       :chainCountDisplay="chainCountDisplay" :frame="frame" :delta="delta" />
     </div>
+    <p><button @click="ticker.add(animateNextPuyos)">NEXT</button></p>
     <p>Game State: {{ gameState }} || stopGame: {{ stopGame }}</p>
     <p>isDropping: {{ isDropping }} || isPopping: {{ isPopping }}</p>
     <p>fieldDataString: {{ fieldDataString }}</p>
@@ -198,7 +199,8 @@ export default {
         chainLength: 0,
         garbageTray: 0,
         cursor: 0,
-        arrow: 0
+        arrow: 0,
+        next: 0
       },
 
       // Editor
@@ -214,8 +216,14 @@ export default {
       toolPage: 0,
 
       // NEXT
-      nextPuyoData: 'RRBGYY',
-      nextPuyoPairs: [] // PIXI.Containers
+      nextPuyoData: 'RRBGYYPP',
+      nextPuyoPairs: [], // PIXI.Containers
+      nextPosition: 0,
+      nextCoord: [
+        { x: 510, y: 256 },
+        { x: 556, y: 376 },
+        { x: 556, y: 536 }
+      ]
     }
   },
   mounted () {
@@ -499,6 +507,43 @@ export default {
         this.arrowDisplay[y][x].rotation = 0
       }
     },
+    updateNextPuyoSprites: function () {
+      // Get the colors from the input string
+      let colors = []
+      for (let i = this.nextPosition; i < this.nextPosition + 6; i++) {
+        switch (this.nextPuyoData[i]) {
+          case 'R': colors.push('red'); break
+          case 'G': colors.push('green'); break
+          case 'B': colors.push('blue'); break
+          case 'Y': colors.push('yellow'); break
+          case 'P': colors.push('purple'); break
+          default: colors.push('spacer')
+        }
+      }
+
+      for (let i = 0; i < 3; i++) {
+        // Make Puyos
+        let color1 = colors[i * 2 + 0]
+        let color2 = colors[i * 2 + 1]
+
+        // Fall back in case there's not enough nextPuyoData
+        if (color1 === undefined) {
+          color1 = 'spacer'
+        }
+        if (color2 === undefined) {
+          color2 = 'spacer'
+        }
+        this.nextPuyoPairs[i].children[0].texture = this.puyoSprites[`${color1}_n.png`]
+        this.nextPuyoPairs[i].children[1].texture = this.puyoSprites[`${color2}_n.png`]
+      }
+
+      this.nextPuyoPairs[0].scale.set(1, 1)
+      this.nextPuyoPairs[0].position.set(this.nextCoord[0].x, this.nextCoord[0].y)
+      this.nextPuyoPairs[1].scale.set(0.8, 0.8)
+      this.nextPuyoPairs[1].position.set(this.nextCoord[1].x, this.nextCoord[1].y)
+      this.nextPuyoPairs[2].scale.set(0.8, 0.8)
+      this.nextPuyoPairs[2].position.set(this.nextCoord[2].x, this.nextCoord[2].y)
+    },
     determineConnections: function () {
       let array = []
       for (let y = 0; y < this.Field.totalRows; y++) {
@@ -585,20 +630,31 @@ export default {
     initNextPuyos: function () {
       // Get the colors from the input string
       let colors = []
-      for (let i = 0; i < this.nextPuyoData.length; i++) {
+      for (let i = this.nextPosition; i < this.nextPosition + 6; i++) {
         switch (this.nextPuyoData[i]) {
           case 'R': colors.push('red'); break
           case 'G': colors.push('green'); break
           case 'B': colors.push('blue'); break
           case 'Y': colors.push('yellow'); break
           case 'P': colors.push('purple'); break
+          default: colors.push('spacer')
         }
       }
 
       for (let i = 0; i < 3; i++) {
         // Make Puyos
-        let axisPuyo = new Sprite(this.puyoSprites[`${colors[i * 2 + 0]}_n.png`])
-        let freePuyo = new Sprite(this.puyoSprites[`${colors[i * 2 + 1]}_n.png`])
+        let color1 = colors[i * 2 + 0]
+        let color2 = colors[i * 2 + 1]
+
+        // Fall back in case there's not enough nextPuyoData
+        if (color1 === undefined) {
+          color1 = 'spacer'
+        }
+        if (color2 === undefined) {
+          color2 = 'spacer'
+        }
+        let axisPuyo = new Sprite(this.puyoSprites[`${color1}_n.png`])
+        let freePuyo = new Sprite(this.puyoSprites[`${color2}_n.png`])
         axisPuyo.y += 60
 
         this.nextPuyoPairs[i] = new PIXI.Container()
@@ -610,11 +666,12 @@ export default {
         this.nextPuyoPairs[i].mask = this.fieldDisplay.nextWindowMask
       }
 
-      this.nextPuyoPairs[0].position.set(510, 256)
-      this.nextPuyoPairs[1].position.set(556, 376)
+      this.nextPuyoPairs[0].scale.set(1, 1)
+      this.nextPuyoPairs[0].position.set(this.nextCoord[0].x, this.nextCoord[0].y)
       this.nextPuyoPairs[1].scale.set(0.8, 0.8)
-      this.nextPuyoPairs[2].position.set(556, 520)
+      this.nextPuyoPairs[1].position.set(this.nextCoord[1].x, this.nextCoord[1].y)
       this.nextPuyoPairs[2].scale.set(0.8, 0.8)
+      this.nextPuyoPairs[2].position.set(this.nextCoord[2].x, this.nextCoord[2].y)
 
       this.stage.addChild(this.nextPuyoPairs[0])
       this.stage.addChild(this.nextPuyoPairs[1])
@@ -1549,6 +1606,28 @@ export default {
         }
       }
       this.timers.arrow += delta
+    },
+    animateNextPuyos: function (delta) {
+      let t = this.timers.next
+      let duration = 8
+
+      this.nextPuyoPairs[0].y = this.nextCoord[0].y - ((this.nextCoord[0].y - 106) / duration) * t
+
+      this.nextPuyoPairs[1].x = this.nextCoord[1].x - ((this.nextCoord[1].x - this.nextCoord[0].x) / duration) * t
+      this.nextPuyoPairs[1].y = this.nextCoord[1].y - ((this.nextCoord[1].y - this.nextCoord[0].y) / duration) * t
+      this.nextPuyoPairs[1].scale.set(0.8 + (0.2 / duration * t), 0.8 + (0.2 / duration * t))
+
+      this.nextPuyoPairs[2].y = this.nextCoord[2].y - ((this.nextCoord[2].y - this.nextCoord[1].y) / duration) * t
+
+      if (t >= duration) {
+        this.ticker.remove(this.animateNextPuyos)
+        this.nextPosition += 2
+        this.timers.next = 0
+        this.updateNextPuyoSprites()
+        return
+      }
+      this.timers.next += 1
+      console.log(this.timers.next)
     },
     playStep: function () {
       if (this.gameState === 'idle') {
