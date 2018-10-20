@@ -56,7 +56,7 @@ const Puyo = {
 }
 
 export default {
-  name: 'Chainsim3',
+  name: 'Chainsim',
   props: ['importedData', 'nextQueue'],
   components: {
     ChainsimControlButton,

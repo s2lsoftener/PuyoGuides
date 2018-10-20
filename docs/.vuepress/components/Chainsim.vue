@@ -3,7 +3,6 @@
     <div class="game-container">
       <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
     </div>
-    <testcomponent></testcomponent>
     <div v-if="gameLoaded"> <!-- ensures that the v-for loops execute -->
       <chainsim-control-button v-for="(sprite, index) in fieldControls" :key="`Control_${index}`"
       :gameLoaded="gameLoaded" :fieldSprites="fieldSprites" :button="sprite" :buttonName="index"
@@ -17,6 +16,7 @@
       <chainsim-chain-count :chainLength="chainLength" :chainCountSprites="chainCountSprites" :gameLoaded="gameLoaded"
       :chainCountDisplay="chainCountDisplay" :frame="frame" :delta="delta" />
     </div>
+    <button @click="prevSlide">Previous Slide</button><button @click="nextSlide">Next Slide</button>
   </div>
 </template>
 
