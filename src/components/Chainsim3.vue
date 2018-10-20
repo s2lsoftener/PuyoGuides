@@ -22,7 +22,7 @@
     <button @click="log(droppingDumpCells)">Drop Animation Array</button><br>
     <button @click="stopGame = !stopGame">Start/Pause</button><br>
     {{ frame }} <br>
-    <button>Previous Slide</button><button @click="nextSlide">Next Slide</button>
+    <button @click="prevSlide">Previous Slide</button><button @click="nextSlide">Next Slide</button>
     <p>Game State: {{ gameState }} || stopGame: {{ stopGame }}</p>
     <p>isDropping: {{ isDropping }} || isPopping: {{ isPopping }}</p>
     <p>fieldData: '{{ fieldDataString }}',
@@ -245,7 +245,10 @@ export default {
       dumpCellContainer: undefined,
       droppingDumpCells: [[]],
       dropDumpDistances: [[]],
-      mergedDump: false // Set to true once the dropped field has been merged
+      mergedDump: false, // Set to true once the dropped field has been merged
+      dumpVelocity: [[]],
+      dumpPuyoStates: [[]],
+      dumpCellTimer: [[]]
     }
   },
   mounted () {
@@ -280,7 +283,7 @@ export default {
       this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dumpPuyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dumpCellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.dumpVelocity = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.dumpVelocity = uniformMatrix(3.75, this.fieldSettings.totalRows, this.fieldSettings.columns)
     },
     initGame: function () {
       // eslint-disable-next-line
@@ -1507,18 +1510,21 @@ export default {
         delta = 0
       }
       let speed = delta * this.simulationSpeed
+      console.log(speed)
       for (let i = 0; i < Math.round(speed); i++) { // Repeat the logic based on skipped frames
         for (let y = 0; y < this.Field.totalRows; y++) {
           for (let x = 0; x < this.Field.columns; x++) {
             if (this.dropDumpDistances[y][x] > 0) {
+              console.log('Detected cells with distance needed greater than 0')
               if (this.dumpPuyoStates[y][x] === 'idle' || this.dumpPuyoStates[y][x] === 'checkDrops') {
                 this.dumpPuyoStates[y].splice(x, 1, 'dropping')
               } else if (this.dumpPuyoStates[y][x] === 'dropping') {
-                console.log(this.dumpDisplay[y][x].y)
                 if (this.dumpDisplay[y][x].y + this.dumpVelocity[y][x] < this.dumpCoordArray[y][x].y + this.dropDumpDistances[y][x] * this.Field.cellHeight) {
+                  console.log('dropping dumps')
                   this.dumpDisplay[y][x].y += this.dumpVelocity[y][x]
-                  this.dumpVelocity[y][x] += 0.1875 / 16 * 60 * t
+                  this.dumpVelocity[y][x] += 0.1875 / 16 * 60
                 } else {
+                  console.log('dump bounce state')
                   this.dumpPuyoStates[y].splice(x, 1, 'bouncing')
                   this.dumpDisplay[y][x].y = this.dumpCoordArray[y][x].y + this.dropDumpDistances[y][x] * this.Field.cellHeight + this.Field.cellHeight / 2
                   this.dumpDisplay[y][x].anchor.set(0.5, 1)
@@ -1532,6 +1538,7 @@ export default {
                   this.dumpDisplay[y][x].scale.y += 0.2 / 8
                   this.dumpDisplay[y][x].scale.x -= 0.2 / 8
                 } else {
+                  console.log('it is no more.')
                   this.dumpDisplay[y][x].anchor.set(0.5, 0.5)
                   this.dumpDisplay[y][x].y = this.dumpCoordArray[y][x].y + this.dropDumpDistances[y][x] * this.Field.cellHeight
                   this.dumpPuyoStates[y].splice(x, 1, 'checkPops')
@@ -1875,6 +1882,10 @@ export default {
         this.nextPosition += 2
         this.timers.next = 0
         this.updateNextPuyoSprites()
+        this.updateDumpDisplay()
+        this.setDumpMatrixDropData()
+        this.needToChangeSlides = true
+        this.controlField('play')
         return
       }
       this.timers.next += 1
@@ -1933,6 +1944,7 @@ export default {
       this.dropDumpDistances = dropDistanceArray
     },
     updateWithNextSlide: function () {
+      console.log('Updating with next slide')
       this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dropDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
@@ -1949,14 +1961,49 @@ export default {
       this.needToChangeSlides = false
       this.gameState = 'idle'
     },
+    prevSlide: function () {
+      if (this.currentSlide > 0) {
+        // Reset to the original field in case the user made some edits.
+        this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.dropDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.score = 0
+        this.stepScore = 0
+        this.garbage = 0
+        this.stepGarbage = 0
+        this.garbagePoints = 0
+        this.leftoverGarbagePoints = 0
+        this.chainLength = 0
+        this.fieldData = stringTo2dArray(this.importedData[this.currentSlide - 1].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.currentSlide -= 1
+        this.needToReset = false
+        this.needToChangeSlides = false
+        this.gameState = 'idle'
+
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            this.dumpDisplay[y][x].visible = false
+          }
+        }
+        this.ticker.addOnce(() => {
+          this.updatePuyoSprites()
+        })
+      }
+    },
     nextSlide: function () {
-      // Reset to the original field in case the user made some edits.
-      this.fieldData = this.fieldData = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.updatePuyoSprites()
-      this.updateDumpDisplay()
-      this.setDumpMatrixDropData()
-      this.needToChangeSlides = true
-      this.controlField('play')
+      if (this.currentSlide < this.importedData.length - 1) {
+        // Reset to the original field in case the user made some edits.
+        this.gameState = 'idle'
+        this.fieldData = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.updatePuyoSprites()
+        this.ticker.add(this.animateNextPuyos)
+        // this.updateDumpDisplay()
+        // this.setDumpMatrixDropData()
+        // this.needToChangeSlides = true
+        // this.controlField('play')
+      } else {
+        console.log('No more slides')
+      }
     }
   },
   computed: {
@@ -2087,6 +2134,7 @@ export default {
         console.log('Checking drops')
         this.setDropData()
         this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.dumpPuyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
         this.updatePuyoSprites()
         if (this.isDropping === false) {
           this.gameState = 'popping'
