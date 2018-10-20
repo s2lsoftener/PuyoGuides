@@ -19,10 +19,10 @@
     </div>
     <p>Game State: {{ gameState }} || stopGame: {{ stopGame }}</p>
     <p>isDropping: {{ isDropping }} || isPopping: {{ isPopping }}</p>
-    <p>fieldDataString: {{ fieldDataString }}</p>
-    <p>shadowDataString: {{ shadowDataString }}</p>
-    <p>cursorDataString: {{ cursorDataString }}</p>
-    <p>arrowDataString: {{ arrowDataString }}</p>
+    <p>fieldData: '{{ fieldDataString }}',
+    <br>shadowData: '{{ shadowDataString }}',
+    <br>cursorData: '{{ cursorDataString }}',
+    <br>arrowData: '{{ arrowDataString }}'</p>
   </div>
 </template>
 
@@ -225,6 +225,7 @@ export default {
   methods: {
     initData: function () {
       this.fieldData = stringTo2dArray(this.importedData.fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.fieldOriginal = stringTo2dArray(this.importedData.fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.shadowData = stringTo2dArray(this.importedData.shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.cursorData = stringTo2dArray(this.importedData.cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.arrowData = stringTo2dArray(this.importedData.arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
@@ -1727,7 +1728,7 @@ export default {
 </script>
 
 <style>
-#chainsim {
+#game {
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none; /* Safari */
   -khtml-user-select: none; /* Konqueror HTML */
