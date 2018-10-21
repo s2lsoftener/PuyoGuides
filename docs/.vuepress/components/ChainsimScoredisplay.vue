@@ -1,7 +1,7 @@
 <script>
 export default {
   name: 'ChainsimScoredisplay',
-  props: ['scoreDisplay', 'score', 'fieldSprites', 'gameLoaded'],
+  props: ['scoreDisplay', 'score', 'fieldSprites', 'gameLoaded', 'item'],
   render: function (h) {
     return h() // Render nothing, avoid error output.
   },

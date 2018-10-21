@@ -1,23 +1,26 @@
 <template>
   <div id="chainsim" @mousedown="setMouseDown(true)" @mouseup="setMouseDown(false)">
-    <div class="game-container">
-      <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
+    <div class="game-container" style="width: 274px; height: 384px; overflow: hidden; position: relative;">
+      <div id="game" ref="game" style="position: absolute; bottom: 0;"></div> <!-- PIXI.js app stage goes in here -->
     </div>
     <div v-if="gameLoaded"> <!-- ensures that the v-for loops execute -->
       <chainsim-control-button v-for="(sprite, index) in fieldControls" :key="`Control_${index}`"
       :gameLoaded="gameLoaded" :fieldSprites="fieldSprites" :button="sprite" :buttonName="index"
       v-on:controlField="controlField" />
+
+      <chainsim-garbagetray :garbage="garbage" :puyoSprites="puyoSprites" :gameLoaded="gameLoaded" :garbageDisplay="garbageDisplay"
+      :frame="frame" :delta="delta" />
     </div>
-    <button @click="prevSlide">Prev</button><button @click="nextSlide">Next</button>
+    <button @click="prevSlide"><</button><button @click="nextSlide">></button>
   </div>
 </template>
 
 <script>
-import * as PIXI from 'pixi.js'
+import '../assets/js/pixi.min.js'
 import Chainsim from '../assets/js/chainsim.js'
 import ChainsimControlButton from './ChainsimControlButton'
-// import ChainsimGarbagetray from './ChainsimGarbagetray'
-import * as BezierEasing from 'bezier-easing'
+import ChainsimGarbagetray from './ChainsimGarbagetray'
+import '../assets/js/bezier-easing.js'
 
 const uniformMatrix = Chainsim.uniformMatrix // Generates a 2D matrix all filled with one value
 const stringTo2dArray = Chainsim.stringTo2dArray // Converts 1D string to 2D matrix
@@ -41,7 +44,8 @@ export default {
   name: 'Chainsim',
   props: ['importedData', 'nextQueue', 'item'],
   components: {
-    ChainsimControlButton
+    ChainsimControlButton,
+    ChainsimGarbagetray
   },
   data () {
     return {
@@ -84,7 +88,6 @@ export default {
       garbagePoints: 0,
       leftoverGarbagePoints: 0,
       chainLength: 0,
-      garbageIcons: ['spacer_n', 'spacer_n', 'spacer_n', 'spacer_n', 'spacer_n', 'spacer_n'],
 
       // Animation data arrays
       poppingCells: [[]], // boolean 2D array. Which cells are undergoing a popping animation?
@@ -709,7 +712,7 @@ export default {
         let spriteArray = []
         let startX = 468
         for (let i = 0; i < this.Field.columns; i++) {
-          spriteArray[i] = new Sprite(this.puyoSprites['spacer_n.png'])
+          spriteArray[i] = new Sprite(this.puyoSprites['crown.png'])
           spriteArray[i].x = startX + spriteArray[i].width * i
           spriteArray[i].origX = startX + spriteArray[i].width * i
           spriteArray[i].y = 470
@@ -720,7 +723,7 @@ export default {
         let spriteArray = []
         let startX = 324
         for (let i = 0; i < this.Field.columns; i++) {
-          spriteArray[i] = new Sprite(this.puyoSprites['spacer_n.png'])
+          spriteArray[i] = new Sprite(this.puyoSprites['crown.png'])
           spriteArray[i].scale.set(0.7, 0.7)
           spriteArray[i].x = startX + spriteArray[i].width * i
           spriteArray[i].origX = startX + spriteArray[i].width * i
@@ -788,12 +791,12 @@ export default {
       let startX = 412
       let startY = 732
 
-      this.chainCountSprites.firstDigit = new Sprite(this.chainCountSprites['spacer.png'])
+      this.chainCountSprites.firstDigit = new Sprite(this.chainCountSprites['chain_1.png'])
       this.chainCountSprites.firstDigit.x = startX
       this.chainCountSprites.firstDigit.y = startY
       this.chainCountSprites.firstDigit.scale.set(0.85, 0.85)
 
-      this.chainCountSprites.secondDigit = new Sprite(this.chainCountSprites['spacer.png'])
+      this.chainCountSprites.secondDigit = new Sprite(this.chainCountSprites['chain_0.png'])
       this.chainCountSprites.secondDigit.x = startX + 40
       this.chainCountSprites.secondDigit.y = startY
       this.chainCountSprites.secondDigit.scale.set(0.85, 0.85)
@@ -808,9 +811,6 @@ export default {
       this.chainCountDisplay.addChild(this.chainCountSprites.secondDigit)
       this.chainCountDisplay.addChild(this.chainCountSprites.chainText)
       this.chainCountDisplay.origY = this.chainCountDisplay.y
-      this.chainCountSprites.firstDigit.alpha = 0
-      this.chainCountSprites.secondDigit.alpha = 0
-      this.chainCountSprites.chainText.alpha = 0
       this.stage.addChild(this.chainCountDisplay)
     },
     initShadowDisplay: function () {
@@ -1658,7 +1658,7 @@ export default {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
           if (this.needToChangeSlides === false) {
-            this.mergeInShadowLayer(true)
+            this.mergeInShadowLayer()
           }
           this.simulationSpeed = 1
         } else if (this.gameState === 'popping' || this.gameState === 'dropping') {
@@ -1669,7 +1669,7 @@ export default {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
           if (this.needToChangeSlides === false) {
-            this.mergeInShadowLayer(true)
+            this.mergeInShadowLayer()
           }
           this.simulationSpeed = 1
         } else if ((this.gameState === 'popping' || this.gameState === 'dropping') && this.simulationSpeed === 8) {
@@ -2000,67 +2000,6 @@ export default {
       } else {
         console.log('No more slides')
       }
-    },
-    countGarbage: function (g, i) {
-      this.checkCrown(g, i)
-    },
-    checkCrown: function (g, i) {
-      if (i < 6) {
-        if (g - 720 >= 0) {
-          this.garbageIcons.splice(i, 1, 'crown')
-          this.checkCrown(g - 720, i + 1)
-        } else {
-          this.checkMoon(g, i)
-        }
-      }
-    },
-    checkMoon: function (g, i) {
-      if (i < 6) {
-        if (g - 360 >= 0) {
-          this.garbageIcons.splice(i, 1, 'moon')
-          this.checkStar(g - 360, i + 1)
-        } else {
-          this.checkStar(g, i)
-        }
-      }
-    },
-    checkStar: function (g, i) {
-      if (i < 6) {
-        if (g - 180 >= 0) {
-          this.garbageIcons.splice(i, 1, 'star')
-          this.checkRock(g - 180, i + 1)
-        } else {
-          this.checkRock(g, i)
-        }
-      }
-    },
-    checkRock: function (g, i) {
-      if (i < 6) {
-        if (g - 30 >= 0) {
-          this.garbageIcons.splice(i, 1, 'rock')
-          this.checkRock(g - 30, i + 1)
-        } else {
-          this.checkLine(g, i)
-        }
-      }
-    },
-    checkLine: function (g, i) {
-      if (i < 6) {
-        if (g - 6 >= 0) {
-          this.garbageIcons.splice(i, 1, 'line')
-          this.checkLine(g - 6, i + 1)
-        } else {
-          this.checkUnit(g, i)
-        }
-      }
-    },
-    checkUnit: function (g, i) {
-      if (i < 6) {
-        if (g - 1 >= 0) {
-          this.garbageIcons.splice(i, 1, 'unit')
-          this.checkUnit(g - 1, i + 1)
-        }
-      }
     }
   },
   computed: {
@@ -2316,13 +2255,6 @@ export default {
       this.timers.garbageTray = 0
       for (let i = 0; i < 6; i++) {
         this.garbageDisplay[i].x = (this.garbageDisplay[2].origX + this.garbageDisplay[3].origX) / 2
-      }
-
-      this.garbageIcons = ['spacer_n', 'spacer_n', 'spacer_n', 'spacer_n', 'spacer_n', 'spacer_n']
-      this.countGarbage(this.garbage, 0) // second parameter is i, the index for garbageIcons (array)
-      console.log(this.garbageDisplay)
-      for (let i = 0; i < 6; i++) {
-        this.garbageDisplay[i].texture = this.puyoSprites[`${this.garbageIcons[i]}.png`]
       }
       this.ticker.add(this.animateGarbageTray)
     },

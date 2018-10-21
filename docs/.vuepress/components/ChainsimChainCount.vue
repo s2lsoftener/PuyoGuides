@@ -1,7 +1,7 @@
 <script>
 export default {
   name: 'ChainsimChainCount',
-  props: ['chainLength', 'chainCountSprites', 'gameLoaded', 'chainCountDisplay'],
+  props: ['chainLength', 'chainCountSprites', 'gameLoaded', 'chainCountDisplay', 'item'],
   render: function (h) {
     return h() // Render nothing, avoid error output.
   },

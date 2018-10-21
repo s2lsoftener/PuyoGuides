@@ -1,23 +1,14 @@
 <template>
-  <div id="chainsim" @mousedown="setMouseDown(true)" @mouseup="setMouseDown(false)">
+  <div id="chainsim">
     <div class="game-container">
       <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
     </div>
-    <div v-if="gameLoaded"> <!-- ensures that the v-for loops execute -->
-      <chainsim-control-button v-for="(sprite, index) in fieldControls" :key="`Control_${index}`"
-      :gameLoaded="gameLoaded" :fieldSprites="fieldSprites" :button="sprite" :buttonName="index"
-      v-on:controlField="controlField" />
-    </div>
-    <button @click="prevSlide">Prev</button><button @click="nextSlide">Next</button>
   </div>
 </template>
 
 <script>
 import * as PIXI from 'pixi.js'
 import Chainsim from '../assets/js/chainsim.js'
-import ChainsimControlButton from './ChainsimControlButton'
-// import ChainsimGarbagetray from './ChainsimGarbagetray'
-import * as BezierEasing from 'bezier-easing'
 
 const uniformMatrix = Chainsim.uniformMatrix // Generates a 2D matrix all filled with one value
 const stringTo2dArray = Chainsim.stringTo2dArray // Converts 1D string to 2D matrix
@@ -40,9 +31,6 @@ const Puyo = {
 export default {
   name: 'Chainsim',
   props: ['importedData', 'nextQueue', 'item'],
-  components: {
-    ChainsimControlButton
-  },
   data () {
     return {
       /* Settings */
@@ -100,7 +88,8 @@ export default {
           width: 608,
           height: 974, // 854
           antialias: true,
-          transparent: true,
+          transparent: false,
+          backgroundColor: 0x061639,
           resolution: 1
         },
         full: {
@@ -134,8 +123,7 @@ export default {
         '/img/picker_arrow_right.png',
         '/img/editor_x.png',
         '/img/current_tool.png',
-        '/img/next_background_1p_mask.png',
-        '/img/rotate_container.png'
+        '/img/next_background_1p_mask.png'
       ],
       puyoSprites: {},
       fieldSprites: {},
@@ -262,19 +250,14 @@ export default {
       // eslint-disable-next-line
       this.renderer = new PIXI.autoDetectRenderer(this.modeSettings.simple.width, this.modeSettings.simple.height, {
         antialias: true,
-        transparent: true,
-        resolution: 1
+        resolution: 1,
+        transparent: true
       })
       this.renderer.view.style.width = `${this.modeSettings.simple.width * this.scaleFactor}px`
-      this.renderer.view.style.height = `${this.modeSettings.simple.height * this.scaleFactor}px`
+      this.renderer.view.style.height = `${(this.modeSettings.simple.height - 120) * this.scaleFactor}px`
+      this.renderer.view.height = this.modeSettings.simple.height - 120
       this.$refs.game.appendChild(this.renderer.view)
       this.stage = new PIXI.Container()
-
-      this.ticker = new PIXI.ticker.Ticker()
-      this.ticker.add(() => {
-        this.renderer.render(this.stage)
-      })
-      this.ticker.start()
 
       let setup = () => {
         // Mark textures as loaded
@@ -292,15 +275,12 @@ export default {
         this.initScoreDisplay()
         this.initGameOverX()
         this.initPuyoDisplay()
-        this.initDumpDisplay()
         this.initControlledPuyos()
-        this.initActivePair()
         this.initShadowDisplay()
         this.initCursorDisplay()
         this.initArrowDisplay()
-        this.initGarbageDisplay()
+        // this.initGarbageDisplay()
         this.initNextPuyos()
-        this.initFieldControls()
         this.initChainCounter()
         this.initToolDisplay()
 
@@ -308,7 +288,12 @@ export default {
         this.gameLoaded = true
 
         // Run the game loop
-        this.ticker.add(delta => this.gameLoop(delta))
+        this.ticker = new PIXI.ticker.Ticker()
+        this.ticker.addOnce((delta) => {
+          // this.renderer.render(this.stage)
+          this.gameLoop(delta)
+        })
+        this.ticker.start()
       }
 
       let loadProgressHandler = (loader, resource) => {
@@ -391,7 +376,7 @@ export default {
       if (this.displayMode === 'full') {
         startX = 150
       } else if (this.displayMode === 'simple') {
-        startX = 32
+        startX = 150
       }
       let spriteArray = []
       for (let i = 0; i < 8; i++) {
@@ -425,41 +410,6 @@ export default {
         }
       }
       this.puyoDisplay = spriteArray
-
-      let me = this
-      for (let y = 0; y < this.Field.totalRows; y++) {
-        for (let x = 0; x < this.Field.columns; x++) {
-          this.puyoDisplay[y][x].interactive = true
-          this.puyoDisplay[y][x].editPuyo = function () {
-            me.isMouseDown = true
-            if (me.editorCurrentTool.layer === 'main' && me.gameState === 'idle') {
-              me.fieldData[y].splice(x, 1, me.editorCurrentTool.puyo)
-              if (me.shadowData[y][x] !== '0') {
-                me.shadowData[y].splice(x, 1, '0') // Remove shadow puyo at this position
-                me.updateShadowSprite(x, y)
-              }
-              me.updatePuyoSprites()
-            }
-          }
-          this.puyoDisplay[y][x].mouseOver = function () {
-            if (me.isMouseDown === true && me.editorCurrentTool.layer === 'main' && me.gameState === 'idle') {
-              me.fieldData[y].splice(x, 1, me.editorCurrentTool.puyo)
-              if (me.shadowData[y][x] !== '0') {
-                me.shadowData[y].splice(x, 1, '0') // Remove shadow puyo at this position
-                me.updateShadowSprite(x, y)
-              }
-              me.updatePuyoSprites()
-            }
-          }
-          this.puyoDisplay[y][x].mouseUp = function () {
-            me.isMouseDown = false
-          }
-          this.puyoDisplay[y][x].on('pointerdown', this.puyoDisplay[y][x].editPuyo)
-          this.puyoDisplay[y][x].on('pointerover', this.puyoDisplay[y][x].mouseOver)
-          this.puyoDisplay[y][x].on('pointerupoutside', this.puyoDisplay[y][x].mouseUp)
-          this.puyoDisplay[y][x].on('pointerup', this.puyoDisplay[y][x].mouseUp)
-        }
-      }
       this.updatePuyoSprites()
     },
     updatePuyoSprites: function () {
@@ -844,37 +794,10 @@ export default {
       }
       this.shadowDisplay = spriteArray
 
-      let me = this
       for (let y = 0; y < this.Field.totalRows; y++) {
         for (let x = 0; x < this.Field.columns; x++) {
           // Update shadow sprites with their imported colors
           this.updateShadowSprite(x, y)
-
-          this.shadowDisplay[y][x].interactive = false
-          this.shadowDisplay[y][x].editPuyo = function () {
-            me.isMouseDown = true
-            if (me.editorCurrentTool.layer === 'shadow' && me.gameState === 'idle') {
-              me.shadowData[y].splice(x, 1, me.editorCurrentTool.puyo)
-              me.fieldData[y].splice(x, 1, '0') // Remove main puyo at this position
-              me.updateShadowSprite(x, y)
-              me.updatePuyoSprites()
-            }
-          }
-          this.shadowDisplay[y][x].mouseOver = function () {
-            if (me.isMouseDown === true && me.editorCurrentTool.layer === 'shadow' && me.gameState === 'idle') {
-              me.shadowData[y].splice(x, 1, me.editorCurrentTool.puyo)
-              me.fieldData[y].splice(x, 1, '0') // Remove main puyo at this position
-              me.updateShadowSprite(x, y)
-              me.updatePuyoSprites()
-            }
-          }
-          this.shadowDisplay[y][x].mouseUp = function () {
-            me.isMouseDown = false
-          }
-          this.shadowDisplay[y][x].on('pointerdown', this.shadowDisplay[y][x].editPuyo)
-          this.shadowDisplay[y][x].on('pointerover', this.shadowDisplay[y][x].mouseOver)
-          this.shadowDisplay[y][x].on('pointerupoutside', this.shadowDisplay[y][x].mouseUp)
-          this.shadowDisplay[y][x].on('pointerup', this.shadowDisplay[y][x].mouseUp)
         }
       }
     },
@@ -964,36 +887,9 @@ export default {
       }
       this.cursorDisplay = spriteArray
 
-      let me = this
       for (let y = 0; y < this.fieldData.length; y++) {
         for (let x = 0; x < this.fieldData[0].length; x++) {
           this.updateCursorSprite(x, y)
-
-          this.cursorDisplay[y][x].interactive = false
-          this.cursorDisplay[y][x].editPuyo = function () {
-            me.isMouseDown = true
-            if (me.editorCurrentTool.layer === 'cursor' && me.gameState === 'idle') {
-              me.cursorData[y].splice(x, 1, me.editorCurrentTool.puyo)
-              me.updateCursorSprite(x, y)
-              me.arrowData[y].splice(x, 1, '0')
-              me.updateArrowSprite(x, y)
-            }
-          }
-          this.cursorDisplay[y][x].mouseOver = function () {
-            if (me.isMouseDown === true && me.editorCurrentTool.layer === 'cursor' && me.gameState === 'idle') {
-              me.cursorData[y].splice(x, 1, me.editorCurrentTool.puyo)
-              me.updateCursorSprite(x, y)
-              me.arrowData[y].splice(x, 1, '0')
-              me.updateArrowSprite(x, y)
-            }
-          }
-          this.cursorDisplay[y][x].mouseUp = function () {
-            me.isMouseDown = false
-          }
-          this.cursorDisplay[y][x].on('pointerdown', this.cursorDisplay[y][x].editPuyo)
-          this.cursorDisplay[y][x].on('pointerover', this.cursorDisplay[y][x].mouseOver)
-          this.cursorDisplay[y][x].on('pointerupoutside', this.cursorDisplay[y][x].mouseUp)
-          this.cursorDisplay[y][x].on('pointerup', this.cursorDisplay[y][x].mouseUp)
         }
       }
     },
@@ -1011,36 +907,9 @@ export default {
       }
       this.arrowDisplay = spriteArray
 
-      let me = this
       for (let y = 0; y < this.fieldData.length; y++) {
         for (let x = 0; x < this.fieldData[0].length; x++) {
           this.updateArrowSprite(x, y)
-
-          this.arrowDisplay[y][x].interactive = false
-          this.arrowDisplay[y][x].editPuyo = function () {
-            me.isMouseDown = true
-            if (me.editorCurrentTool.layer === 'arrow' && me.gameState === 'idle') {
-              me.arrowData[y].splice(x, 1, me.editorCurrentTool.puyo)
-              me.updateArrowSprite(x, y)
-              me.cursorData[y].splice(x, 1, '0')
-              me.updateCursorSprite(x, y)
-            }
-          }
-          this.arrowDisplay[y][x].mouseOver = function () {
-            if (me.isMouseDown === true && me.editorCurrentTool.layer === 'arrow' && me.gameState === 'idle') {
-              me.arrowData[y].splice(x, 1, me.editorCurrentTool.puyo)
-              me.updateArrowSprite(x, y)
-              me.cursorData[y].splice(x, 1, '0')
-              me.updateCursorSprite(x, y)
-            }
-          }
-          this.arrowDisplay[y][x].mouseUp = function () {
-            me.isMouseDown = false
-          }
-          this.arrowDisplay[y][x].on('pointerdown', this.arrowDisplay[y][x].editPuyo)
-          this.arrowDisplay[y][x].on('pointerover', this.arrowDisplay[y][x].mouseOver)
-          this.arrowDisplay[y][x].on('pointerupoutside', this.arrowDisplay[y][x].mouseUp)
-          this.arrowDisplay[y][x].on('pointerup', this.arrowDisplay[y][x].mouseUp)
         }
       }
     },
@@ -1408,24 +1277,9 @@ export default {
       }
     },
     gameLoop: function (delta) {
-      if (this.gameState === 'idle') {
-        this.stateEditField(delta)
-      } else if (this.gameState === 'dropping' && this.needToReset === false) {
-        this.animateDropPuyos(delta)
-        if (this.needToChangeSlides === true) {
-          this.animateDropDumpPuyos(delta)
-        }
-      } else if (this.gameState === 'popping' && this.needToReset === false) {
-        this.animatePopPuyos(delta)
-      }
-      // this.animateCursors(delta)
-      // this.animateArrows(delta)
-
-      // this.nextPuyoPairs.forEach((pair) => {
-      //   pair.rotation += 2 * Math.PI / 60
-      // })
-
       this.renderer.render(this.stage)
+      this.ticker.destroy()
+      console.log('ticking')
     },
     stateEditField: function (delta) {
       //
@@ -1632,9 +1486,6 @@ export default {
 
       this.updatePuyoSprites()
       console.log('merged shadow layer')
-    },
-    setMouseDown: function (bool) {
-      this.isMouseDown = bool // true, false
     },
     // Simulation controls
     controlField: function (control) { // expects a string
@@ -2166,11 +2017,6 @@ export default {
       }
       return false // If none of the cells are dropping, return false. Animations complete.
     },
-    Easers: function () {
-      return {
-        editBubble: BezierEasing(0.14, 0.18, 0, 1.16)
-      }
-    },
     fieldDataString: function () {
       return flatten2dTo1d(this.fieldData).join('')
     },
@@ -2358,6 +2204,20 @@ export default {
 </script>
 
 <style>
+#chainsim {
+  background-color: #ececec;
+  width: 273.6px;
+  height: 384.3px;
+  display: inline-block;
+  margin-left: 8px;
+  margin-right: 8px;
+  padding-left: 4px;
+  padding-right: 4px;
+  border-radius: 8px;
+  -moz-box-shadow: 3px 3px 1px 0px #999;
+  -webkit-box-shadow: 3px 3px 1px 0px #999;
+  box-shadow: 3px 3px 1px 0px #999;
+}
 #game {
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none; /* Safari */
