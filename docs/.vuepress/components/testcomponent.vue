@@ -1,27 +1,24 @@
 <template>
-  <div>
-    <p>Test component</p>
-    <div ref="games"></div>
-  </div>
+  <div class="pleeease-click-me" ><button @click="emitGlobalClickEvent()">Open Modal</button></div>
 </template>
 
 <script>
-import '../assets/js/pixi.min.js'
-import Chainsim from '../assets/js/chainsim.js'
+// Import the EventBus we just created.
+import { EventBus } from './eventbus.js';
 
 export default {
-  name: 'testcomponent',
-  components: {
-
+  data() {
+    return {
+      clickCount: 0
+    }
   },
-  mounted () {
-    let app = new PIXI.Application({width: 256, height: 256})
-    this.$refs.games.appendChild(app.view)
-    console.log(Chainsim)
+
+  methods: {
+    emitGlobalClickEvent() {
+      this.clickCount++;
+      // Send the event on a channel (i-got-clicked) with a payload (the click count.)
+      EventBus.$emit('i-got-clicked', this.clickCount);
+    }
   }
 }
 </script>
-
-<style>
-
-</style>

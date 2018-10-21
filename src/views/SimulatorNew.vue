@@ -1,29 +1,20 @@
 <template>
   <div class="SimulatorNew">
-    Chain Simulator Editor and Test Page.
-    <!-- <chainsim
+    Chain Simulator Editor and Test Page.<br><br>
+    <chainsim
     :importedData="importedData" :nextQueue="nextQueue">
-    </chainsim><br><br> -->
-    <chain-img
-    :importedData="importedData" :nextQueue="nextQueue">
-    </chain-img><chain-img
-    :importedData="importedData" :nextQueue="nextQueue">
-    </chain-img><chain-img
-    :importedData="importedData" :nextQueue="nextQueue">
-    </chain-img>
+    </chainsim><br><br>
   </div>
 </template>
 
 <script>
 // @ is an alias to /src
 import Chainsim from '@/components/Chainsim.vue'
-import ChainImg from '@/components/ChainImg.vue'
 
 export default {
   name: 'SimulatorNew',
   components: {
-    Chainsim,
-    ChainImg
+    Chainsim
   },
   data () {
     return {
@@ -56,3 +47,5 @@ export default {
   }
 }
 </script>
+<style scoped>
+</style>

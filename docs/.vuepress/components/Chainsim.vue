@@ -1,5 +1,5 @@
 <template>
-  <div id="chainsim" @mousedown="setMouseDown(true)" @mouseup="setMouseDown(false)">
+  <div id="chainsim">
     <div class="game-container">
       <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
     </div>
@@ -7,28 +7,17 @@
       <chainsim-control-button v-for="(sprite, index) in fieldControls" :key="`Control_${index}`"
       :gameLoaded="gameLoaded" :fieldSprites="fieldSprites" :button="sprite" :buttonName="index"
       v-on:controlField="controlField" />
-
-      <chainsim-garbagetray :garbage="garbage" :puyoSprites="puyoSprites" :gameLoaded="gameLoaded" :garbageDisplay="garbageDisplay"
-      :frame="frame" :delta="delta" />
-
-      <chainsim-scoredisplay :scoreDisplay="scoreDisplay" :score="score" :gameLoaded="gameLoaded" :fieldSprites="fieldSprites" />
-
-      <chainsim-chain-count :chainLength="chainLength" :chainCountSprites="chainCountSprites" :gameLoaded="gameLoaded"
-      :chainCountDisplay="chainCountDisplay" :frame="frame" :delta="delta" />
     </div>
-    <button @click="prevSlide">Previous Slide</button><button @click="nextSlide">Next Slide</button>
+    <!-- <button @click="prevSlide">Prev</button><button @click="nextSlide">Next</button> -->
   </div>
 </template>
 
 <script>
 import '../assets/js/pixi.min.js'
 import Chainsim from '../assets/js/chainsim.js'
-import testcomponent from './testcomponent'
 import ChainsimControlButton from './ChainsimControlButton'
-import ChainsimGarbagetray from './ChainsimGarbagetray'
-import ChainsimScoredisplay from './ChainsimScoredisplay'
-import ChainsimChainCount from './ChainsimChainCount'
 import '../assets/js/bezier-easing.js'
+import { EventBus } from './eventbus.js'
 
 const uniformMatrix = Chainsim.uniformMatrix // Generates a 2D matrix all filled with one value
 const stringTo2dArray = Chainsim.stringTo2dArray // Converts 1D string to 2D matrix
@@ -50,12 +39,9 @@ const Puyo = {
 
 export default {
   name: 'Chainsim',
-  props: ['importedData', 'nextQueue'],
+  props: ['importedData', 'nextQueue', 'item'],
   components: {
-    ChainsimControlButton,
-    ChainsimGarbagetray,
-    ChainsimScoredisplay,
-    ChainsimChainCount
+    ChainsimControlButton
   },
   data () {
     return {
@@ -98,6 +84,7 @@ export default {
       garbagePoints: 0,
       leftoverGarbagePoints: 0,
       chainLength: 0,
+      garbageIcons: ['spacer_n', 'spacer_n', 'spacer_n', 'spacer_n', 'spacer_n', 'spacer_n'],
 
       // Animation data arrays
       poppingCells: [[]], // boolean 2D array. Which cells are undergoing a popping animation?
@@ -113,8 +100,7 @@ export default {
           width: 608,
           height: 974, // 854
           antialias: true,
-          transparent: false,
-          backgroundColor: 0x061639,
+          transparent: true,
           resolution: 1
         },
         full: {
@@ -122,7 +108,6 @@ export default {
           height: 854,
           antialias: true,
           transparent: false,
-          backgroundColor: 0x061639,
           resolution: 1
         }
       },
@@ -241,17 +226,76 @@ export default {
   mounted () {
     this.initData()
     this.initGame()
+    EventBus.$on('i-got-clicked', data => {
+      this.updateChainsim(data)
+    })
   },
   methods: {
+    updateChainsim: function (data) {
+      this.ticker.remove(this.animateDropPuyos)
+      this.ticker.remove(this.animateDropDumpPuyos)
+      this.ticker.remove(this.animatePopPuyos)
+      this.ticker.remove(this.animateChainCounter)
+      this.ticker.remove(this.animateGarbageTray)
+      this.ticker.remove(this.animateNextPuyos)
+      this.gameState = 'idle'
+      this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.dropDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.clearPuyosResult = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.dropPuyosResult = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.cellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.dumpPuyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.dumpCellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.dumpVelocity = uniformMatrix(3.75, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.score = 0
+      this.stepScore = 0
+      this.garbage = 0
+      this.stepGarbage = 0
+      this.garbagePoints = 0
+      this.leftoverGarbagePoints = 0
+      this.chainLength = 0
+      this.fieldData = stringTo2dArray(data.importedData[0].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.fieldOriginal = stringTo2dArray(data.importedData[0].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.shadowData = stringTo2dArray(data.importedData[0].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.cursorData = stringTo2dArray(data.importedData[0].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.arrowData = stringTo2dArray(data.importedData[0].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.nextPuyoData = data.nextQueue
+      this.needToReset = false
+      this.needToChangeSlides = false
+      this.nextQueuePosition = 0
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        for (let x = 0; x < this.Field.columns; x++) {
+          this.dumpDisplay[y][x].visible = false
+        }
+      }
+      this.currentSlide = 0
+      this.updatePuyoSprites()
+      this.updateNextPuyoSprites()
+      this.updateDumpDisplay()
+      for (let y = 0; y < this.Field.totalRows; y++) {
+        for (let x = 0; x < this.Field.columns; x++) {
+          this.updateShadowSprite(x, y)
+          this.updateCursorSprite(x, y)
+          this.updateArrowSprite(x, y)
+        }
+      }
+    },
     log: function (input) {
       console.log(input)
     },
     initData: function () {
-      this.fieldData = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.fieldOriginal = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.shadowData = stringTo2dArray(this.importedData[this.currentSlide].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.cursorData = stringTo2dArray(this.importedData[this.currentSlide].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.arrowData = stringTo2dArray(this.importedData[this.currentSlide].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      // this.fieldData = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      // this.fieldOriginal = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      // this.shadowData = stringTo2dArray(this.importedData[this.currentSlide].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      // this.cursorData = stringTo2dArray(this.importedData[this.currentSlide].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      // this.arrowData = stringTo2dArray(this.importedData[this.currentSlide].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.fieldData = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.fieldOriginal = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.shadowData = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.cursorData = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.arrowData = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.controlPuyoData = uniformMatrix('0', 6, this.fieldSettings.columns)
       this.controlPuyoData = [['0', '0', '0', '0', '0', '0'],
         ['0', '0', '0', '0', '0', '0'],
@@ -263,6 +307,7 @@ export default {
       this.colorNameData = uniformMatrix('spacer', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.droppingDumpCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dropDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.clearPuyosResult = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dropPuyosResult = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
@@ -271,14 +316,14 @@ export default {
       this.dumpPuyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dumpCellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dumpVelocity = uniformMatrix(3.75, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.nextPuyoData = this.nextQueue
+      // this.nextPuyoData = this.nextQueue
+      this.nextPuyoData = '000000'
     },
     initGame: function () {
       // eslint-disable-next-line
       this.renderer = new PIXI.autoDetectRenderer(this.modeSettings.simple.width, this.modeSettings.simple.height, {
         antialias: true,
-        transparent: false,
-        backgroundColor: 0x061639,
+        transparent: true,
         resolution: 1
       })
       this.renderer.view.style.width = `${this.modeSettings.simple.width * this.scaleFactor}px`
@@ -294,9 +339,7 @@ export default {
 
       let setup = () => {
         // Mark textures as loaded
-        this.texturesLoaded = this.texturesToLoad.every((texture) => {
-          return resources[texture] !== undefined
-        })
+        this.texturesLoaded = true
 
         // Assign loaded spritesheets to vue data
         this.fieldSprites = resources['/img/field.json'].textures
@@ -336,15 +379,18 @@ export default {
       this.texturesLoaded = this.texturesToLoad.every((texture) => {
         return resources[texture] !== undefined
       })
-      if (this.texturesLoaded === false) {
-        loader
-          .add(this.texturesToLoad)
-          .on('progress', loadProgressHandler)
-          .load(setup)
-      } else {
-        loader
-          .load(setup)
-      }
+      console.log(`Chainsim textures loaded?: ${this.texturesLoaded}`)
+      // if (this.texturesLoaded === false) {
+      //   loader
+      //     .add(this.texturesToLoad)
+      //     .on('progress', loadProgressHandler)
+      //     .load(setup)
+      // } else {
+      //   loader
+      //     .load(setup)
+      // }
+      loader
+        .load(setup)
     },
     initFieldDisplay: function () {
       // Character Background
@@ -725,7 +771,7 @@ export default {
         let spriteArray = []
         let startX = 468
         for (let i = 0; i < this.Field.columns; i++) {
-          spriteArray[i] = new Sprite(this.puyoSprites['crown.png'])
+          spriteArray[i] = new Sprite(this.puyoSprites['spacer_n.png'])
           spriteArray[i].x = startX + spriteArray[i].width * i
           spriteArray[i].origX = startX + spriteArray[i].width * i
           spriteArray[i].y = 470
@@ -736,7 +782,7 @@ export default {
         let spriteArray = []
         let startX = 324
         for (let i = 0; i < this.Field.columns; i++) {
-          spriteArray[i] = new Sprite(this.puyoSprites['crown.png'])
+          spriteArray[i] = new Sprite(this.puyoSprites['spacer_n.png'])
           spriteArray[i].scale.set(0.7, 0.7)
           spriteArray[i].x = startX + spriteArray[i].width * i
           spriteArray[i].origX = startX + spriteArray[i].width * i
@@ -804,12 +850,12 @@ export default {
       let startX = 412
       let startY = 732
 
-      this.chainCountSprites.firstDigit = new Sprite(this.chainCountSprites['chain_1.png'])
+      this.chainCountSprites.firstDigit = new Sprite(this.chainCountSprites['spacer.png'])
       this.chainCountSprites.firstDigit.x = startX
       this.chainCountSprites.firstDigit.y = startY
       this.chainCountSprites.firstDigit.scale.set(0.85, 0.85)
 
-      this.chainCountSprites.secondDigit = new Sprite(this.chainCountSprites['chain_0.png'])
+      this.chainCountSprites.secondDigit = new Sprite(this.chainCountSprites['spacer.png'])
       this.chainCountSprites.secondDigit.x = startX + 40
       this.chainCountSprites.secondDigit.y = startY
       this.chainCountSprites.secondDigit.scale.set(0.85, 0.85)
@@ -824,6 +870,9 @@ export default {
       this.chainCountDisplay.addChild(this.chainCountSprites.secondDigit)
       this.chainCountDisplay.addChild(this.chainCountSprites.chainText)
       this.chainCountDisplay.origY = this.chainCountDisplay.y
+      this.chainCountSprites.firstDigit.alpha = 0
+      this.chainCountSprites.secondDigit.alpha = 0
+      this.chainCountSprites.chainText.alpha = 0
       this.stage.addChild(this.chainCountDisplay)
     },
     initShadowDisplay: function () {
@@ -1431,8 +1480,8 @@ export default {
       } else if (this.gameState === 'popping' && this.needToReset === false) {
         this.animatePopPuyos(delta)
       }
-      this.animateCursors(delta)
-      this.animateArrows(delta)
+      // this.animateCursors(delta)
+      // this.animateArrows(delta)
 
       // this.nextPuyoPairs.forEach((pair) => {
       //   pair.rotation += 2 * Math.PI / 60
@@ -1671,7 +1720,7 @@ export default {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
           if (this.needToChangeSlides === false) {
-            this.mergeInShadowLayer()
+            this.mergeInShadowLayer(true)
           }
           this.simulationSpeed = 1
         } else if (this.gameState === 'popping' || this.gameState === 'dropping') {
@@ -1682,7 +1731,7 @@ export default {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
           if (this.needToChangeSlides === false) {
-            this.mergeInShadowLayer()
+            this.mergeInShadowLayer(true)
           }
           this.simulationSpeed = 1
         } else if ((this.gameState === 'popping' || this.gameState === 'dropping') && this.simulationSpeed === 8) {
@@ -2013,29 +2062,94 @@ export default {
       } else {
         console.log('No more slides')
       }
+    },
+    countGarbage: function (g, i) {
+      this.checkCrown(g, i)
+    },
+    checkCrown: function (g, i) {
+      if (i < 6) {
+        if (g - 720 >= 0) {
+          this.garbageIcons.splice(i, 1, 'crown')
+          this.checkCrown(g - 720, i + 1)
+        } else {
+          this.checkMoon(g, i)
+        }
+      }
+    },
+    checkMoon: function (g, i) {
+      if (i < 6) {
+        if (g - 360 >= 0) {
+          this.garbageIcons.splice(i, 1, 'moon')
+          this.checkStar(g - 360, i + 1)
+        } else {
+          this.checkStar(g, i)
+        }
+      }
+    },
+    checkStar: function (g, i) {
+      if (i < 6) {
+        if (g - 180 >= 0) {
+          this.garbageIcons.splice(i, 1, 'star')
+          this.checkRock(g - 180, i + 1)
+        } else {
+          this.checkRock(g, i)
+        }
+      }
+    },
+    checkRock: function (g, i) {
+      if (i < 6) {
+        if (g - 30 >= 0) {
+          this.garbageIcons.splice(i, 1, 'rock')
+          this.checkRock(g - 30, i + 1)
+        } else {
+          this.checkLine(g, i)
+        }
+      }
+    },
+    checkLine: function (g, i) {
+      if (i < 6) {
+        if (g - 6 >= 0) {
+          this.garbageIcons.splice(i, 1, 'line')
+          this.checkLine(g - 6, i + 1)
+        } else {
+          this.checkUnit(g, i)
+        }
+      }
+    },
+    checkUnit: function (g, i) {
+      if (i < 6) {
+        if (g - 1 >= 0) {
+          this.garbageIcons.splice(i, 1, 'unit')
+          this.checkUnit(g - 1, i + 1)
+        }
+      }
     }
   },
   computed: {
     chainDiff: function () {
-      let oldField = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      let newField = stringTo2dArray(this.importedData[this.currentSlide + 1].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      if (this.importedData !== undefined) {
+        let oldField = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        let newField = stringTo2dArray(this.importedData[this.currentSlide + 1].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
 
-      let diff = []
-      for (let y = 0; y < this.fieldSettings.totalRows; y++) {
-        diff[y] = []
-        for (let x = 0; x < this.fieldSettings.columns; x++) {
-          if (oldField[y][x] === '0' && newField[y][x] !== '0') {
-            diff[y][x] = newField[y][x]
-          } else {
-            diff[y][x] = '0'
+        let diff = []
+        for (let y = 0; y < this.fieldSettings.totalRows; y++) {
+          diff[y] = []
+          for (let x = 0; x < this.fieldSettings.columns; x++) {
+            if (oldField[y][x] === '0' && newField[y][x] !== '0') {
+              diff[y][x] = newField[y][x]
+            } else {
+              diff[y][x] = '0'
+            }
           }
         }
-      }
 
-      // Compute drop
-      let diffField = new Chainsim.Field(this.fieldSettings, diff)
-      let diffDropped = Chainsim.mapToStringArray(Chainsim.Simulate.dropPuyos(diffField).dropResult)
-      return diffDropped
+        // Compute drop
+        let diffField = new Chainsim.Field(this.fieldSettings, diff)
+        let diffDropped = Chainsim.mapToStringArray(Chainsim.Simulate.dropPuyos(diffField).dropResult)
+        return diffDropped
+      } else {
+        return uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
+      }
     },
     combinedMatrix: function () {
       let combinedMatrix = JSON.parse(JSON.stringify(this.chainDiff))
@@ -2134,6 +2248,26 @@ export default {
     },
     arrowDataString: function () {
       return flatten2dTo1d(this.arrowData).join('')
+    },
+    scoreString: function () {
+      let string = this.score.toString()
+      let zeroesToAdd = 8 - string.length
+
+      if (string.length > 8) {
+        return '99999999'
+      } else {
+        for (let i = 0; i < zeroesToAdd; i++) {
+          string = '0' + string
+        }
+        return string
+      }
+    },
+    chainLengthString: function () {
+      let string = this.chainLength.toString()
+      if (string.length < 2) {
+        string = '0' + string
+      }
+      return string
     }
   },
   watch: {
@@ -2208,9 +2342,21 @@ export default {
           this.resetField()
           this.needToReset = false
         } else {
-          if (this.currentSlide < this.importedData.length - 1 && this.needToChangeSlides === true) {
-            if (this.importedData[this.currentSlide + this.slideChange].autoDrop === true) {
-              this.updateWithNextSlide()
+          if (this.importedData !== undefined) {
+            if (this.currentSlide < this.importedData.length - 1 && this.needToChangeSlides === true) {
+              if (this.importedData[this.currentSlide + this.slideChange].autoDrop === true) {
+                this.updateWithNextSlide()
+              }
+            } else {
+              this.fieldData = this.dropPuyosResult
+              console.log('Dropped the new puyo field')
+              this.updatePuyoSprites()
+              if (this.chainAutoPlay === true) {
+                this.gameState = 'popping'
+              } else {
+                this.simulationSpeed = 1
+                this.gameState = 'chainStopped'
+              }
             }
           } else {
             this.fieldData = this.dropPuyosResult
@@ -2249,7 +2395,41 @@ export default {
       for (let i = 0; i < 6; i++) {
         this.garbageDisplay[i].x = (this.garbageDisplay[2].origX + this.garbageDisplay[3].origX) / 2
       }
+
+      this.garbageIcons = ['spacer_n', 'spacer_n', 'spacer_n', 'spacer_n', 'spacer_n', 'spacer_n']
+      this.countGarbage(this.garbage, 0) // second parameter is i, the index for garbageIcons (array)
+      console.log(this.garbageDisplay)
+      for (let i = 0; i < 6; i++) {
+        this.garbageDisplay[i].texture = this.puyoSprites[`${this.garbageIcons[i]}.png`]
+      }
       this.ticker.add(this.animateGarbageTray)
+    },
+    scoreString: function () {
+      if (this.gameLoaded === true) {
+        for (let i = 0; i < 8; i++) {
+          this.scoreDisplay[i].texture = this.fieldSprites[`score_${this.scoreString[i]}.png`]
+        }
+      }
+    },
+    chainLengthString: function () {
+      this.chainCountSprites.firstDigit.alpha = 0
+      this.chainCountSprites.secondDigit.alpha = 0
+      this.chainCountSprites.chainText.alpha = 0
+
+      if (this.chainLengthString[0] !== '0') {
+        this.chainCountSprites.firstDigit.alpha = 1
+        this.chainCountSprites.firstDigit.texture = this.chainCountSprites[`chain_${this.chainLengthString[0]}.png`]
+      } else {
+        this.chainCountSprites.firstDigit.texture = this.chainCountSprites[`spacer.png`]
+      }
+
+      if (this.chainLength > 0) {
+        this.chainCountSprites.secondDigit.alpha = 1
+        this.chainCountSprites.secondDigit.texture = this.chainCountSprites[`chain_${this.chainLengthString[1]}.png`]
+        this.chainCountSprites.chainText.alpha = 1
+      } else {
+        this.chainCountSprites.secondDigit.texture = this.chainCountSprites[`spacer.png`]
+      }
     }
   }
 }

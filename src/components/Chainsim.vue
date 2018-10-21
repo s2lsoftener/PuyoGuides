@@ -9,6 +9,12 @@
       v-on:controlField="controlField" />
     </div>
     <button @click="prevSlide">Prev</button><button @click="nextSlide">Next</button>
+    <p>Game State: {{ gameState }} || stopGame: {{ stopGame }}</p>
+    <p>isDropping: {{ isDropping }} || isPopping: {{ isPopping }}</p>
+    <p>fieldData: '{{ fieldDataString }}',
+    <br>shadowData: '{{ shadowDataString }}',
+    <br>cursorData: '{{ cursorDataString }}',
+    <br>arrowData: '{{ arrowDataString }}'</p>
   </div>
 </template>
 
@@ -16,7 +22,6 @@
 import * as PIXI from 'pixi.js'
 import Chainsim from '../assets/js/chainsim.js'
 import ChainsimControlButton from './ChainsimControlButton'
-// import ChainsimGarbagetray from './ChainsimGarbagetray'
 import * as BezierEasing from 'bezier-easing'
 
 const uniformMatrix = Chainsim.uniformMatrix // Generates a 2D matrix all filled with one value
@@ -2294,6 +2299,17 @@ export default {
         }
       }
     },
+    importedData: {
+      handler: function () {
+        this.fieldData = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.fieldOriginal = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.shadowData = stringTo2dArray(this.importedData[this.currentSlide].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.cursorData = stringTo2dArray(this.importedData[this.currentSlide].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.arrowData = stringTo2dArray(this.importedData[this.currentSlide].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.resetField()
+      },
+      deep: true
+    },
     needToChangeSlides: function (newVal, oldVal) {
       if (newVal === true) {
         for (let y = 0; y < this.Field.totalRows; y++) {
@@ -2357,7 +2373,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 #game {
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none; /* Safari */
