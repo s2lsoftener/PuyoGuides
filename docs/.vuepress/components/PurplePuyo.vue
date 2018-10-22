@@ -153,5 +153,6 @@ export default {
 <style scoped>
 .purple-puyo {
   display: inline-block;
+  vertical-align: middle;
 }
 </style>

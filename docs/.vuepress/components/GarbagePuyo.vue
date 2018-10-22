@@ -153,5 +153,6 @@ export default {
 <style scoped>
 .garbage-puyo {
   display: inline-block;
+  vertical-align: middle;
 }
 </style>
