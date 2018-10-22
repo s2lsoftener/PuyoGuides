@@ -220,7 +220,55 @@ export default {
       mergedDump: false, // Set to true once the dropped field has been merged
       dumpVelocity: [[]],
       dumpPuyoStates: [[]],
-      dumpCellTimer: [[]]
+      dumpCellTimer: [[]],
+
+      // Color blind settings?
+      colorSettings: {
+        red: {
+          hue: 0,
+          brightness: 100,
+          contrast: 0,
+          saturate: 0
+        },
+        green: {
+          hue: 0,
+          brightness: 100,
+          contrast: 0,
+          saturate: 0
+        },
+        blue: {
+          hue: 0,
+          brightness: 100,
+          contrast: 0,
+          saturate: 0
+        },
+        yellow: {
+          hue: 0,
+          brightness: 100,
+          contrast: 0,
+          saturate: 0
+        },
+        purple: {
+          hue: 0,
+          brightness: 100,
+          contrast: 0,
+          saturate: 0
+        },
+        garbage: {
+          hue: 0,
+          brightness: 100,
+          contrast: 0,
+          saturate: 0
+        }
+      },
+      colorFilters: {
+        red: new PIXI.filters.ColorMatrixFilter(),
+        green: new PIXI.filters.ColorMatrixFilter(),
+        blue: new PIXI.filters.ColorMatrixFilter(),
+        yellow: new PIXI.filters.ColorMatrixFilter(),
+        purple: new PIXI.filters.ColorMatrixFilter(),
+        garbage: new PIXI.filters.ColorMatrixFilter()
+      }
     }
   },
   mounted () {
@@ -253,11 +301,11 @@ export default {
       this.garbagePoints = 0
       this.leftoverGarbagePoints = 0
       this.chainLength = 0
-      this.fieldData = stringTo2dArray(data.importedData[0].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.fieldOriginal = stringTo2dArray(data.importedData[0].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.shadowData = stringTo2dArray(data.importedData[0].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.cursorData = stringTo2dArray(data.importedData[0].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.arrowData = stringTo2dArray(data.importedData[0].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.fieldData = stringTo2dArray(data.importedData[data.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.fieldOriginal = stringTo2dArray(data.importedData[data.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.shadowData = stringTo2dArray(data.importedData[data.currentSlide].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.cursorData = stringTo2dArray(data.importedData[data.currentSlide].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.arrowData = stringTo2dArray(data.importedData[data.currentSlide].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.nextPuyoData = data.nextQueue
       this.needToReset = false
       this.needToChangeSlides = false
@@ -378,49 +426,67 @@ export default {
       this.$refs.game.appendChild(this.renderer.view)
       this.stage = new PIXI.Container()
 
-      this.ticker = new PIXI.ticker.Ticker()
-      this.ticker.add(() => {
-        this.renderer.render(this.stage)
+      // this.ticker = new PIXI.ticker.Ticker()
+      // this.ticker.add(() => {
+      //   this.renderer.render(this.stage)
+      // })
+      // this.ticker.start()
+
+      let waitForLoad = new Promise((resolve, reject) => {
+        setInterval(function () {
+          if (loader.progress < 100) {
+            console.log(loader.progress)
+            console.log('Chainsim says not loaded')
+          } else {
+            resolve('Chainsim Assets loaded...!')
+          }
+        }, 50)
       })
-      this.ticker.start()
 
-      let setup = () => {
-        // Mark textures as loaded
-        this.texturesLoaded = true
+      waitForLoad.then((value) => {
+        console.log(value)
+        this.runSetup()
+      })
 
-        // Assign loaded spritesheets to vue data
-        this.fieldSprites = resources['/img/field.json'].textures
-        this.puyoSprites = resources['/img/puyo.json'].textures
-        this.chainCountSprites = resources['/img/chain_font.json'].textures
+      // let setup = () => {
+      //   // Mark textures as loaded
+      //   this.texturesLoaded = true
 
-        // Place sprites on the field
-        this.initFieldDisplay()
-        this.initScoreDisplay()
-        this.initGameOverX()
-        this.initPuyoDisplay()
-        this.initDumpDisplay()
-        this.initControlledPuyos()
-        this.initActivePair()
-        this.initShadowDisplay()
-        this.initCursorDisplay()
-        this.initArrowDisplay()
-        this.initGarbageDisplay()
-        this.initNextPuyos()
-        this.initFieldControls()
-        this.initChainCounter()
-        this.initToolDisplay()
+      //   // Assign loaded spritesheets to vue data
+      //   this.fieldSprites = resources['/img/field.json'].textures
+      //   this.puyoSprites = resources['/img/puyo.json'].textures
+      //   this.chainCountSprites = resources['/img/chain_font.json'].textures
 
-        // Marked game as loaded
-        this.gameLoaded = true
+      //   // Place sprites on the field
+      //   this.initFieldDisplay()
+      //   this.initScoreDisplay()
+      //   this.initGameOverX()
+      //   this.initPuyoDisplay()
+      //   this.initDumpDisplay()
+      //   this.initControlledPuyos()
+      //   this.initActivePair()
+      //   this.initShadowDisplay()
+      //   this.initCursorDisplay()
+      //   this.initArrowDisplay()
+      //   this.initGarbageDisplay()
+      //   this.initNextPuyos()
+      //   this.initFieldControls()
+      //   this.initChainCounter()
+      //   this.initToolDisplay()
 
-        // Run the game loop
-        this.ticker.add(delta => this.gameLoop(delta))
-      }
+      //   // Marked game as loaded
+      //   this.gameLoaded = true
 
-      let loadProgressHandler = (loader, resource) => {
-        console.log(`Loading: ${resource.url}`)
-        console.log(`Progress: ${Math.floor(loader.progress)}%`)
-      }
+      //   // Run the game loop
+      //   this.ticker = new PIXI.ticker.Ticker()
+      //   this.ticker.add(delta => this.gameLoop(delta))
+      //   this.ticker.start()
+      // }
+
+      // let loadProgressHandler = (loader, resource) => {
+      //   console.log(`Loading: ${resource.url}`)
+      //   console.log(`Progress: ${Math.floor(loader.progress)}%`)
+      // }
 
       // Check if textures have already been loaded
       // if (Object.keys(resources).length < this.texturesToLoad.length) {
@@ -442,7 +508,95 @@ export default {
       //   loader
       //     .load(setup)
       // }
-      loader.load(setup)
+      // loader
+      //   .on('progress', () => {
+      //     console.log('Waiting for assets to load.')
+      //   })
+      //   .load(setup)
+    },
+    runSetup: function () {
+      // Retrieve color settings from localStorage
+      if (localStorage.getItem('puyocolors')) {
+        try {
+          this.colorSettings = JSON.parse(localStorage.getItem('puyocolors'))
+          console.log('Found color settings in localStorage')
+        } catch(e) {
+          console.log('Removing puyocolors from localStorage.')
+          localStorage.removeItem('puyocolors')
+          console.log('Using default color settings instead.')
+          this.colorSettings = {
+            red: {
+              hue: 0,
+              brightness: 100,
+              contrast: 0,
+              saturate: 0
+            },
+            green: {
+              hue: 0,
+              brightness: 100,
+              contrast: 0,
+              saturate: 0
+            },
+            blue: {
+              hue: 0,
+              brightness: 100,
+              contrast: 0,
+              saturate: 0
+            },
+            yellow: {
+              hue: 0,
+              brightness: 100,
+              contrast: 0,
+              saturate: 0
+            },
+            purple: {
+              hue: 0,
+              brightness: 100,
+              contrast: 0,
+              saturate: 0
+            },
+            garbage: {
+              hue: 0,
+              brightness: 100,
+              contrast: 0,
+              saturate: 0
+            }
+          }
+        }
+      }
+      
+      // Mark textures as loaded
+      this.texturesLoaded = true
+
+      // Assign loaded spritesheets to vue data
+      this.fieldSprites = resources['/img/field.json'].textures
+      this.puyoSprites = resources['/img/puyo.json'].textures
+      this.chainCountSprites = resources['/img/chain_font.json'].textures
+
+      // Place sprites on the field
+      this.initFieldDisplay()
+      this.initScoreDisplay()
+      this.initGameOverX()
+      this.initPuyoDisplay()
+      this.initDumpDisplay()
+      // this.initControlledPuyos()
+      // this.initActivePair()
+      this.initShadowDisplay()
+      this.initCursorDisplay()
+      this.initArrowDisplay()
+      this.initGarbageDisplay()
+      this.initNextPuyos()
+      this.initFieldControls()
+      this.initChainCounter()
+      this.initToolDisplay()
+
+      // Marked game as loaded
+      this.gameLoaded = true
+
+      // Run the game loop
+      this.ticker = new PIXI.ticker.Ticker()
+      this.ticker.add(delta => this.gameLoop(delta))
+      this.ticker.start()
     },
     initFieldDisplay: function () {
       // Character Background
@@ -583,11 +737,24 @@ export default {
         for (let x = 0; x < this.Field.columns; x++) {
           this.puyoDisplay[y][x].x = this.coordArray[y][x].x
           this.puyoDisplay[y][x].y = this.coordArray[y][x].y
+          if (this.colorNameData[y][x] !== 'spacer') {
+            this.puyoDisplay[y][x].filters = [this.colorFilters[`${this.colorNameData[y][x]}`]]  
+          }
           this.puyoDisplay[y][x].spritename = `${this.colorNameData[y][x]}_${this.connectionData[y][x]}.png`
           this.puyoDisplay[y][x].texture = this.puyoSprites[`${this.colorNameData[y][x]}_${this.connectionData[y][x]}.png`]
           this.puyoDisplay[y][x].anchor.set(0.5, 0.5)
           this.puyoDisplay[y][x].scale.set(1, 1)
         }
+      }
+
+      if (this.gameLoaded === false) {
+        // I only want to bother PIXI to update these settings once, not every time the puyos change. 
+        this.colorFilters.red.hue(this.colorSettings.red.hue)
+        this.colorFilters.green.hue(this.colorSettings.green.hue)
+        this.colorFilters.blue.hue(this.colorSettings.blue.hue)
+        this.colorFilters.yellow.hue(this.colorSettings.yellow.hue)
+        this.colorFilters.purple.hue(this.colorSettings.purple.hue)
+        this.colorFilters.garbage.hue(this.colorSettings.garbage.hue)
       }
       console.log('updated sprites')
     },
@@ -661,6 +828,14 @@ export default {
         if (color2 === undefined) {
           color2 = 'spacer'
         }
+
+        if (color1 !== 'spacer') {
+          this.nextPuyoPairs[i].children[0].filters = [this.colorFilters[`${color1}`]]
+        }
+        if (color2 !== 'spacer') {
+          this.nextPuyoPairs[i].children[1].filters = [this.colorFilters[`${color2}`]] 
+        }
+
         this.nextPuyoPairs[i].children[0].texture = this.puyoSprites[`${color1}_n.png`]
         this.nextPuyoPairs[i].children[1].texture = this.puyoSprites[`${color2}_n.png`]
       }
@@ -784,6 +959,13 @@ export default {
         let axisPuyo = new Sprite(this.puyoSprites[`${color1}_n.png`])
         let freePuyo = new Sprite(this.puyoSprites[`${color2}_n.png`])
         axisPuyo.y += 60
+
+        if (color1 !== 'spacer') {
+          axisPuyo.filters = [this.colorFilters[`${color1}`]]
+        }
+        if (color2 !== 'spacer') {
+          freePuyo.filters = [this.colorFilters[`${color2}`]] 
+        }
 
         this.nextPuyoPairs[i] = new PIXI.Container()
         this.nextPuyoPairs[i].addChild(axisPuyo)
@@ -1704,7 +1886,7 @@ export default {
 
       for (let y = 0; y < this.Field.totalRows; y++) {
         for (let x = 0; x < this.Field.columns; x++) {
-          Math.cos(t / 30 * Math.PI) >= 0
+          Math.cos(t / 60 * Math.PI) >= 0
             ? this.cursorDisplay[y][x].scale.set(0.9, 0.9)
             : this.cursorDisplay[y][x].scale.set(1, 1)
         }
@@ -1961,16 +2143,16 @@ export default {
       for (let y = 0; y < this.Field.totalRows; y++) {
         for (let x = 0; x < this.Field.columns; x++) {
           if (this.arrowData[y][x] === 'R') {
-            this.arrowDisplay[y][x].x = this.coordArray[y][x].x + 8 * Math.cos(t / 30 * Math.PI)
+            this.arrowDisplay[y][x].x = this.coordArray[y][x].x + 8 * Math.cos(t / 60 * Math.PI)
           }
           if (this.arrowData[y][x] === 'L') {
-            this.arrowDisplay[y][x].x = this.coordArray[y][x].x - 8 * Math.cos(t / 30 * Math.PI)
+            this.arrowDisplay[y][x].x = this.coordArray[y][x].x - 8 * Math.cos(t / 60 * Math.PI)
           }
           if (this.arrowData[y][x] === 'U') {
-            this.arrowDisplay[y][x].y = this.coordArray[y][x].y - 8 * Math.cos(t / 30 * Math.PI)
+            this.arrowDisplay[y][x].y = this.coordArray[y][x].y - 8 * Math.cos(t / 60 * Math.PI)
           }
           if (this.arrowData[y][x] === 'D') {
-            this.arrowDisplay[y][x].y = this.coordArray[y][x].y + 8 * Math.cos(t / 30 * Math.PI)
+            this.arrowDisplay[y][x].y = this.coordArray[y][x].y + 8 * Math.cos(t / 60 * Math.PI)
           }
         }
       }

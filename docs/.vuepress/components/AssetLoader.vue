@@ -1,9 +1,10 @@
 <template>
-  <div></div>
+  <div class="asset-loader"></div>
 </template>
 
 <script>
 import '../assets/js/pixi.min.js'
+import { EventBus } from './eventbus.js'
 
 const loader = PIXI.loader // eslint-disable-line no-unused-vars
 const resources = PIXI.loader.resources // eslint-disable-line no-unused-vars
@@ -39,10 +40,17 @@ export default {
     loader
       .add(this.texturesToLoad)
       .on('progress', loadProgressHandler)
+      .on('complete', () => {
+        EventBus.setLoaded()
+      })
+      .load()
   }
 }
 </script>
 
-<style>
-
+<style scoped>
+.asset-loader {
+  width: 0px;
+  height: 0px;
+}
 </style>

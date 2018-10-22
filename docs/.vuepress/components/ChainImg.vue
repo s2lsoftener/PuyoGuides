@@ -4,7 +4,8 @@
      v-if="gameInView" 
      :in-viewport-offset-top='-2000'
      :importedData="importedData" 
-     :nextQueue="nextQueue"></chain-img-field>
+     :nextQueue="nextQueue"
+     :slideshowSlide="0"></chain-img-field>
   </div>
 </template>
 
