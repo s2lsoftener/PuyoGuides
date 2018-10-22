@@ -1,8 +1,8 @@
 <template>
   <div>
-    <chainsim-modal-content v-show="showModal" v-on:close="showModal = false">
+    <chainsim-modal-content v-show="showModal">
       <h3 slot="header">Chain Simulator</h3>
-      <div slot="body"><chainsim /></div>
+      <div slot="body"><chainsim :showModal="showModal" /></div>
     </chainsim-modal-content>
   </div>
 </template>
@@ -31,8 +31,11 @@ export default {
     }
   },
   mounted () {
-    EventBus.$on('i-got-clicked', () => {
-      this.showModal = !this.showModal
+    EventBus.$on('openModal', () => {
+      this.showModal = true
+    })
+    EventBus.$on('closeModal', () => {
+      this.showModal = false
     })
   }
 }
@@ -45,18 +48,28 @@ export default {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: 150%; /* Extra height so the translucent black covers the screen on all devices */
   background-color: rgba(0, 0, 0, .5);
+  transition: opacity 0.3s ease;
+}
+
+.modal-wrapper-outer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
   display: table;
-  transition: opacity .3s ease;
 }
 
 .modal-wrapper {
+  position: relative;
   display: table-cell;
   vertical-align: middle;
 }
 
 .modal-container {
+  position: relative;
   width: 300px;
   margin: 0px auto;
   padding: 20px 30px;
@@ -68,16 +81,21 @@ export default {
 }
 
 .modal-header h3 {
+  position: relative;
   margin-top: 0;
   color: #42b983;
 }
 
 .modal-body {
-  margin: 20px 0;
+  position: relative;
+  margin: 10px 0;
+  width: 100%;
 }
 
 .modal-default-button {
-  float: right;
+  position: absolute;
+  top: 22px;
+  right: 22px;
 }
 
 /*

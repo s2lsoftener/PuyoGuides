@@ -1,23 +1,22 @@
 <template>
-  <div>
-    <div class="game-container">
-      <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
+  <div class="game-container">
+    <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
+    <div class="chainsim-loaded" v-if="gameLoaded === false">
+      <div class="chainsim-loaded-inner">
+        <img src="/img/save_wheel.png" style="vertical-align: middle;">Loading
+      </div>
     </div>
-    <div v-if="gameLoaded"> <!-- ensures that the v-for loops execute -->
-      <chainsim-control-button v-for="(sprite, index) in fieldControls" :key="`Control_${index}`"
-      :gameLoaded="gameLoaded" :fieldSprites="fieldSprites" :button="sprite" :buttonName="index"
-      v-on:controlField="controlField" />
-    </div>
-    <!-- <button @click="prevSlide">Prev</button><button @click="nextSlide">Next</button> -->
+
+    <button class="edit" @click="openChainsim">Edit</button>
   </div>
 </template>
 
 <script>
 import '../assets/js/pixi.min.js'
 import Chainsim from '../assets/js/chainsim.js'
-import ChainsimControlButton from './ChainsimControlButton'
-import '../assets/js/bezier-easing.js'
 import { EventBus } from './eventbus.js'
+
+const inViewport = require('vue-in-viewport-mixin')
 
 const uniformMatrix = Chainsim.uniformMatrix // Generates a 2D matrix all filled with one value
 const stringTo2dArray = Chainsim.stringTo2dArray // Converts 1D string to 2D matrix
@@ -38,11 +37,9 @@ const Puyo = {
 }
 
 export default {
-  name: 'Chainsim',
-  props: ['importedData', 'nextQueue', 'item', 'showModal'],
-  components: {
-    ChainsimControlButton
-  },
+  name: 'ChainImgField',
+  props: ['importedData', 'nextQueue'],
+  mixins: [ inViewport ],
   data () {
     return {
       /* Settings */
@@ -100,7 +97,8 @@ export default {
           width: 608,
           height: 974, // 854
           antialias: true,
-          transparent: true,
+          transparent: false,
+          backgroundColor: 0x061639,
           resolution: 1
         },
         full: {
@@ -134,8 +132,7 @@ export default {
         '/img/picker_arrow_right.png',
         '/img/editor_x.png',
         '/img/current_tool.png',
-        '/img/next_background_1p_mask.png',
-        '/img/rotate_container.png'
+        '/img/next_background_1p_mask.png'
       ],
       puyoSprites: {},
       fieldSprites: {},
@@ -150,7 +147,7 @@ export default {
       garbageDisplay: [],
       cursorDisplay: [],
       arrowDisplay: [],
-      chainCounterDisplay: {},
+      chainCountDisplay: {},
       fieldDisplay: {},
       cellTimer: [[]],
       puyoStates: [[]],
@@ -226,123 +223,20 @@ export default {
   mounted () {
     this.initData()
     this.initGame()
-    EventBus.$on('openModal', data => {
-      this.updateChainsim(data)
-    })
-    EventBus.$on('stopChainsim', () => {
-      this.closeModal()
-    }) 
   },
   methods: {
-    updateChainsim: function (data) {
-      this.gameState = 'idle'
-      this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.dropDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.clearPuyosResult = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.dropPuyosResult = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.cellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.dumpPuyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.dumpCellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.dumpVelocity = uniformMatrix(3.75, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.score = 0
-      this.stepScore = 0
-      this.garbage = 0
-      this.stepGarbage = 0
-      this.garbagePoints = 0
-      this.leftoverGarbagePoints = 0
-      this.chainLength = 0
-      this.fieldData = stringTo2dArray(data.importedData[0].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.fieldOriginal = stringTo2dArray(data.importedData[0].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.shadowData = stringTo2dArray(data.importedData[0].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.cursorData = stringTo2dArray(data.importedData[0].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.arrowData = stringTo2dArray(data.importedData[0].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.nextPuyoData = data.nextQueue
-      this.needToReset = false
-      this.needToChangeSlides = false
-      this.nextQueuePosition = 0
-      for (let y = 0; y < this.Field.totalRows; y++) {
-        for (let x = 0; x < this.Field.columns; x++) {
-          this.dumpDisplay[y][x].visible = false
-        }
-      }
-      this.currentSlide = 0
-      this.ticker.addOnce(() => {
-        this.updatePuyoSprites()
-        this.updateNextPuyoSprites()
-        this.updateDumpDisplay()
-        for (let y = 0; y < this.Field.totalRows; y++) {
-          for (let x = 0; x < this.Field.columns; x++) {
-            this.updateShadowSprite(x, y)
-            this.updateCursorSprite(x, y)
-            this.updateArrowSprite(x, y)
-          }
-        }
-      })
-    },
-    closeModal: function () {
-      this.gameState = 'idle'
-      this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.dropDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.clearPuyosResult = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.dropPuyosResult = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.cellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.dumpPuyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.dumpCellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.dumpVelocity = uniformMatrix(3.75, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.score = 0
-      this.stepScore = 0
-      this.garbage = 0
-      this.stepGarbage = 0
-      this.garbagePoints = 0
-      this.leftoverGarbagePoints = 0
-      this.chainLength = 0
-      this.fieldData = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.fieldOriginal = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.shadowData = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.cursorData = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.arrowData = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.nextPuyoData = '000000'
-      this.needToReset = false
-      this.needToChangeSlides = false
-      this.nextQueuePosition = 0
-      for (let y = 0; y < this.Field.totalRows; y++) {
-        for (let x = 0; x < this.Field.columns; x++) {
-          this.dumpDisplay[y][x].visible = false
-        }
-      }
-      this.currentSlide = 0
-      this.ticker.addOnce(() => {
-        this.updatePuyoSprites()
-        this.updateNextPuyoSprites()
-        this.updateDumpDisplay()
-        for (let y = 0; y < this.Field.totalRows; y++) {
-          for (let x = 0; x < this.Field.columns; x++) {
-            this.updateShadowSprite(x, y)
-            this.updateCursorSprite(x, y)
-            this.updateArrowSprite(x, y)
-          }
-        }
-        EventBus.$emit('closeModal')
-      })
+    openChainsim: function () {
+      EventBus.$emit('openModal', {importedData: this.importedData, nextQueue: this.nextQueue})
     },
     log: function (input) {
       console.log(input)
     },
     initData: function () {
-      // this.fieldData = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      // this.fieldOriginal = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      // this.shadowData = stringTo2dArray(this.importedData[this.currentSlide].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      // this.cursorData = stringTo2dArray(this.importedData[this.currentSlide].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      // this.arrowData = stringTo2dArray(this.importedData[this.currentSlide].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.fieldData = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.fieldOriginal = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.shadowData = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.cursorData = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.arrowData = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.fieldData = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.fieldOriginal = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.shadowData = stringTo2dArray(this.importedData[this.currentSlide].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.cursorData = stringTo2dArray(this.importedData[this.currentSlide].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      this.arrowData = stringTo2dArray(this.importedData[this.currentSlide].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.controlPuyoData = uniformMatrix('0', 6, this.fieldSettings.columns)
       this.controlPuyoData = [['0', '0', '0', '0', '0', '0'],
         ['0', '0', '0', '0', '0', '0'],
@@ -354,7 +248,6 @@ export default {
       this.colorNameData = uniformMatrix('spacer', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.droppingDumpCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dropDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.clearPuyosResult = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dropPuyosResult = uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
@@ -363,30 +256,26 @@ export default {
       this.dumpPuyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dumpCellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dumpVelocity = uniformMatrix(3.75, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      // this.nextPuyoData = this.nextQueue
-      this.nextPuyoData = '000000'
+      this.nextPuyoData = this.nextQueue
     },
     initGame: function () {
       // eslint-disable-next-line
-      this.renderer = new PIXI.autoDetectRenderer(this.modeSettings.simple.width, this.modeSettings.simple.height, {
+      this.renderer = new PIXI.WebGLRenderer(this.modeSettings.simple.width, this.modeSettings.simple.height, {
         antialias: true,
-        transparent: true,
-        resolution: 1
+        resolution: 1,
+        transparent: true
       })
       this.renderer.view.style.width = `${this.modeSettings.simple.width * this.scaleFactor}px`
-      this.renderer.view.style.height = `${this.modeSettings.simple.height * this.scaleFactor}px`
+      this.renderer.view.style.height = `${(this.modeSettings.simple.height - 120) * this.scaleFactor}px`
+      this.renderer.view.height = this.modeSettings.simple.height - 120
       this.$refs.game.appendChild(this.renderer.view)
       this.stage = new PIXI.Container()
 
-      this.ticker = new PIXI.ticker.Ticker()
-      this.ticker.add(() => {
-        this.renderer.render(this.stage)
-      })
-      this.ticker.start()
-
       let setup = () => {
         // Mark textures as loaded
-        this.texturesLoaded = true
+        this.texturesLoaded = this.texturesToLoad.every((texture) => {
+          return resources[texture] !== undefined
+        })
 
         // Assign loaded spritesheets to vue data
         this.fieldSprites = resources['/img/field.json'].textures
@@ -398,15 +287,12 @@ export default {
         this.initScoreDisplay()
         this.initGameOverX()
         this.initPuyoDisplay()
-        this.initDumpDisplay()
         this.initControlledPuyos()
-        this.initActivePair()
         this.initShadowDisplay()
         this.initCursorDisplay()
         this.initArrowDisplay()
-        this.initGarbageDisplay()
+        // this.initGarbageDisplay()
         this.initNextPuyos()
-        this.initFieldControls()
         this.initChainCounter()
         this.initToolDisplay()
 
@@ -414,7 +300,12 @@ export default {
         this.gameLoaded = true
 
         // Run the game loop
-        this.ticker.add(delta => this.gameLoop(delta))
+        this.ticker = new PIXI.ticker.Ticker()
+        this.ticker.addOnce((delta) => {
+          // this.renderer.render(this.stage)
+          this.gameLoop(delta)
+        })
+        this.ticker.start()
       }
 
       let loadProgressHandler = (loader, resource) => {
@@ -423,16 +314,9 @@ export default {
       }
 
       // Check if textures have already been loaded
-      // if (Object.keys(resources).length < this.texturesToLoad.length) {
-      //   this.texturesLoaded = false
-      // console.log(Object.keys(resources))
-      // console.log('textures not loaded yet')
-      //   } else {
-      //   console.log(Object.keys(resources))
-      //   this.texturesLoaded = true
-      //   console.log('textures already loaded')
-      // }
-
+      // this.texturesLoaded = this.texturesToLoad.every((texture) => {
+      //   return resources[texture] !== undefined
+      // })
       // if (this.texturesLoaded === false) {
       //   loader
       //     .add(this.texturesToLoad)
@@ -505,7 +389,7 @@ export default {
       if (this.displayMode === 'full') {
         startX = 150
       } else if (this.displayMode === 'simple') {
-        startX = 32
+        startX = 150
       }
       let spriteArray = []
       for (let i = 0; i < 8; i++) {
@@ -539,41 +423,6 @@ export default {
         }
       }
       this.puyoDisplay = spriteArray
-
-      let me = this
-      for (let y = 0; y < this.Field.totalRows; y++) {
-        for (let x = 0; x < this.Field.columns; x++) {
-          this.puyoDisplay[y][x].interactive = true
-          this.puyoDisplay[y][x].editPuyo = function () {
-            me.isMouseDown = true
-            if (me.editorCurrentTool.layer === 'main' && me.gameState === 'idle') {
-              me.fieldData[y].splice(x, 1, me.editorCurrentTool.puyo)
-              if (me.shadowData[y][x] !== '0') {
-                me.shadowData[y].splice(x, 1, '0') // Remove shadow puyo at this position
-                me.updateShadowSprite(x, y)
-              }
-              me.updatePuyoSprites()
-            }
-          }
-          this.puyoDisplay[y][x].mouseOver = function () {
-            if (me.isMouseDown === true && me.editorCurrentTool.layer === 'main' && me.gameState === 'idle') {
-              me.fieldData[y].splice(x, 1, me.editorCurrentTool.puyo)
-              if (me.shadowData[y][x] !== '0') {
-                me.shadowData[y].splice(x, 1, '0') // Remove shadow puyo at this position
-                me.updateShadowSprite(x, y)
-              }
-              me.updatePuyoSprites()
-            }
-          }
-          this.puyoDisplay[y][x].mouseUp = function () {
-            me.isMouseDown = false
-          }
-          this.puyoDisplay[y][x].on('pointerdown', this.puyoDisplay[y][x].editPuyo)
-          this.puyoDisplay[y][x].on('pointerover', this.puyoDisplay[y][x].mouseOver)
-          this.puyoDisplay[y][x].on('pointerupoutside', this.puyoDisplay[y][x].mouseUp)
-          this.puyoDisplay[y][x].on('pointerup', this.puyoDisplay[y][x].mouseUp)
-        }
-      }
       this.updatePuyoSprites()
     },
     updatePuyoSprites: function () {
@@ -902,40 +751,30 @@ export default {
       let startX = 412
       let startY = 732
 
-      this.chainCounterDisplay.firstDigit = new Sprite(this.chainCountSprites['spacer.png'])
-      this.chainCounterDisplay.firstDigit.x = startX
-      this.chainCounterDisplay.firstDigit.y = startY
-      this.chainCounterDisplay.firstDigit.scale.set(0.85, 0.85)
-      this.chainCounterDisplay.firstDigit.origY = this.chainCounterDisplay.firstDigit.y
-      this.chainCounterDisplay.firstDigit.alpha = 0
+      this.chainCountSprites.firstDigit = new Sprite(this.chainCountSprites['spacer.png'])
+      this.chainCountSprites.firstDigit.x = startX
+      this.chainCountSprites.firstDigit.y = startY
+      this.chainCountSprites.firstDigit.scale.set(0.85, 0.85)
 
-      this.chainCounterDisplay.secondDigit = new Sprite(this.chainCountSprites['spacer.png'])
-      this.chainCounterDisplay.secondDigit.x = startX + 40
-      this.chainCounterDisplay.secondDigit.y = startY
-      this.chainCounterDisplay.secondDigit.scale.set(0.85, 0.85)
-      this.chainCounterDisplay.secondDigit.origY = this.chainCounterDisplay.secondDigit.y
-      this.chainCounterDisplay.secondDigit.alpha = 0
+      this.chainCountSprites.secondDigit = new Sprite(this.chainCountSprites['spacer.png'])
+      this.chainCountSprites.secondDigit.x = startX + 40
+      this.chainCountSprites.secondDigit.y = startY
+      this.chainCountSprites.secondDigit.scale.set(0.85, 0.85)
 
-      this.chainCounterDisplay.chainText = new Sprite(this.chainCountSprites['chain_text.png'])
-      this.chainCounterDisplay.chainText.x = startX + 84
-      this.chainCounterDisplay.chainText.y = startY + 10
-      this.chainCounterDisplay.chainText.origY = this.chainCounterDisplay.chainText.y
-      this.chainCounterDisplay.chainText.scale.set(0.85, 0.85)
-      this.chainCounterDisplay.chainText.alpha = 0
+      this.chainCountSprites.chainText = new Sprite(this.chainCountSprites['chain_text.png'])
+      this.chainCountSprites.chainText.x = startX + 84
+      this.chainCountSprites.chainText.y = startY + 10
+      this.chainCountSprites.chainText.scale.set(0.85, 0.85)
 
-      this.stage.addChild(this.chainCounterDisplay.firstDigit)
-      this.stage.addChild(this.chainCounterDisplay.secondDigit)
-      this.stage.addChild(this.chainCounterDisplay.chainText)
-
-      // this.chainCountDisplay = new PIXI.Container()
-      // this.chainCountDisplay.addChild(this.chainCounterDisplay.firstDigit)
-      // this.chainCountDisplay.addChild(this.chainCounterDisplay.secondDigit)
-      // this.chainCountDisplay.addChild(this.chainCounterDisplay.chainText)
-      // this.chainCountDisplay.origY = this.chainCountDisplay.y
-      // this.chainCounterDisplay.firstDigit.alpha = 0
-      // this.chainCounterDisplay.secondDigit.alpha = 0
-      // this.chainCounterDisplay.chainText.alpha = 0
-      // this.stage.addChild(this.chainCountDisplay)
+      this.chainCountDisplay = new PIXI.Container()
+      this.chainCountDisplay.addChild(this.chainCountSprites.firstDigit)
+      this.chainCountDisplay.addChild(this.chainCountSprites.secondDigit)
+      this.chainCountDisplay.addChild(this.chainCountSprites.chainText)
+      this.chainCountDisplay.origY = this.chainCountDisplay.y
+      this.chainCountSprites.firstDigit.alpha = 0
+      this.chainCountSprites.secondDigit.alpha = 0
+      this.chainCountSprites.chainText.alpha = 0
+      this.stage.addChild(this.chainCountDisplay)
     },
     initShadowDisplay: function () {
       let spriteArray = []
@@ -968,37 +807,10 @@ export default {
       }
       this.shadowDisplay = spriteArray
 
-      let me = this
       for (let y = 0; y < this.Field.totalRows; y++) {
         for (let x = 0; x < this.Field.columns; x++) {
           // Update shadow sprites with their imported colors
           this.updateShadowSprite(x, y)
-
-          this.shadowDisplay[y][x].interactive = false
-          this.shadowDisplay[y][x].editPuyo = function () {
-            me.isMouseDown = true
-            if (me.editorCurrentTool.layer === 'shadow' && me.gameState === 'idle') {
-              me.shadowData[y].splice(x, 1, me.editorCurrentTool.puyo)
-              me.fieldData[y].splice(x, 1, '0') // Remove main puyo at this position
-              me.updateShadowSprite(x, y)
-              me.updatePuyoSprites()
-            }
-          }
-          this.shadowDisplay[y][x].mouseOver = function () {
-            if (me.isMouseDown === true && me.editorCurrentTool.layer === 'shadow' && me.gameState === 'idle') {
-              me.shadowData[y].splice(x, 1, me.editorCurrentTool.puyo)
-              me.fieldData[y].splice(x, 1, '0') // Remove main puyo at this position
-              me.updateShadowSprite(x, y)
-              me.updatePuyoSprites()
-            }
-          }
-          this.shadowDisplay[y][x].mouseUp = function () {
-            me.isMouseDown = false
-          }
-          this.shadowDisplay[y][x].on('pointerdown', this.shadowDisplay[y][x].editPuyo)
-          this.shadowDisplay[y][x].on('pointerover', this.shadowDisplay[y][x].mouseOver)
-          this.shadowDisplay[y][x].on('pointerupoutside', this.shadowDisplay[y][x].mouseUp)
-          this.shadowDisplay[y][x].on('pointerup', this.shadowDisplay[y][x].mouseUp)
         }
       }
     },
@@ -1088,36 +900,9 @@ export default {
       }
       this.cursorDisplay = spriteArray
 
-      let me = this
       for (let y = 0; y < this.fieldData.length; y++) {
         for (let x = 0; x < this.fieldData[0].length; x++) {
           this.updateCursorSprite(x, y)
-
-          this.cursorDisplay[y][x].interactive = false
-          this.cursorDisplay[y][x].editPuyo = function () {
-            me.isMouseDown = true
-            if (me.editorCurrentTool.layer === 'cursor' && me.gameState === 'idle') {
-              me.cursorData[y].splice(x, 1, me.editorCurrentTool.puyo)
-              me.updateCursorSprite(x, y)
-              me.arrowData[y].splice(x, 1, '0')
-              me.updateArrowSprite(x, y)
-            }
-          }
-          this.cursorDisplay[y][x].mouseOver = function () {
-            if (me.isMouseDown === true && me.editorCurrentTool.layer === 'cursor' && me.gameState === 'idle') {
-              me.cursorData[y].splice(x, 1, me.editorCurrentTool.puyo)
-              me.updateCursorSprite(x, y)
-              me.arrowData[y].splice(x, 1, '0')
-              me.updateArrowSprite(x, y)
-            }
-          }
-          this.cursorDisplay[y][x].mouseUp = function () {
-            me.isMouseDown = false
-          }
-          this.cursorDisplay[y][x].on('pointerdown', this.cursorDisplay[y][x].editPuyo)
-          this.cursorDisplay[y][x].on('pointerover', this.cursorDisplay[y][x].mouseOver)
-          this.cursorDisplay[y][x].on('pointerupoutside', this.cursorDisplay[y][x].mouseUp)
-          this.cursorDisplay[y][x].on('pointerup', this.cursorDisplay[y][x].mouseUp)
         }
       }
     },
@@ -1135,36 +920,9 @@ export default {
       }
       this.arrowDisplay = spriteArray
 
-      let me = this
       for (let y = 0; y < this.fieldData.length; y++) {
         for (let x = 0; x < this.fieldData[0].length; x++) {
           this.updateArrowSprite(x, y)
-
-          this.arrowDisplay[y][x].interactive = false
-          this.arrowDisplay[y][x].editPuyo = function () {
-            me.isMouseDown = true
-            if (me.editorCurrentTool.layer === 'arrow' && me.gameState === 'idle') {
-              me.arrowData[y].splice(x, 1, me.editorCurrentTool.puyo)
-              me.updateArrowSprite(x, y)
-              me.cursorData[y].splice(x, 1, '0')
-              me.updateCursorSprite(x, y)
-            }
-          }
-          this.arrowDisplay[y][x].mouseOver = function () {
-            if (me.isMouseDown === true && me.editorCurrentTool.layer === 'arrow' && me.gameState === 'idle') {
-              me.arrowData[y].splice(x, 1, me.editorCurrentTool.puyo)
-              me.updateArrowSprite(x, y)
-              me.cursorData[y].splice(x, 1, '0')
-              me.updateCursorSprite(x, y)
-            }
-          }
-          this.arrowDisplay[y][x].mouseUp = function () {
-            me.isMouseDown = false
-          }
-          this.arrowDisplay[y][x].on('pointerdown', this.arrowDisplay[y][x].editPuyo)
-          this.arrowDisplay[y][x].on('pointerover', this.arrowDisplay[y][x].mouseOver)
-          this.arrowDisplay[y][x].on('pointerupoutside', this.arrowDisplay[y][x].mouseUp)
-          this.arrowDisplay[y][x].on('pointerup', this.arrowDisplay[y][x].mouseUp)
         }
       }
     },
@@ -1532,27 +1290,9 @@ export default {
       }
     },
     gameLoop: function (delta) {
-      if (this.gameState === 'idle') {
-        this.stateEditField(delta)
-      } else if (this.gameState === 'dropping' && this.needToReset === false) {
-        this.animateDropPuyos(delta)
-        if (this.needToChangeSlides === true) {
-          this.animateDropDumpPuyos(delta)
-        }
-      } else if (this.gameState === 'popping' && this.needToReset === false) {
-        this.animatePopPuyos(delta)
-      }
-      this.animateCursors(delta)
-      this.animateArrows(delta)
-
-      // this.nextPuyoPairs.forEach((pair) => {
-      //   pair.rotation += 2 * Math.PI / 60
-      // })
-      if (this.inFocus === true) {
-        this.animateCursors(delta)
-        this.animateArrows(delta)
-        this.renderer.render(this.stage)
-      }
+      this.renderer.render(this.stage)
+      this.ticker.destroy()
+      console.log('ticking')
     },
     stateEditField: function (delta) {
       //
@@ -1760,9 +1500,6 @@ export default {
       this.updatePuyoSprites()
       console.log('merged shadow layer')
     },
-    setMouseDown: function (bool) {
-      this.isMouseDown = bool // true, false
-    },
     // Simulation controls
     controlField: function (control) { // expects a string
       if (control === 'reset') {
@@ -1784,10 +1521,9 @@ export default {
       } else if (control === 'play') {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
-          // if (this.needToChangeSlides === false) {
-          //   this.mergeInShadowLayer(true)
-          // }
-          this.mergeInShadowLayer(false)
+          if (this.needToChangeSlides === false) {
+            this.mergeInShadowLayer(true)
+          }
           this.simulationSpeed = 1
         } else if (this.gameState === 'popping' || this.gameState === 'dropping') {
           this.simulationSpeed = 24
@@ -1796,10 +1532,9 @@ export default {
       } else if (control === 'auto') {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
-          // if (this.needToChangeSlides === false) {
-          //   this.mergeInShadowLayer(true)
-          // }
-          this.mergeInShadowLayer(false)
+          if (this.needToChangeSlides === false) {
+            this.mergeInShadowLayer(true)
+          }
           this.simulationSpeed = 1
         } else if ((this.gameState === 'popping' || this.gameState === 'dropping') && this.simulationSpeed === 8) {
           this.simulationSpeed = 24
@@ -1918,13 +1653,9 @@ export default {
       let t = this.timers.chainLength
       this.timers.chainLength += delta
       if (this.timers.chainLength <= 30) {
-        this.chainCounterDisplay.firstDigit.y = this.chainCounterDisplay.firstDigit.origY - 16 * ((-1 / 225) * (t - 15) ** 2 + 1) // parabola
-        this.chainCounterDisplay.secondDigit.y = this.chainCounterDisplay.secondDigit.origY - 16 * ((-1 / 225) * (t - 15) ** 2 + 1) // parabola
-        this.chainCounterDisplay.chainText.y = this.chainCounterDisplay.chainText.origY - 16 * ((-1 / 225) * (t - 15) ** 2 + 1) // parabola
+        this.chainCountDisplay.y = this.chainCountDisplay.origY - 16 * ((-1 / 225) * (t - 15) ** 2 + 1) // parabola
       } else {
-        this.chainCounterDisplay.firstDigit.y = this.chainCounterDisplay.firstDigit.origY
-        this.chainCounterDisplay.secondDigit.y = this.chainCounterDisplay.secondDigit.origY
-        this.chainCounterDisplay.chainText.y = this.chainCounterDisplay.chainText.origY
+        this.chainCountDisplay.y = this.chainCountDisplay.origY
         this.ticker.remove(this.animateChainCounter)
         console.log('counter bounce over')
       }
@@ -2198,29 +1929,25 @@ export default {
   },
   computed: {
     chainDiff: function () {
-      if (this.importedData !== undefined) {
-        let oldField = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-        let newField = stringTo2dArray(this.importedData[this.currentSlide + 1].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      let oldField = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+      let newField = stringTo2dArray(this.importedData[this.currentSlide + 1].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
 
-        let diff = []
-        for (let y = 0; y < this.fieldSettings.totalRows; y++) {
-          diff[y] = []
-          for (let x = 0; x < this.fieldSettings.columns; x++) {
-            if (oldField[y][x] === '0' && newField[y][x] !== '0') {
-              diff[y][x] = newField[y][x]
-            } else {
-              diff[y][x] = '0'
-            }
+      let diff = []
+      for (let y = 0; y < this.fieldSettings.totalRows; y++) {
+        diff[y] = []
+        for (let x = 0; x < this.fieldSettings.columns; x++) {
+          if (oldField[y][x] === '0' && newField[y][x] !== '0') {
+            diff[y][x] = newField[y][x]
+          } else {
+            diff[y][x] = '0'
           }
         }
-
-        // Compute drop
-        let diffField = new Chainsim.Field(this.fieldSettings, diff)
-        let diffDropped = Chainsim.mapToStringArray(Chainsim.Simulate.dropPuyos(diffField).dropResult)
-        return diffDropped
-      } else {
-        return uniformMatrix('0', this.fieldSettings.totalRows, this.fieldSettings.columns)
       }
+
+      // Compute drop
+      let diffField = new Chainsim.Field(this.fieldSettings, diff)
+      let diffDropped = Chainsim.mapToStringArray(Chainsim.Simulate.dropPuyos(diffField).dropResult)
+      return diffDropped
     },
     combinedMatrix: function () {
       let combinedMatrix = JSON.parse(JSON.stringify(this.chainDiff))
@@ -2303,11 +2030,6 @@ export default {
       }
       return false // If none of the cells are dropping, return false. Animations complete.
     },
-    Easers: function () {
-      return {
-        editBubble: BezierEasing(0.14, 0.18, 0, 1.16)
-      }
-    },
     fieldDataString: function () {
       return flatten2dTo1d(this.fieldData).join('')
     },
@@ -2339,20 +2061,6 @@ export default {
         string = '0' + string
       }
       return string
-    },
-    inFocus: function () {
-      if (this.showModal !== undefined) {
-        if (this.showModal === true) {
-          console.log('Chainsim entering focus.')
-          return true
-        } else {
-          console.log('Chainsim exiting focus')
-          return false
-        }
-      } else {
-        console.log('Show modal undefined')
-        return false
-      }
     }
   },
   watch: {
@@ -2427,21 +2135,9 @@ export default {
           this.resetField()
           this.needToReset = false
         } else {
-          if (this.importedData !== undefined) {
-            if (this.currentSlide < this.importedData.length - 1 && this.needToChangeSlides === true) {
-              if (this.importedData[this.currentSlide + this.slideChange].autoDrop === true) {
-                this.updateWithNextSlide()
-              }
-            } else {
-              this.fieldData = this.dropPuyosResult
-              console.log('Dropped the new puyo field')
-              this.updatePuyoSprites()
-              if (this.chainAutoPlay === true) {
-                this.gameState = 'popping'
-              } else {
-                this.simulationSpeed = 1
-                this.gameState = 'chainStopped'
-              }
+          if (this.currentSlide < this.importedData.length - 1 && this.needToChangeSlides === true) {
+            if (this.importedData[this.currentSlide + this.slideChange].autoDrop === true) {
+              this.updateWithNextSlide()
             }
           } else {
             this.fieldData = this.dropPuyosResult
@@ -2471,9 +2167,7 @@ export default {
     chainLength: function () {
       this.ticker.remove(this.animateChainCounter)
       this.timers.chainLength = 0
-      this.chainCounterDisplay.firstDigit.y = this.chainCounterDisplay.firstDigit.origY
-      this.chainCounterDisplay.secondDigit.y = this.chainCounterDisplay.secondDigit.origY
-      this.chainCounterDisplay.chainText.y = this.chainCounterDisplay.chainText.origY
+      this.chainCountDisplay.y = this.chainCountDisplay.origY
       this.ticker.add(this.animateChainCounter)
     },
     garbage: function () {
@@ -2499,30 +2193,47 @@ export default {
       }
     },
     chainLengthString: function () {
-      this.chainCounterDisplay.firstDigit.alpha = 0
-      this.chainCounterDisplay.secondDigit.alpha = 0
-      this.chainCounterDisplay.chainText.alpha = 0
+      this.chainCountSprites.firstDigit.alpha = 0
+      this.chainCountSprites.secondDigit.alpha = 0
+      this.chainCountSprites.chainText.alpha = 0
 
       if (this.chainLengthString[0] !== '0') {
-        this.chainCounterDisplay.firstDigit.alpha = 1
-        this.chainCounterDisplay.firstDigit.texture = this.chainCountSprites[`chain_${this.chainLengthString[0]}.png`]
+        this.chainCountSprites.firstDigit.alpha = 1
+        this.chainCountSprites.firstDigit.texture = this.chainCountSprites[`chain_${this.chainLengthString[0]}.png`]
       } else {
-        this.chainCounterDisplay.firstDigit.texture = this.chainCountSprites[`spacer.png`]
+        this.chainCountSprites.firstDigit.texture = this.chainCountSprites[`spacer.png`]
       }
 
       if (this.chainLength > 0) {
-        this.chainCounterDisplay.secondDigit.alpha = 1
-        this.chainCounterDisplay.secondDigit.texture = this.chainCountSprites[`chain_${this.chainLengthString[1]}.png`]
-        this.chainCounterDisplay.chainText.alpha = 1
+        this.chainCountSprites.secondDigit.alpha = 1
+        this.chainCountSprites.secondDigit.texture = this.chainCountSprites[`chain_${this.chainLengthString[1]}.png`]
+        this.chainCountSprites.chainText.alpha = 1
       } else {
-        this.chainCounterDisplay.secondDigit.texture = this.chainCountSprites[`spacer.png`]
+        this.chainCountSprites.secondDigit.texture = this.chainCountSprites[`spacer.png`]
       }
+    },
+    'inViewport.now': function (visible) {
+      console.log('This component is '+( visible ? 'in-viewport' : 'hidden'))
     }
   }
 }
 </script>
 
-<style>
+<style scoped>
+#chainsim {
+  background-color: #f3f5f7;
+  width: 273.6px;
+  height: 384.3px;
+  display: inline-block;
+  margin-left: 8px;
+  margin-right: 8px;
+  padding-left: 4px;
+  padding-right: 4px;
+  border-radius: 8px;
+  -moz-box-shadow: 3px 3px 1px 0px #999;
+  -webkit-box-shadow: 3px 3px 1px 0px #999;
+  box-shadow: 3px 3px 1px 0px #999;
+}
 #game {
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none; /* Safari */
@@ -2530,5 +2241,55 @@ export default {
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* Internet Explorer/Edge */
   user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+}
+.game-container {
+  position: relative;
+  height: 100%;
+}
+.edit {
+  position: absolute;
+  right: 28px;
+  bottom: 60px;
+}
+.chainsim-loaded {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: table;
+}
+
+.chainsim-loaded .chainsim-loaded-inner {
+  text-align: center;
+  display: table-cell;
+  vertical-align: middle;
+  color: white;
+  text-shadow: 2px 2px black;
+  font-size: 1.5rem;
+}
+
+.chainsim-loaded .chainsim-loaded-inner img {
+  width: 30px;
+  height: 30px;
+  -webkit-animation: rotation 2s infinite linear;
+  animation: rotation 2s infinite linear;
+}
+
+@-webkit-keyframes rotation {
+		from {
+				-webkit-transform: rotate(0deg);
+		}
+		to {
+				-webkit-transform: rotate(359deg);
+		}
+}
+
+@keyframes rotation {
+		from {
+				transform: rotate(0deg);
+		}
+		to {
+				transform: rotate(359deg);
+		}
 }
 </style>
