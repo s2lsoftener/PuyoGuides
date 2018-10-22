@@ -111,6 +111,7 @@ export default {
     
     this.renderer = new PIXI.WebGLRenderer(16, 15, {
       resolution: 1,
+      antialias: false,
       transparent: true
     })
     this.$refs.puyo.appendChild(this.renderer.view)
