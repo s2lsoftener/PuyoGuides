@@ -776,6 +776,9 @@ export default {
         color = 'spacer'
       }
       this.shadowDisplay[y][x].texture = this.puyoSprites[`${color}_n.png`]
+      if (color !== 'spacer') {
+        this.shadowDisplay[y][x].filters = [this.colorFilters[`${color}`]]  
+      }
       console.log('Updated the shadow sprite.')
     },
     updateCursorSprite: function (x, y) {
@@ -1145,6 +1148,9 @@ export default {
           spriteArray[y][x].alpha = 0.4
           spriteArray[y][x].x = this.coordArray[y][x].x
           spriteArray[y][x].y = this.coordArray[y][x].y
+          if (color !== 'spacer') {
+            spriteArray[y][x].filters = [this.colorFilters[`${color}`]]
+          }
           this.stage.addChild(spriteArray[y][x])
         }
       }
@@ -1453,6 +1459,31 @@ export default {
             spritesToolsPage0[y][x].targetLayer = 'shadow'
           }
           spritesToolsPage0[y][x].anchor.set(0.5, 0.5)
+
+          // Set filter
+          let color0 = undefined
+          if (colorsPage0[y * 7 + x] === Puyo.Red) {
+            color0 = 'red'
+          } else if (colorsPage0[y * 7 + x] === Puyo.Green) {
+            color0 = 'green'
+          } else if (colorsPage0[y * 7 + x] === Puyo.Blue) {
+            color0 = 'blue'
+          } else if (colorsPage0[y * 7 + x] === Puyo.Yellow) {
+            color0 = 'yellow'
+          } else if (colorsPage0[y * 7 + x] === Puyo.Purple) {
+            color0 = 'purple'
+          } else if (colorsPage0[y * 7 + x] === Puyo.Garbage) {
+            color0 = 'garbage'
+          } else {
+            color0 = 'spacer'
+          }
+          console.log(color0)
+          console.log(this.colorFilters[`${color0}`])
+          if (color0 !== undefined) {
+            if (color0 !== 'spacer') {
+              spritesToolsPage0[y][x].filters = [this.colorFilters[`${color0}`]]
+            }
+          }
 
           // Define interactions
           spritesToolsPage0[y][x].on('pointerdown', function () {

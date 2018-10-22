@@ -152,5 +152,6 @@ export default {
 <style scoped>
 .red-puyo {
   display: inline-block;
+  vertical-align: middle;
 }
 </style>

@@ -1,5 +1,5 @@
 const path = require('path')
-// inViewport = require('vue-in-viewport-mixin')
+
 module.exports = {
   title: 'Puyo Puyo Tutorials',
   description: 'New guides for playing Puyo Puyo!',
@@ -7,6 +7,16 @@ module.exports = {
     config.resolveLoader
       .modules
       .add(path.resolve(__dirname, './node_modules'))
+  },
+  themeConfig: {
+    sidebar: [
+      {
+        title: 'Tutorial',
+        collapsable: false,
+        children: [
+          '/tutorial/'
+        ]
+      }
+    ]
   }
-  // inViewport: inViewport
 }
