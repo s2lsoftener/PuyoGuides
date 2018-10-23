@@ -1,6 +1,8 @@
 <template>
   <div class="game-container">
     <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
+    <div>{{ caption }}</div>
+    <div class="overlay" @mouseover="playChainHover(); simulationSpeed = 1" @mouseout="needToReset = true; reloadSlide(); gameState = 'idle'"></div>
     <div class="chainsim-loaded" v-if="gameLoaded === false">
       <div class="chainsim-loaded-inner">
         <img src="/img/save_wheel.png" style="vertical-align: middle;">Loading
@@ -38,7 +40,7 @@ const Puyo = {
 
 export default {
   name: 'ChainImgField',
-  props: ['importedData', 'nextQueue', 'slideshowSlide'],
+  props: ['importedData', 'nextQueue', 'slideshowSlide', 'caption'],
   mixins: [ inViewport ],
   data () {
     return {
@@ -147,7 +149,7 @@ export default {
       garbageDisplay: [],
       cursorDisplay: [],
       arrowDisplay: [],
-      chainCountDisplay: {},
+      chainCounterDisplay: {},
       fieldDisplay: {},
       cellTimer: [[]],
       puyoStates: [[]],
@@ -396,7 +398,7 @@ export default {
       this.initShadowDisplay()
       this.initCursorDisplay()
       this.initArrowDisplay()
-      // this.initGarbageDisplay()
+      this.initGarbageDisplay()
       this.initNextPuyos()
       this.initChainCounter()
       this.initToolDisplay()
@@ -522,6 +524,8 @@ export default {
           this.puyoDisplay[y][x].texture = this.puyoSprites[`${this.colorNameData[y][x]}_${this.connectionData[y][x]}.png`]
           this.puyoDisplay[y][x].anchor.set(0.5, 0.5)
           this.puyoDisplay[y][x].scale.set(1, 1)
+          this.puyoDisplay[y][x].alpha = 1
+          this.puyoDisplay[y][x].visible = true
         }
       }
 
@@ -779,6 +783,7 @@ export default {
         this.fieldDisplay.garbageTray.x = 316
         this.fieldDisplay.garbageTray.y = 915
         this.fieldDisplay.garbageTray.scale.set(0.7, 0.7)
+        this.fieldDisplay.garbageTray.visible = false
         this.stage.addChild(this.fieldDisplay.garbageTray)
       }
 
@@ -802,6 +807,7 @@ export default {
           spriteArray[i].x = startX + spriteArray[i].width * i
           spriteArray[i].origX = startX + spriteArray[i].width * i
           spriteArray[i].y = 910
+          spriteArray[i].visible = false
           this.stage.addChild(spriteArray[i])
         }
         this.garbageDisplay = spriteArray
@@ -865,30 +871,40 @@ export default {
       let startX = 412
       let startY = 732
 
-      this.chainCountSprites.firstDigit = new Sprite(this.chainCountSprites['spacer.png'])
-      this.chainCountSprites.firstDigit.x = startX
-      this.chainCountSprites.firstDigit.y = startY
-      this.chainCountSprites.firstDigit.scale.set(0.85, 0.85)
+      this.chainCounterDisplay.firstDigit = new Sprite(this.chainCountSprites['spacer.png'])
+      this.chainCounterDisplay.firstDigit.x = startX
+      this.chainCounterDisplay.firstDigit.y = startY
+      this.chainCounterDisplay.firstDigit.scale.set(0.85, 0.85)
+      this.chainCounterDisplay.firstDigit.origY = this.chainCounterDisplay.firstDigit.y
+      this.chainCounterDisplay.firstDigit.alpha = 0
 
-      this.chainCountSprites.secondDigit = new Sprite(this.chainCountSprites['spacer.png'])
-      this.chainCountSprites.secondDigit.x = startX + 40
-      this.chainCountSprites.secondDigit.y = startY
-      this.chainCountSprites.secondDigit.scale.set(0.85, 0.85)
+      this.chainCounterDisplay.secondDigit = new Sprite(this.chainCountSprites['spacer.png'])
+      this.chainCounterDisplay.secondDigit.x = startX + 40
+      this.chainCounterDisplay.secondDigit.y = startY
+      this.chainCounterDisplay.secondDigit.scale.set(0.85, 0.85)
+      this.chainCounterDisplay.secondDigit.origY = this.chainCounterDisplay.secondDigit.y
+      this.chainCounterDisplay.secondDigit.alpha = 0
 
-      this.chainCountSprites.chainText = new Sprite(this.chainCountSprites['chain_text.png'])
-      this.chainCountSprites.chainText.x = startX + 84
-      this.chainCountSprites.chainText.y = startY + 10
-      this.chainCountSprites.chainText.scale.set(0.85, 0.85)
+      this.chainCounterDisplay.chainText = new Sprite(this.chainCountSprites['chain_text.png'])
+      this.chainCounterDisplay.chainText.x = startX + 84
+      this.chainCounterDisplay.chainText.y = startY + 10
+      this.chainCounterDisplay.chainText.origY = this.chainCounterDisplay.chainText.y
+      this.chainCounterDisplay.chainText.scale.set(0.85, 0.85)
+      this.chainCounterDisplay.chainText.alpha = 0
 
-      this.chainCountDisplay = new PIXI.Container()
-      this.chainCountDisplay.addChild(this.chainCountSprites.firstDigit)
-      this.chainCountDisplay.addChild(this.chainCountSprites.secondDigit)
-      this.chainCountDisplay.addChild(this.chainCountSprites.chainText)
-      this.chainCountDisplay.origY = this.chainCountDisplay.y
-      this.chainCountSprites.firstDigit.alpha = 0
-      this.chainCountSprites.secondDigit.alpha = 0
-      this.chainCountSprites.chainText.alpha = 0
-      this.stage.addChild(this.chainCountDisplay)
+      this.stage.addChild(this.chainCounterDisplay.firstDigit)
+      this.stage.addChild(this.chainCounterDisplay.secondDigit)
+      this.stage.addChild(this.chainCounterDisplay.chainText)
+
+      // this.chainCountDisplay = new PIXI.Container()
+      // this.chainCountDisplay.addChild(this.chainCountSprites.firstDigit)
+      // this.chainCountDisplay.addChild(this.chainCountSprites.secondDigit)
+      // this.chainCountDisplay.addChild(this.chainCountSprites.chainText)
+      // this.chainCountDisplay.origY = this.chainCountDisplay.y
+      // this.chainCountSprites.firstDigit.alpha = 0
+      // this.chainCountSprites.secondDigit.alpha = 0
+      // this.chainCountSprites.chainText.alpha = 0
+      // this.stage.addChild(this.chainCountDisplay)
     },
     initShadowDisplay: function () {
       let spriteArray = []
@@ -1435,6 +1451,21 @@ export default {
       this.renderer.render(this.stage)
       console.log('ticking')
     },
+    hoverLoop: function (delta) {
+      if (this.gameState === 'idle') {
+        this.stateEditField(delta)
+      } else if (this.gameState === 'dropping' && this.needToReset === false) {
+        this.animateDropPuyos(delta)
+        if (this.needToChangeSlides === true) {
+          this.animateDropDumpPuyos(delta)
+        }
+      } else if (this.gameState === 'popping' && this.needToReset === false) {
+        this.animatePopPuyos(delta)
+      }
+      this.animateCursors(delta)
+      this.animateArrows(delta)
+      this.renderer.render(this.stage)
+    },
     stateEditField: function (delta) {
       //
     },
@@ -1662,9 +1693,10 @@ export default {
       } else if (control === 'play') {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
-          if (this.needToChangeSlides === false) {
-            this.mergeInShadowLayer(true)
-          }
+          this.mergeInShadowLayer(true)
+          // if (this.needToChangeSlides === false) {
+          //   this.mergeInShadowLayer(true)
+          // }
           this.simulationSpeed = 1
         } else if (this.gameState === 'popping' || this.gameState === 'dropping') {
           this.simulationSpeed = 24
@@ -1673,9 +1705,10 @@ export default {
       } else if (control === 'auto') {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
-          if (this.needToChangeSlides === false) {
-            this.mergeInShadowLayer(true)
-          }
+          this.mergeInShadowLayer(true)
+          // if (this.needToChangeSlides === false) {
+          //   this.mergeInShadowLayer(true)
+          // }
           this.simulationSpeed = 1
         } else if ((this.gameState === 'popping' || this.gameState === 'dropping') && this.simulationSpeed === 8) {
           this.simulationSpeed = 24
@@ -1724,6 +1757,58 @@ export default {
       this.$nextTick(() => {
         this.fieldData = this.fieldOriginal
         this.needToReset = false
+      })
+    },
+    reloadSlide: function () {
+      this.ticker.addOnce(() => {
+        this.fieldData = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.shadowData = stringTo2dArray(this.importedData[this.currentSlide].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.cursorData = stringTo2dArray(this.importedData[this.currentSlide].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.arrowData = stringTo2dArray(this.importedData[this.currentSlide].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        let predictedResetArray = stringTo2dArray(this.importedData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            if (this.shadowData[y][x] !== '0' && this.shadowData[y][x] !== this.fieldData[y][x]) {
+              predictedResetArray[y].splice(x, 1, this.shadowData[y][x])
+            }
+          }
+        }
+        this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.dropDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.clearPuyosResult = predictedResetArray
+        this.dropPuyosResult = predictedResetArray
+        this.cellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            this.shadowDisplay[y][x].visible = true
+            this.cursorDisplay[y][x].visible = true
+            this.arrowDisplay[y][x].visible = true
+          }
+        }
+        this.score = 0
+        this.stepScore = 0
+        this.garbage = 0
+        this.stepGarbage = 0
+        this.garbagePoints = 0
+        this.leftoverGarbagePoints = 0
+        this.chainLength = 0
+        this.needToReset = false
+        this.needToChangeSlides = false
+        this.gameState = 'idle'
+        this.updatePuyoSprites()
+        this.updateNextPuyoSprites()
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            this.updateShadowSprite(x, y)
+            this.updateCursorSprite(x, y)
+            this.updateArrowSprite(x, y)
+          }
+        }
+        this.ticker.remove(this.hoverLoop)
+        this.ticker.remove(this.hoverLoop)
+        this.renderer.render(this.stage)
       })
     },
     emptyField: function () {
@@ -1794,9 +1879,13 @@ export default {
       let t = this.timers.chainLength
       this.timers.chainLength += delta
       if (this.timers.chainLength <= 30) {
-        this.chainCountDisplay.y = this.chainCountDisplay.origY - 16 * ((-1 / 225) * (t - 15) ** 2 + 1) // parabola
+        this.chainCounterDisplay.firstDigit.y = this.chainCounterDisplay.firstDigit.origY - 16 * ((-1 / 225) * (t - 15) ** 2 + 1) // parabola
+        this.chainCounterDisplay.secondDigit.y = this.chainCounterDisplay.secondDigit.origY - 16 * ((-1 / 225) * (t - 15) ** 2 + 1) // parabola
+        this.chainCounterDisplay.chainText.y = this.chainCounterDisplay.chainText.origY - 16 * ((-1 / 225) * (t - 15) ** 2 + 1) // parabola
       } else {
-        this.chainCountDisplay.y = this.chainCountDisplay.origY
+        this.chainCounterDisplay.firstDigit.y = this.chainCounterDisplay.firstDigit.origY
+        this.chainCounterDisplay.secondDigit.y = this.chainCounterDisplay.secondDigit.origY
+        this.chainCounterDisplay.chainText.y = this.chainCounterDisplay.chainText.origY
         this.ticker.remove(this.animateChainCounter)
         console.log('counter bounce over')
       }
@@ -1890,6 +1979,12 @@ export default {
         this.chainAutoPlay = true
         this.gameState = 'dropping'
       }
+    },
+    playChainHover: function () {
+      this.mergeInShadowLayer(true)
+      this.chainAutoPlay = true
+      this.gameState = 'dropping'
+      this.ticker.add(this.hoverLoop); 
     },
     setDumpMatrixDropData: function () {
       let settings = {
@@ -2239,11 +2334,11 @@ export default {
         this.ticker.addOnce(() => {
           console.log('resetting field')
           this.updatePuyoSprites()
-          for (let y = 0; y < this.Field.totalRows; y++) {
-            for (let x = 0; x < this.Field.columns; x++) {
-              this.dumpDisplay[y][x].visible = false
-            }
-          }
+          // for (let y = 0; y < this.Field.totalRows; y++) {
+          //   for (let x = 0; x < this.Field.columns; x++) {
+          //     this.dumpDisplay[y][x].visible = false
+          //   }
+          // }
         })
       }
 
@@ -2318,7 +2413,9 @@ export default {
     chainLength: function () {
       this.ticker.remove(this.animateChainCounter)
       this.timers.chainLength = 0
-      this.chainCountDisplay.y = this.chainCountDisplay.origY
+      this.chainCounterDisplay.firstDigit.y = this.chainCounterDisplay.firstDigit.origY
+      this.chainCounterDisplay.secondDigit.y = this.chainCounterDisplay.secondDigit.origY
+      this.chainCounterDisplay.chainText.y = this.chainCounterDisplay.chainText.origY
       this.ticker.add(this.animateChainCounter)
     },
     garbage: function () {
@@ -2344,23 +2441,23 @@ export default {
       }
     },
     chainLengthString: function () {
-      this.chainCountSprites.firstDigit.alpha = 0
-      this.chainCountSprites.secondDigit.alpha = 0
-      this.chainCountSprites.chainText.alpha = 0
+      this.chainCounterDisplay.firstDigit.alpha = 0
+      this.chainCounterDisplay.secondDigit.alpha = 0
+      this.chainCounterDisplay.chainText.alpha = 0
 
       if (this.chainLengthString[0] !== '0') {
-        this.chainCountSprites.firstDigit.alpha = 1
-        this.chainCountSprites.firstDigit.texture = this.chainCountSprites[`chain_${this.chainLengthString[0]}.png`]
+        this.chainCounterDisplay.firstDigit.alpha = 1
+        this.chainCounterDisplay.firstDigit.texture = this.chainCountSprites[`chain_${this.chainLengthString[0]}.png`]
       } else {
-        this.chainCountSprites.firstDigit.texture = this.chainCountSprites[`spacer.png`]
+        this.chainCounterDisplay.firstDigit.texture = this.chainCountSprites[`spacer.png`]
       }
 
       if (this.chainLength > 0) {
-        this.chainCountSprites.secondDigit.alpha = 1
-        this.chainCountSprites.secondDigit.texture = this.chainCountSprites[`chain_${this.chainLengthString[1]}.png`]
-        this.chainCountSprites.chainText.alpha = 1
+        this.chainCounterDisplay.secondDigit.alpha = 1
+        this.chainCounterDisplay.secondDigit.texture = this.chainCountSprites[`chain_${this.chainLengthString[1]}.png`]
+        this.chainCounterDisplay.chainText.alpha = 1
       } else {
-        this.chainCountSprites.secondDigit.texture = this.chainCountSprites[`spacer.png`]
+        this.chainCounterDisplay.secondDigit.texture = this.chainCountSprites[`spacer.png`]
       }
     },
     'inViewport.now': function (visible) {
@@ -2406,8 +2503,8 @@ export default {
 }
 .edit {
   position: absolute;
-  right: 28px;
-  bottom: 60px;
+  right: 18px;
+  top: 200px;
 }
 .chainsim-loaded {
   position: absolute;
@@ -2415,6 +2512,14 @@ export default {
   width: 100%;
   height: 100%;
   display: table;
+}
+.overlay {
+  position: absolute;
+  top: 5px;
+  left: 0;
+  width: 200px;
+  height: 375px;
+  background-color: rgba(50,50,50,0)
 }
 
 .chainsim-loaded .chainsim-loaded-inner {

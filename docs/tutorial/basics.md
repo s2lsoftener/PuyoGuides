@@ -17,13 +17,13 @@ If you connect **four** or more Puyos of the **same color** together, they’ll 
   }]" :nextQueue="'RRBGYYPPRBGYPYPGBG'" />
 
 Gravity constantly affects Puyos, so popping one group of Puyos can cause more groups to start popping too. This is called a **Chain**.
-<ChainImg :importedData="
+<!-- <ChainImg :importedData="
   [{fieldData: '0000000000000000000000000000000000000000000000000000000RG000RGB000RGB000RGBB00',
     shadowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
     cursorData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
     arrowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
     autoDrop: false
-  }]" :nextQueue="'RRBGYYPPRBGYPYPGBG'" />
+  }]" :nextQueue="'RRBGYYPPRBGYPYPGBG'" /> -->
 
 
 

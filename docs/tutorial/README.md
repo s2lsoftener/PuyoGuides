@@ -3,6 +3,8 @@ title: Introduction
 ---
 <AssetLoader />
 # Introduction
-**Puyo Puyo** is a competitive puzzle game series. It was originally developed by **COMPILE** back in the 90s, but **SEGA** owns and develops the franchise now. 
+**Puyo Puyo Esports** is coming out!!
 
-Puyo Puyo is unique among puzzle games because of its focus on acccessible gameplay.
+Are you interested in getting stronger? Let's train and get stronger.
+
+<Figure :imgUrl="'/img/guides/puyopuyoesports.jpg'" :caption="'Puyo Puyo Esports!!'" />

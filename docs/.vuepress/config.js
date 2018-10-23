@@ -14,7 +14,8 @@ module.exports = {
         title: 'Tutorial',
         collapsable: false,
         children: [
-          '/tutorial/'
+          '/tutorial/',
+          '/tutorial/basics'
         ]
       }
     ]
