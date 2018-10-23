@@ -60,8 +60,8 @@ export default {
   flex-wrap: wrap;
   justify-content: center;
   background-color: #f3f5f7;
-  min-width: 273.6px;
-  min-height: 384.3px;
+  /* min-width: 273.6px;
+  min-height: 384.3px; */
   margin-left: 8px;
   margin-right: 8px;
   padding: 12px;
@@ -72,6 +72,9 @@ export default {
 }
 #slideshow {
   text-align: center;
+}
+.chainsim-container {
+  position: relative;
 }
 .text-container {
   width: 273.6px;

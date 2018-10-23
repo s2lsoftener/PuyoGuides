@@ -16,8 +16,6 @@ This site makes heavy use of WebGL to render the chainsims and other content. If
 
 # Color Edit
 If you have trouble differentiating colors, try changing the settings here. Refresh the page and they should take effect site-wide. (Only the hue setting will do anything because the other filters won't combine without matrix math that I can't be bothered to figure out right now.)
-<RedPuyo /><GreenPuyo /><BluePuyo /><YellowPuyo /><PurplePuyo /><GarbagePuyo />
-
 <ColorEdit />
 
 # Slideshow example

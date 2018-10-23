@@ -3,8 +3,7 @@
     <div class="game-wrapper">
       <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
     </div>
-    <div v-if="caption !== undefined" class="caption">{{ caption }}</div>
-    <div class="overlay" @mouseover="playChainHover(); simulationSpeed = 1" @mouseout="needToReset = true; reloadSlide(); gameState = 'idle'; chainLength = 0"></div>
+    <div class="overlay" @mouseover="needToReload = false; playChainHover(); simulationSpeed = 1" @mouseout="needToReload = true; needToReset = true; reloadSlide(); gameState = 'idle'; chainLength = 0"></div>
     <div class="chainsim-loaded" v-if="gameLoaded === false">
       <div class="chainsim-loaded-inner">
         <img src="/img/save_wheel.png" style="vertical-align: middle;">Loading
@@ -184,6 +183,7 @@ export default {
       },
       needToChangeSlides: false,
       slideChange: 1,
+      needToReload: false,
 
       // Editor
       editorCurrentTool: {
@@ -2392,7 +2392,12 @@ export default {
         } else {
           this.fieldData = this.clearPuyosResult
           console.log('set cleared puyo field')
-          this.gameState = 'dropping'
+          if (this.needToReload === true) {
+            this.gameState = 'idle'
+            this.needToReload = false
+          } else {
+            this.gameState = 'dropping'
+          }
         }
       }
     },
@@ -2412,7 +2417,12 @@ export default {
             console.log('Dropped the new puyo field')
             this.updatePuyoSprites()
             if (this.chainAutoPlay === true) {
-              this.gameState = 'popping'
+              if (this.needToReload === true) {
+                this.gameState = 'idle'
+                this.needToReload = false
+              } else {
+                this.gameState = 'popping'
+              }
             } else {
               this.simulationSpeed = 1
               this.gameState = 'chainStopped'
@@ -2522,7 +2532,7 @@ export default {
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* Internet Explorer/Edge */
   user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
-  position: absolute;
+  position: relative;
   top: -54px;
 }
 .game-container {
@@ -2536,7 +2546,7 @@ export default {
 .edit {
   position: absolute;
   right: 18px;
-  top: 250px;
+  top: 235px;
 }
 .chainsim-loaded {
   position: absolute;

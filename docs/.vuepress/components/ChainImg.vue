@@ -7,6 +7,9 @@
      :nextQueue="nextQueue"
      :slideshowSlide="0"
      :caption="caption"></chain-img-field>
+     <div v-if="hasCaption === true" class="caption">
+       <slot></slot>
+     </div>
   </div>
 </template>
 
@@ -17,7 +20,7 @@ const inViewport = require('vue-in-viewport-mixin')
 
 export default {
   name: 'ChainImg',
-  props: ['importedData', 'nextQueue', 'caption'],
+  props: ['importedData', 'nextQueue', 'caption', 'hasCaption'],
   mixins: [ inViewport ],
   components: {
     ChainImgField
@@ -62,5 +65,8 @@ export default {
   box-shadow: 3px 3px 1px 0px #999;
   overflow: hidden;
   vertical-align: top;
+}
+.caption {
+  padding: 0px 4px 8px 4px;
 }
 </style>

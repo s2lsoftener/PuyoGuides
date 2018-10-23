@@ -15,6 +15,7 @@ module.exports = {
         collapsable: false,
         children: [
           '/tutorial/',
+          '/tutorial/gamescreen',
           '/tutorial/basics'
         ]
       }
