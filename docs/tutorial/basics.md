@@ -8,6 +8,7 @@ Let's review how Puyo Puyo works. The game starts off by giving you **pairs** of
 -gif-
 
 If you connect **four** or more Puyos of the **same color** together, they’ll pop and disappear.
+
 <ChainImg :importedData="
   [{fieldData: '00000000000000000000000000000000000000000000000000000000000000000RGG000RGGG0RR',
     shadowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
@@ -34,3 +35,5 @@ Big chains send a lot of <GarbagePuyo />Garbage Puyo all at once. Overpowering y
 
 There's more to Puyo Puyo than pooping out your biggest combos as fast as possible though. A big chain won't always lead to victory if you're not careful. For example, here's a cool chain I almost made in a match once. Click Play/Edit to view it in the simulator -- it's a 13 Chain!
 -sim-
+
+<ChainsimModal />

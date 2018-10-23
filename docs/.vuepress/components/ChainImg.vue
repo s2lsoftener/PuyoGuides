@@ -45,6 +45,7 @@ export default {
 
 <style>
 #chainsim {
+  position: relative;
   background-color: #f3f5f7;
   width: 273.6px;
   height: 384.3px;
@@ -57,5 +58,6 @@ export default {
   -moz-box-shadow: 3px 3px 1px 0px #999;
   -webkit-box-shadow: 3px 3px 1px 0px #999;
   box-shadow: 3px 3px 1px 0px #999;
+  overflow: hidden;
 }
 </style>

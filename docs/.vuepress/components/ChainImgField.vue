@@ -2,7 +2,7 @@
   <div class="game-container">
     <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
     <div>{{ caption }}</div>
-    <div class="overlay" @mouseover="playChainHover(); simulationSpeed = 1" @mouseout="needToReset = true; reloadSlide(); gameState = 'idle'"></div>
+    <div class="overlay" @mouseover="playChainHover(); simulationSpeed = 1" @mouseout="needToReset = true; reloadSlide(); gameState = 'idle'; chainLength = 0"></div>
     <div class="chainsim-loaded" v-if="gameLoaded === false">
       <div class="chainsim-loaded-inner">
         <img src="/img/save_wheel.png" style="vertical-align: middle;">Loading
@@ -314,8 +314,8 @@ export default {
         transparent: true
       })
       this.renderer.view.style.width = `${this.modeSettings.simple.width * this.scaleFactor}px`
-      this.renderer.view.style.height = `${(this.modeSettings.simple.height - 120) * this.scaleFactor}px`
-      this.renderer.view.height = this.modeSettings.simple.height - 120
+      this.renderer.view.style.height = `${(this.modeSettings.simple.height) * this.scaleFactor}px`
+      this.renderer.view.height = this.modeSettings.simple.height
       this.$refs.game.appendChild(this.renderer.view)
       this.stage = new PIXI.Container()
 
@@ -2475,7 +2475,7 @@ export default {
 </script>
 
 <style scoped>
-#chainsim {
+/* #chainsim {
   background-color: #f3f5f7;
   width: 273.6px;
   height: 384.3px;
@@ -2488,7 +2488,7 @@ export default {
   -moz-box-shadow: 3px 3px 1px 0px #999;
   -webkit-box-shadow: 3px 3px 1px 0px #999;
   box-shadow: 3px 3px 1px 0px #999;
-}
+} */
 #game {
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none; /* Safari */
@@ -2500,6 +2500,7 @@ export default {
 .game-container {
   position: relative;
   height: 100%;
+  top: -54px;
 }
 .edit {
   position: absolute;
