@@ -12,7 +12,7 @@ module.exports = {
     sidebar: [
       {
         title: 'Tutorial',
-        collapsable: false,
+        collapsable: true,
         children: [
           '/tutorial/',
           '/tutorial/gamescreen',
