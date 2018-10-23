@@ -5,7 +5,8 @@
      :in-viewport-offset-top='-2000'
      :importedData="importedData" 
      :nextQueue="nextQueue"
-     :slideshowSlide="0"></chain-img-field>
+     :slideshowSlide="0"
+     :caption="caption"></chain-img-field>
   </div>
 </template>
 
@@ -16,7 +17,7 @@ const inViewport = require('vue-in-viewport-mixin')
 
 export default {
   name: 'ChainImg',
-  props: ['importedData', 'nextQueue'],
+  props: ['importedData', 'nextQueue', 'caption'],
   mixins: [ inViewport ],
   components: {
     ChainImgField
@@ -48,10 +49,11 @@ export default {
   position: relative;
   background-color: #f3f5f7;
   width: 273.6px;
-  height: 384.3px;
+  min-height: 384.3px;
   display: inline-block;
   margin-left: 8px;
   margin-right: 8px;
+  margin-bottom: 8px;
   padding-left: 4px;
   padding-right: 4px;
   border-radius: 8px;
@@ -59,5 +61,6 @@ export default {
   -webkit-box-shadow: 3px 3px 1px 0px #999;
   box-shadow: 3px 3px 1px 0px #999;
   overflow: hidden;
+  vertical-align: top;
 }
 </style>

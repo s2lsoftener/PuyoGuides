@@ -1,7 +1,9 @@
 <template>
   <div class="game-container">
-    <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
-    <div>{{ caption }}</div>
+    <div class="game-wrapper">
+      <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
+    </div>
+    <div v-if="caption !== undefined" class="caption">{{ caption }}</div>
     <div class="overlay" @mouseover="playChainHover(); simulationSpeed = 1" @mouseout="needToReset = true; reloadSlide(); gameState = 'idle'; chainLength = 0"></div>
     <div class="chainsim-loaded" v-if="gameLoaded === false">
       <div class="chainsim-loaded-inner">
@@ -767,6 +769,7 @@ export default {
       this.nextPuyoPairs[1].position.set(this.nextCoord[1].x, this.nextCoord[1].y)
       this.nextPuyoPairs[2].scale.set(0.8, 0.8)
       this.nextPuyoPairs[2].position.set(this.nextCoord[2].x, this.nextCoord[2].y)
+      this.nextPuyoPairs[2].visible = false
 
       this.stage.addChild(this.nextPuyoPairs[0])
       this.stage.addChild(this.nextPuyoPairs[1])
@@ -1799,12 +1802,31 @@ export default {
         this.gameState = 'idle'
         this.updatePuyoSprites()
         this.updateNextPuyoSprites()
+        this.updateChain
         for (let y = 0; y < this.Field.totalRows; y++) {
           for (let x = 0; x < this.Field.columns; x++) {
             this.updateShadowSprite(x, y)
             this.updateCursorSprite(x, y)
             this.updateArrowSprite(x, y)
           }
+        }
+        this.chainCounterDisplay.firstDigit.alpha = 0
+        this.chainCounterDisplay.secondDigit.alpha = 0
+        this.chainCounterDisplay.chainText.alpha = 0
+
+        if (this.chainLengthString[0] !== '0') {
+          this.chainCounterDisplay.firstDigit.alpha = 1
+          this.chainCounterDisplay.firstDigit.texture = this.chainCountSprites[`chain_${this.chainLengthString[0]}.png`]
+        } else {
+          this.chainCounterDisplay.firstDigit.texture = this.chainCountSprites[`spacer.png`]
+        }
+
+        if (this.chainLength > 0) {
+          this.chainCounterDisplay.secondDigit.alpha = 1
+          this.chainCounterDisplay.secondDigit.texture = this.chainCountSprites[`chain_${this.chainLengthString[1]}.png`]
+          this.chainCounterDisplay.chainText.alpha = 1
+        } else {
+          this.chainCounterDisplay.secondDigit.texture = this.chainCountSprites[`spacer.png`]
         }
         this.ticker.remove(this.hoverLoop)
         this.ticker.remove(this.hoverLoop)
@@ -2489,6 +2511,10 @@ export default {
   -webkit-box-shadow: 3px 3px 1px 0px #999;
   box-shadow: 3px 3px 1px 0px #999;
 } */
+.game-wrapper {
+  position: relative;
+  height: 384.3px;
+}
 #game {
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none; /* Safari */
@@ -2496,16 +2522,21 @@ export default {
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* Internet Explorer/Edge */
   user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+  position: absolute;
+  top: -54px;
 }
 .game-container {
   position: relative;
   height: 100%;
-  top: -54px;
+}
+.caption {
+  padding: 0px 4px 4px 4px;
+  border-top: 1px solid rgb(196, 196, 196);
 }
 .edit {
   position: absolute;
   right: 18px;
-  top: 200px;
+  top: 250px;
 }
 .chainsim-loaded {
   position: absolute;

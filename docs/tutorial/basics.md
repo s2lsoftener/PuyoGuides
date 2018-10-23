@@ -3,6 +3,7 @@ title: Basic Mechanics
 ---
 <AssetLoader />
 # Basic Mechanics
+In this guide, we'll go over the basics of playing Puyo Puyo.
 
 Let's review how Puyo Puyo works. The game starts off by giving you **pairs** of Puyos to place around the game field.
 -gif-
