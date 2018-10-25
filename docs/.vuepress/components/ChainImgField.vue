@@ -476,7 +476,7 @@ export default {
       if (this.displayMode === 'full') {
         startX = 150
       } else if (this.displayMode === 'simple') {
-        startX = 150
+        startX = 32
       }
       let spriteArray = []
       for (let i = 0; i < 8; i++) {
@@ -786,7 +786,7 @@ export default {
         this.fieldDisplay.garbageTray.x = 316
         this.fieldDisplay.garbageTray.y = 915
         this.fieldDisplay.garbageTray.scale.set(0.7, 0.7)
-        this.fieldDisplay.garbageTray.visible = false
+        this.fieldDisplay.garbageTray.visible = true
         this.stage.addChild(this.fieldDisplay.garbageTray)
       }
 
@@ -810,7 +810,7 @@ export default {
           spriteArray[i].x = startX + spriteArray[i].width * i
           spriteArray[i].origX = startX + spriteArray[i].width * i
           spriteArray[i].y = 910
-          spriteArray[i].visible = false
+          spriteArray[i].visible = true
           this.stage.addChild(spriteArray[i])
         }
         this.garbageDisplay = spriteArray
@@ -1828,6 +1828,22 @@ export default {
         } else {
           this.chainCounterDisplay.secondDigit.texture = this.chainCountSprites[`spacer.png`]
         }
+
+        // Update Garbage Tray
+        this.ticker.remove(this.animateGarbageTray)
+        this.timers.garbageTray = 0
+        for (let i = 0; i < 6; i++) {
+          this.garbageDisplay[i].x = (this.garbageDisplay[2].origX + this.garbageDisplay[3].origX) / 2
+        }
+
+        this.garbageIcons = ['spacer_n', 'spacer_n', 'spacer_n', 'spacer_n', 'spacer_n', 'spacer_n']
+        this.countGarbage(this.garbage, 0) // second parameter is i, the index for garbageIcons (array)
+        console.log(this.garbageDisplay)
+        for (let i = 0; i < 6; i++) {
+          this.garbageDisplay[i].texture = this.puyoSprites[`${this.garbageIcons[i]}.png`]
+        }
+        this.ticker.addOnce(this.animateGarbageTray)
+
         this.ticker.remove(this.hoverLoop)
         this.ticker.remove(this.hoverLoop)
         this.renderer.render(this.stage)
@@ -2062,8 +2078,14 @@ export default {
       this.shadowData = stringTo2dArray(this.importedData[this.currentSlide + 1].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.cursorData = stringTo2dArray(this.importedData[this.currentSlide + 1].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.arrowData = stringTo2dArray(this.importedData[this.currentSlide + 1].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+
+      if (this.importedData[this.currentSlide].advanceNext === true) {
+        this.nextQueuePosition += 2
+      } else {
+        this.nextQueuePosition += 0
+      }
+
       this.currentSlide += 1
-      this.nextQueuePosition += 2
 
       this.ticker.addOnce(() => {
         this.updatePuyoSprites()
@@ -2094,12 +2116,19 @@ export default {
         this.fieldData = stringTo2dArray(this.importedData[this.currentSlide - 1].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
         this.needToReset = false
         this.needToChangeSlides = false
-        this.nextQueuePosition -= 2 // Next Queue Position
-        // for (let y = 0; y < this.Field.totalRows; y++) {
-        //   for (let x = 0; x < this.Field.columns; x++) {
-        //     this.dumpDisplay[y][x].visible = false
-        //   }
-        // }
+
+        if (this.importedData[this.currentSlide - 1].advanceNext === true) {
+          this.nextQueuePosition -= 2
+        } else {
+          this.nextQueuePosition -= 0
+        }
+
+        // this.nextQueuePosition -= 2 // Next Queue Position
+        // // for (let y = 0; y < this.Field.totalRows; y++) {
+        // //   for (let x = 0; x < this.Field.columns; x++) {
+        // //     this.dumpDisplay[y][x].visible = false
+        // //   }
+        // // }
         this.shadowData = stringTo2dArray(this.importedData[this.currentSlide - 1].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
         this.cursorData = stringTo2dArray(this.importedData[this.currentSlide - 1].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
         this.arrowData = stringTo2dArray(this.importedData[this.currentSlide - 1].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)

@@ -16,7 +16,8 @@ module.exports = {
         children: [
           '/tutorial/',
           '/tutorial/gamescreen',
-          '/tutorial/basics'
+          '/tutorial/basics',
+          '/tutorial/stairs'
         ]
       }
     ]
