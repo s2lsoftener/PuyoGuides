@@ -14,6 +14,11 @@ footer: Thank you to everyone supporting the Puyo Nexus Patreon.
 <AssetLoader />
 This site makes heavy use of WebGL to render the chainsims and other content. If your browser doesn't have it enabled, or if it's not very fast, then you're going to have a... bad time.
 
+# Recent Content
+| Tutorials          | News               | Blog               |
+|--------------------|--------------------|--------------------|
+| <RecentArticles /> | <RecentArticles /> | <RecentArticles /> |
+
 # Color Edit
 If you have trouble differentiating colors, try changing the settings here. Refresh the page and they should take effect site-wide. (Only the hue setting will do anything because the other filters won't combine without matrix math that I can't be bothered to figure out right now.)
 <ColorEdit />

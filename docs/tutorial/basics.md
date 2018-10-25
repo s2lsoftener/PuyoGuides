@@ -159,8 +159,16 @@ Remember, the goal of Puyo Puyo is to make four of the same color connect. So ac
 It's very easy to get tunnel visioned on the link you're currently working on.
 -- where does this go?? --
 
-In a real match, you're going to feel a lot of pressure to play fast. If the Puyos you're currently holding don't immediately contribute to the link you want to make, it's very easy to fall into the habit of just throwing your Puyos off to the side.
+It also doesn't help that, in a real match, you're going to feel pressure to play fast. If the Puyos you're holding don't have an obvious use, it's easy to get in the habit of throwing them off to the side.
+-- NoHOHO Stacking, disappointed emoji.--
 
+You should try your best to have some sort of plan though. In the chainsim below, the immediate link needs Blues and Reds.
+-- from the earlier chain --
+
+But if you look at the NEXT Window, only Greens and Yellows are available. How do we begin to use these colors? 
+-- 4 chain from the beginning --
+
+Let's start by revisiting the 4 Chain we made at the beginning of this page. 
 
 
 
