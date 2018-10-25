@@ -26,8 +26,6 @@ Setting up the Puyos so they fall and pop automatically is the basic idea behind
 ## Your First Chain
 Now that you've seen what chains are supposed to be like, let's try to make one on our own.
 
-If you connect four Puyos of the same color, they'll pop right away and you'll only get a 1 Chain. To make a longer one, we need to temporarily separate the group of four with other colors.
-
 <Slideshow :importedData="
   [{fieldData: '0000000000000000000000000000000000000000000000000000000000000000000000R0000RR0',
     shadowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
@@ -35,7 +33,7 @@ If you connect four Puyos of the same color, they'll pop right away and you'll o
     arrowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
     autoDrop: false,
     advanceNext: true,
-    slideText: 'Let\'s say you start with this, three Red Puyos. You have Red and Blue Puyos coming up.'
+    slideText: 'Imagine you\'re starting with this, three Red Puyos. You have Red and Blue Puyos coming up.'
   },
   {
     fieldData: '0000000000000000000000000000000000000000000000000000000000000000000000R0000RR0',
@@ -74,7 +72,7 @@ If you connect four Puyos of the same color, they'll pop right away and you'll o
     slideText: 'We have a 2 Chain! (Hover over tha chainsim to watch it play.)'
   }]" :nextQueue="'RBBBGB'" />
 
-If you keep separating the colors one at a time, you can make even longer chains.
+If you keep separating the colors, one at a time, you can make even longer chains.
 
 <Slideshow :importedData="
   [{fieldData: '000000000000000000000000000000000000000000000000000000000000000R0000BBR000BRR0',
@@ -131,10 +129,40 @@ If you keep separating the colors one at a time, you can make even longer chains
     slideText: 'Now, the Yellow Puyos are the trigger for your chain. If you pop it, you\'ll get a 4 Chain. Let\'s do that.'
   }]" :nextQueue="'GBGGYGYYYY'" />
 
-## Learning to Plan Ahead
-Of course, the Puyos you get in a real match won't always come that perfectly. Let's look back at the chain we made, and think about how the scenario can change.
+## Planning Ahead
+Think back on the chains above. Did you notice anything about their general structure? When we were making each **link**, we focused on making a group of three first; worrying about the fourth Puyo came after.
+-- x2 Chainsim --
 
-If you noticed, we focused on building a group of three Puyos first, and then worried about separating the 4th color.
+Unless you're really lucky, making chains won't always be this straightforward. Sometimes, you'll only get two of the Puyos you'll need.
+-- Chainsim --
+
+Or maybe you'll only get one of the color you want.
+-- Chainsim --
+
+Or, maybe, the game will hand you colors you don't even "need" right now.
+-- Chainsim --
+
+Maybe you'll get loads of a color you already have?
+-- Chainsim --
+
+You'll need to know how to handle each of these **color distributions** if you want to make consistent chains.
+
+### A. Visualize Potential Shapes
+Remember, the goal of Puyo Puyo is to make four of the same color connect. So actually, it doesn't really matter how you group things as long as you can make the groups of four happen eventually.
+
+-- a group of three and a group of 1 --
+-- a group of two and a group of two --
+-- a group of 1 and a group of three --
+-- three more --
+
+### B. Visualize Future Links
+It's very easy to get tunnel visioned on the link you're currently working on.
+-- where does this go?? --
+
+In a real match, you're going to feel a lot of pressure to play fast. If the Puyos you're currently holding don't immediately contribute to the link you want to make, it's very easy to fall into the habit of just throwing your Puyos off to the side.
+
+
+
 
 <ChainImg :importedData="
   [{fieldData: '00000000000000000000000000000000000000000000000000000000B00000GR0000BBR000BRR0',
@@ -144,5 +172,6 @@ If you noticed, we focused on building a group of three Puyos first, and then wo
     autoDrop: false
   }]" :nextQueue="''" :hasCaption="true">The blue Puyos won't pop because there's only three of them.</ChainImg>
 
+However, you won't always get to finish the group of three first. 
 
 <ChainsimModal />
