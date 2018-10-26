@@ -66,11 +66,20 @@ export default {
               ? ['R', 'G', 'P', 'Y']
               : ['R', 'G', 'B', 'P']
 
+      let shuffleArray = [] // Shuffle the colors so purple isn't overrepresented.
+      for (let i = 3; i >= 0; i--) {
+        let index = Math.floor(this.puyoGenerator.random_excl() * (i + 1))
+        shuffleArray.push(colorArray[index])
+        colorArray.splice(index, 1)
+      }
+
+      console.log(shuffleArray)
+
       let colorString = ''
       for (let i = 0; i < 512; i++) {
         (i < 4)
-          ? colorString += colorArray[Math.floor(this.puyoGenerator.random_excl() * 3)]
-          : colorString += colorArray[Math.floor(this.puyoGenerator.random_excl() * 4)]
+          ? colorString += shuffleArray[Math.floor(this.puyoGenerator.random_excl() * 3)]
+          : colorString += shuffleArray[Math.floor(this.puyoGenerator.random_excl() * 4)]
       }
       return colorString
     }
