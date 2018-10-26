@@ -12,6 +12,7 @@
     <button @click="slideActivePair('left')">Left</button><button @click="slideActivePair('right')">Right</button><br>
     <button @click="rotateActivePair('ccw')">CCW</button><button @click="dropActivePair">Draw/Place Puyo</button><button @click="rotateActivePair('cw')">CW</button><br>
     <textarea rows="5" cols="40" v-model="copyPaster"></textarea>
+    <button @click="saveJSON(copyPaster, 'chainJSON.json', 'text/plain')">Save JSON</button>
     <p>In bounds?: {{ checkDropInBounds }}</p>
     <p>Game State: {{ gameState }} || stopGame: {{ stopGame }}</p>
     <p>isDropping: {{ isDropping }} || isPopping: {{ isPopping }}</p>
@@ -2445,6 +2446,23 @@ export default {
           this.garbageIcons.splice(i, 1, 'unit')
           this.checkUnit(g - 1, i + 1)
         }
+      }
+    },
+    saveJSON: function (data, filename, type) {
+      let file = new Blob([data], { type: type })
+      if (window.navigator.msSaveOrOpenBlob) {
+        window.navigator.msSaveOrOpenBlob(file, filename)
+      } else {
+        let a = document.createElement('a')
+        let url = URL.createObjectURL(file)
+        a.href = url
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        setTimeout(function () {
+          document.body.removeChild(a)
+          window.URL.revokeObjectURL(url)
+        }, 0)
       }
     }
   },
