@@ -45,7 +45,7 @@ export default {
         // }
       ],
       nextQueue: '',
-      seed: 1
+      seed: Math.round(Math.random() * 128)
     }
   },
   computed: {
@@ -75,7 +75,6 @@ export default {
     }
   },
   created () {
-    this.seed = Math.round(Math.random * 128)
     this.nextQueue = this.generatedNextQueue
   }
 }

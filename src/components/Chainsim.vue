@@ -337,6 +337,9 @@ export default {
 
         // Run the game loop
         this.ticker.add(delta => this.gameLoop(delta))
+
+        // Draw the first puyo
+        this.dropActivePair()
       }
 
       let loadProgressHandler = (loader, resource) => {
