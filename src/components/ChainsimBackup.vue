@@ -8,10 +8,9 @@
       :gameLoaded="gameLoaded" :fieldSprites="fieldSprites" :button="sprite" :buttonName="index"
       v-on:controlField="controlField" />
     </div>
-    <!-- <button @click="prevSlide">Prev</button><button @click="nextSlide">Next</button><br> -->
+    <button @click="prevSlide">Prev</button><button @click="nextSlide">Next</button><br>
     <button @click="slideActivePair('left')">Left</button><button @click="slideActivePair('right')">Right</button><br>
-    <button @click="rotateActivePair('ccw')">CCW</button><button @click="dropActivePair">Draw/Place Puyo</button><button @click="rotateActivePair('cw')">CW</button><br>
-    <textarea rows="5" cols="40" v-model="copyPaster"></textarea>
+    <button @click="rotateActivePair('ccw')">CCW</button><button @click="placeActivePair">Place Puyo</button><button @click="rotateActivePair('cw')">CW</button><br>
     <p>In bounds?: {{ checkDropInBounds }}</p>
     <p>Game State: {{ gameState }} || stopGame: {{ stopGame }}</p>
     <p>isDropping: {{ isDropping }} || isPopping: {{ isPopping }}</p>
@@ -72,8 +71,6 @@ export default {
       // Game states
       gameMode: 'editor', // editor, playable
       gameState: 'idle', // idle/playing -> dropping -> popping -> dropping/chainEnded || editor
-      gameData: undefined,
-      gamePlayable: true,
 
       // Field Arrays
       fieldData: [[]], // 2D string array with the main field representation
@@ -221,7 +218,7 @@ export default {
       controlPuyoData: [[]],
       controlPuyoSprites: [[]],
       activePair: {
-        data: '00',
+        data: 'RB',
         axisPuyo: {
           x: 2,
           y: 13
@@ -973,40 +970,6 @@ export default {
       //   this.activePair.sprites.children[1].rotation -= 2 * Math.PI / 180
       // })
     },
-    updateActivePair: function () {
-      this.activePair.data = `${this.nextPuyoData[this.nextQueuePosition - 2]}${this.nextPuyoData[this.nextQueuePosition - 1]}`
-
-      let axisPuyo = this.activePair.axisPuyo
-      let freePuyo = this.activePair.freePuyo
-      let colors = []
-      for (let i = 0; i < 2; i++) {
-        switch (this.activePair.data[i]) {
-          case 'R': colors.push('red'); break
-          case 'G': colors.push('green'); break
-          case 'B': colors.push('blue'); break
-          case 'Y': colors.push('yellow'); break
-          case 'P': colors.push('purple'); break
-          default: colors.push('spacer')
-        }
-      }
-
-      // Fall back in case the puyos are undefined
-      if (colors[0] === undefined) {
-        colors[0] = 'spacer'
-      }
-      if (colors[1] === undefined) {
-        colors[0] = 'spacer'
-      }
-
-      axisPuyo.visible = true
-      freePuyo.visible = true
-      axisPuyo.cellPos = { x: 2, y: 1 }
-      freePuyo.cellPos = { x: 2, y: 0 }
-      axisPuyo.position.set(this.activeCoordArray[1][2].x, this.activeCoordArray[1][2].y)
-      freePuyo.position.set(this.activeCoordArray[0][2].x, this.activeCoordArray[0][2].y)
-      axisPuyo.texture = this.puyoSprites[`${colors[0]}_n.png`]
-      freePuyo.texture = this.puyoSprites[`${colors[1]}_n.png`]
-    },
     slideActivePair: function (d) {
       let axisPuyo = this.activePair.axisPuyo
       let freePuyo = this.activePair.freePuyo
@@ -1087,32 +1050,24 @@ export default {
         freePuyo.y = this.activeCoordArray[freePuyo.cellPos.y][freePuyo.cellPos.x].y
       }
     },
-    dropActivePair: function () {
-      if (this.gameState === 'idle') {
-        console.log(this.gameData)
-        if (this.currentSlide === this.gameData.length - 1) {
-          this.gameData.push({
-            fieldData: flatten2dTo1d(this.createNextFieldData()),
-            fieldOriginal: flatten2dTo1d(this.createNextFieldData()),
-            shadowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-            cursorData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-            arrowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-            autoDrop: true
-          })
-        } else if (this.currentSlide < this.gameData.length - 1) {
-          this.gameData[this.currentSlide + 1] = {
-            fieldData: flatten2dTo1d(this.createNextFieldData()),
-            fieldOriginal: flatten2dTo1d(this.createNextFieldData()),
-            shadowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-            cursorData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-            arrowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-            autoDrop: true
-          }
+    placeActivePair: function () {
+      console.log(this.gameData)
+      if (this.currentSlide === this.gameData.length - 1) {
+        this.gameData.push({
+          fieldData: flatten2dTo1d(this.createNextFieldData()),
+          shadowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
+          cursorData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
+          arrowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        })
+      } else if (this.currentSlide < this.gameData.length - 1) {
+        this.gameData[this.currentSlide + 1] = {
+          fieldData: flatten2dTo1d(this.createNextFieldData()),
+          shadowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
+          cursorData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
+          arrowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000'
         }
-        this.playToNextSlide()
-      } else {
-        console.log('You can only place Puyos while the board is in an idle state.')
       }
+      this.setDumpMatrixDropData()
     },
     initCursorDisplay: function () {
       let spriteArray = []
@@ -1660,7 +1615,7 @@ export default {
                 if (this.dumpDisplay[y][x].y + this.dumpVelocity[y][x] < this.dumpCoordArray[y][x].y + this.dropDumpDistances[y][x] * this.Field.cellHeight) {
                   console.log('dropping dumps')
                   this.dumpDisplay[y][x].y += this.dumpVelocity[y][x]
-                  this.dumpVelocity[y][x] += 0.1875 / 16 * 60 * this.frame
+                  this.dumpVelocity[y][x] += 0.1875 / 16 * 60
                 } else {
                   console.log('dump bounce state')
                   this.dumpPuyoStates[y].splice(x, 1, 'bouncing')
@@ -1777,7 +1732,7 @@ export default {
       if (clearResult.popData.poppingGroups.length !== 0) {
         this.calculateScore(clearResult.popData)
       } else {
-        this.gameState = this.gamePlayable ? 'idle' : 'chainStopped'
+        this.gameState = 'chainStopped'
       }
     },
     mergeInShadowLayer: function (replace) {
@@ -2009,7 +1964,7 @@ export default {
     },
     animateNextPuyos: function (delta) {
       let t = this.timers.next
-      let duration = 12
+      let duration = 8
 
       this.nextPuyoPairs[0].y = this.nextCoord[0].y - ((this.nextCoord[0].y - 106) / duration) * t
 
@@ -2024,7 +1979,10 @@ export default {
         this.nextQueuePosition += 2
         this.timers.next = 0
         this.updateNextPuyoSprites()
-        this.updateActivePair()
+        this.updateDumpDisplay()
+        this.setDumpMatrixDropData()
+        this.needToChangeSlides = true
+        this.controlField('play')
         return
       }
       this.timers.next += 1
@@ -2084,13 +2042,9 @@ export default {
     },
     updateWithNextSlide: function () {
       console.log('Updating with next slide')
-      this.activePair.axisPuyo.visible = false
-      this.activePair.freePuyo.visible = false
       this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dropDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.dropDumpDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.droppingDumpCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.score = 0
       this.stepScore = 0
       this.garbage = 0
@@ -2113,16 +2067,6 @@ export default {
           this.updateArrowSprite(x, y)
         }
       }
-
-      this.ticker.addOnce(() => {
-        this.updatePuyoSprites()
-        for (let y = 0; y < this.Field.totalRows; y++) {
-          for (let x = 0; x < this.Field.columns; x++) {
-            this.dumpDisplay[y][x].visible = false
-          }
-        }
-        this.controlField('auto')
-      })
     },
     prevSlide: function () {
       if (this.currentSlide > 0 && this.gameState === 'idle') {
@@ -2165,27 +2109,13 @@ export default {
     nextSlide: function () {
       if (this.currentSlide < this.gameData.length - 1 && this.gameState === 'idle') {
         // Reset to the original field in case the user made some edits.
-        this.fieldData = this.gamePlayable ? this.fieldData : stringTo2dArray(this.gameData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.fieldData = stringTo2dArray(this.gameData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
         this.updatePuyoSprites()
         this.ticker.add(this.animateNextPuyos)
         // this.updateDumpDisplay()
         // this.setDumpMatrixDropData()
         // this.needToChangeSlides = true
         // this.controlField('play')
-      } else {
-        console.log('No more slides')
-      }
-    },
-    playToNextSlide: function () {
-      // For the playable version.
-      if (this.currentSlide < this.gameData.length - 1 && this.gameState === 'idle') {
-        // Reset to the original field in case the user made some edits.
-        this.fieldData = this.gamePlayable ? this.fieldData : stringTo2dArray(this.gameData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-        this.updatePuyoSprites()
-        this.setDumpMatrixDropData()
-        this.updateDumpDisplay()
-        this.needToChangeSlides = true
-        this.controlField('play')
       } else {
         console.log('No more slides')
       }
@@ -2236,8 +2166,13 @@ export default {
             }
           }
           // Use unshift to add Puyos to the beginning of the array
-          axisEmpty.unshift(this.activePair.data[0])
-
+          if (axisPuyo.cellPos.y < freePuyo.cellPos.y) {
+            axisEmpty.unshift(this.activePair.data[1])
+            axisEmpty.unshift(this.activePair.data[0])
+          } else {
+            axisEmpty.unshift(this.activePair.data[0])
+            axisEmpty.unshift(this.activePair.data[1])
+          }
           // fill up the column with '0' until it's back to totalRow
           let axisFiller = []
           for (let y = 0; y < this.Field.totalRows - axisEmpty.length; y++) {
@@ -2254,14 +2189,18 @@ export default {
 
           let freeEmpty = [] // Cells of a column that aren't empty
           for (let y = 0; y < this.Field.totalRows; y++) {
-            if (this.fieldData[y][freePuyo.cellPos.x] !== '0') {
-              freeEmpty.push(this.fieldData[y][freePuyo.cellPos.x])
+            if (this.fieldData[y][axisPuyo.cellPos.x] !== '0') {
+              freeEmpty.push(this.fieldData[y][axisPuyo.cellPos.x])
             }
           }
           // Use unshift to add Puyos to the beginning of the array
-
-          freeEmpty.unshift(this.activePair.data[1])
-
+          if (axisPuyo.cellPos.y < freePuyo.cellPos.y) {
+            freeEmpty.unshift(this.activePair.data[1])
+            freeEmpty.unshift(this.activePair.data[0])
+          } else {
+            freeEmpty.unshift(this.activePair.data[0])
+            freeEmpty.unshift(this.activePair.data[1])
+          }
           // fill up the column with '0' until it's back to totalRow
           let freeFiller = []
           for (let y = 0; y < this.Field.totalRows - freeEmpty.length; y++) {
@@ -2273,7 +2212,7 @@ export default {
 
           // Replace the column in the next field data
           for (let y = 0; y < this.Field.totalRows; y++) {
-            nextFieldData[y].splice([freePuyo.cellPos.x], 1, freeEmpty[y])
+            nextFieldData[y].splice([axisPuyo.cellPos.x], 1, freeEmpty[y])
           }
 
           return nextFieldData
@@ -2344,8 +2283,7 @@ export default {
   },
   computed: {
     chainDiff: function () {
-      // let oldField = stringTo2dArray(this.gameData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      let oldField = this.fieldData
+      let oldField = stringTo2dArray(this.gameData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
       let newField = stringTo2dArray(this.gameData[this.currentSlide + 1].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
 
       let diff = []
@@ -2367,8 +2305,7 @@ export default {
     },
     combinedMatrix: function () {
       let combinedMatrix = JSON.parse(JSON.stringify(this.chainDiff))
-      // let oldField = stringTo2dArray(this.gameData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      let oldField = this.fieldData
+      let oldField = stringTo2dArray(this.gameData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
 
       for (let y = 0; y < this.Field.totalRows; y++) {
         combinedMatrix.push(oldField[y])
@@ -2552,17 +2489,12 @@ export default {
         string = '0' + string
       }
       return string
-    },
-    copyPaster: function () {
-      return JSON.stringify(this.gameData)
     }
   },
   watch: {
     gameState: function (newVal, oldVal) {
       this.frame = 0
       if (newVal === 'dropping') {
-        this.activePair.freePuyo.visible = false
-        this.activePair.axisPuyo.visible = false
         console.log('Checking drops')
         this.setDropData()
         this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
@@ -2576,8 +2508,6 @@ export default {
           }
         }
       } else if (newVal === 'popping') {
-        this.activePair.axisPuyo.visible = false
-        this.activePair.freePuyo.visible = false
         console.log('Checking pops')
         this.setPopData()
         this.puyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
@@ -2591,7 +2521,6 @@ export default {
               this.dumpDisplay[y][x].visible = false
             }
           }
-          this.ticker.add(this.animateNextPuyos)
         })
       }
 
@@ -2646,23 +2575,23 @@ export default {
               this.gameState = 'popping'
             } else {
               this.simulationSpeed = 1
-              this.gameState = this.gamePlayable ? 'idle' : 'chainStopped'
+              this.gameState = 'chainStopped'
             }
           }
         }
       }
     },
-    // gameData: {
-    //   handler: function () {
-    //     this.fieldData = stringTo2dArray(this.gameData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-    //     this.fieldOriginal = stringTo2dArray(this.gameData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-    //     this.shadowData = stringTo2dArray(this.gameData[this.currentSlide].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-    //     this.cursorData = stringTo2dArray(this.gameData[this.currentSlide].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-    //     this.arrowData = stringTo2dArray(this.gameData[this.currentSlide].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-    //     this.resetField()
-    //   },
-    //   deep: true
-    // },
+    gameData: {
+      handler: function () {
+        this.fieldData = stringTo2dArray(this.gameData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.fieldOriginal = stringTo2dArray(this.gameData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.shadowData = stringTo2dArray(this.gameData[this.currentSlide].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.cursorData = stringTo2dArray(this.gameData[this.currentSlide].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.arrowData = stringTo2dArray(this.gameData[this.currentSlide].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.resetField()
+      },
+      deep: true
+    },
     needToChangeSlides: function (newVal, oldVal) {
       if (newVal === true) {
         for (let y = 0; y < this.Field.totalRows; y++) {

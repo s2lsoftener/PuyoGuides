@@ -17,7 +17,8 @@ module.exports = {
           '/tutorial/',
           '/tutorial/gamescreen',
           '/tutorial/basics',
-          '/tutorial/stairs'
+          '/tutorial/stairs',
+          '/tutorial/test'
         ]
       }
     ]
