@@ -10,6 +10,7 @@
 <script>
 // @ is an alias to /src
 import Chainsim from '@/components/Chainsim.vue'
+const MersenneTwister = require('mersenne-twister')
 
 export default {
   name: 'SimulatorNew',
@@ -43,8 +44,39 @@ export default {
         //   autoDrop: true
         // }
       ],
-      nextQueue: 'RRBGYYPPRBGYPYPGBGBGYPRRBGYPRRBPGYYYBBYPGYPBPBBBPPRRBGYYPPRBGYPYPGBGBGYPRRBGYPRRBPGYYYBBYPGYPBPBBBPPRRBGYYPPRBGYPYPGBGBGYPRRBGYPRRBPGYYYBBYPGYPBPBBBPPRRBGYYPPRBGYPYPGBGBGYPRRBGYPRRBPGYYYBBYPGYPBPBBBPP'
+      nextQueue: '',
+      seed: 1
     }
+  },
+  computed: {
+    puyoGenerator: function () {
+      return new MersenneTwister(this.seed)
+    },
+    generatedNextQueue: function () {
+      let colorArray = []
+      let colorChoice = this.puyoGenerator.random() * 5
+      colorArray = colorChoice <= 1
+        ? ['R', 'G', 'B', 'Y']
+        : colorChoice <= 2
+          ? ['P', 'G', 'B', 'Y']
+          : colorChoice <= 3
+            ? ['R', 'P', 'B', 'Y']
+            : colorChoice <= 4
+              ? ['R', 'G', 'P', 'Y']
+              : ['R', 'G', 'B', 'P']
+
+      let colorString = ''
+      for (let i = 0; i < 512; i++) {
+        (i < 4)
+          ? colorString += colorArray[Math.floor(this.puyoGenerator.random_excl() * 3)]
+          : colorString += colorArray[Math.floor(this.puyoGenerator.random_excl() * 4)]
+      }
+      return colorString
+    }
+  },
+  created () {
+    this.seed = Math.round(Math.random * 128)
+    this.nextQueue = this.generatedNextQueue
   }
 }
 </script>

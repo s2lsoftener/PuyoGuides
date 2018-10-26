@@ -1326,6 +1326,17 @@ export default {
       this.playCtrlDisplay.moveRight.y = startY + height * i
       this.playCtrlDisplay.moveRight.interactive = true
       this.playCtrlDisplay.moveRight.buttonMode = true
+      this.playCtrlDisplay.moveRight
+        .on('pointerdown', () => {
+          this.playCtrlDisplay.moveRight.texture = this.fieldSprites[`btn_right_pressed.png`]
+        })
+        .on('pointerup', () => {
+          this.playCtrlDisplay.moveRight.texture = this.fieldSprites[`btn_right.png`]
+          this.slideActivePair('right')
+        })
+        .on('pointerup', () => {
+          this.playCtrlDisplay.moveRight.texture = this.fieldSprites[`btn_right.png`]
+        })
       this.stage.addChild(this.playCtrlDisplay.moveRight)
       i += 1
 
@@ -1334,6 +1345,17 @@ export default {
       this.playCtrlDisplay.moveDown.y = startY + height * i
       this.playCtrlDisplay.moveDown.interactive = true
       this.playCtrlDisplay.moveDown.buttonMode = true
+      this.playCtrlDisplay.moveDown
+        .on('pointerdown', () => {
+          this.playCtrlDisplay.moveDown.texture = this.fieldSprites[`btn_down_pressed.png`]
+        })
+        .on('pointerup', () => {
+          this.playCtrlDisplay.moveDown.texture = this.fieldSprites[`btn_down.png`]
+          this.dropActivePair()
+        })
+        .on('pointerup', () => {
+          this.playCtrlDisplay.moveDown.texture = this.fieldSprites[`btn_down.png`]
+        })
       this.stage.addChild(this.playCtrlDisplay.moveDown)
     },
     initToolDisplay: function () {
