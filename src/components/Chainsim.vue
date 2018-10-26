@@ -168,6 +168,7 @@ export default {
       editorTools: [],
       editorSelectors: [],
       editorWindow: {},
+      playCtrlDisplay: {},
 
       /* Loader details */
       loadingText: 'Loading...',
@@ -323,7 +324,11 @@ export default {
         this.initArrowDisplay()
         this.initGarbageDisplay()
         this.initNextPuyos()
-        this.initFieldControls()
+        if (this.gamePlayable === false) {
+          this.initFieldControls()
+        } else {
+          this.initPlayControls()
+        }
         this.initChainCounter()
         this.initToolDisplay()
 
@@ -1254,6 +1259,82 @@ export default {
           this.dumpDisplay[y][x].visible = true
         }
       }
+    },
+    initPlayControls: function () {
+      let startY = 480
+      let height
+      let i = 0
+
+      this.playCtrlDisplay.rotateLeft = new Sprite(this.fieldSprites['btn_rotateleft.png'])
+      this.playCtrlDisplay.rotateLeft.x = 452
+      this.playCtrlDisplay.rotateLeft.y = startY
+      this.playCtrlDisplay.rotateLeft.interactive = true
+      this.playCtrlDisplay.rotateLeft.buttonMode = true
+      this.playCtrlDisplay.rotateLeft
+        .on('pointerdown', () => {
+          this.playCtrlDisplay.rotateLeft.texture = this.fieldSprites[`btn_rotateleft_pressed.png`]
+        })
+        .on('pointerup', () => {
+          this.playCtrlDisplay.rotateLeft.texture = this.fieldSprites[`btn_rotateleft.png`]
+          this.rotateActivePair('ccw')
+        })
+        .on('pointerup', () => {
+          this.playCtrlDisplay.rotateLeft.texture = this.fieldSprites[`btn_rotateleft.png`]
+        })
+      this.stage.addChild(this.playCtrlDisplay.rotateLeft)
+      height = this.playCtrlDisplay.rotateLeft.height
+
+      this.playCtrlDisplay.rotateRight = new Sprite(this.fieldSprites['btn_rotateright.png'])
+      this.playCtrlDisplay.rotateRight.x = 528
+      this.playCtrlDisplay.rotateRight.y = startY + height * i
+      this.playCtrlDisplay.rotateRight.interactive = true
+      this.playCtrlDisplay.rotateRight.buttonMode = true
+      this.playCtrlDisplay.rotateRight
+        .on('pointerdown', () => {
+          this.playCtrlDisplay.rotateRight.texture = this.fieldSprites[`btn_rotateright_pressed.png`]
+        })
+        .on('pointerup', () => {
+          this.playCtrlDisplay.rotateRight.texture = this.fieldSprites[`btn_rotateright.png`]
+          this.rotateActivePair('cw')
+        })
+        .on('pointerup', () => {
+          this.playCtrlDisplay.rotateRight.texture = this.fieldSprites[`btn_rotateright.png`]
+        })
+      this.stage.addChild(this.playCtrlDisplay.rotateRight)
+      i += 1
+
+      this.playCtrlDisplay.moveLeft = new Sprite(this.fieldSprites['btn_left.png'])
+      this.playCtrlDisplay.moveLeft.x = 452
+      this.playCtrlDisplay.moveLeft.y = startY + height * i
+      this.playCtrlDisplay.moveLeft.interactive = true
+      this.playCtrlDisplay.moveLeft.buttonMode = true
+      this.playCtrlDisplay.moveLeft
+        .on('pointerdown', () => {
+          this.playCtrlDisplay.moveLeft.texture = this.fieldSprites[`btn_left_pressed.png`]
+        })
+        .on('pointerup', () => {
+          this.playCtrlDisplay.moveLeft.texture = this.fieldSprites[`btn_left.png`]
+          this.slideActivePair('left')
+        })
+        .on('pointerup', () => {
+          this.playCtrlDisplay.moveLeft.texture = this.fieldSprites[`btn_left.png`]
+        })
+      this.stage.addChild(this.playCtrlDisplay.moveLeft)
+
+      this.playCtrlDisplay.moveRight = new Sprite(this.fieldSprites['btn_right.png'])
+      this.playCtrlDisplay.moveRight.x = 528
+      this.playCtrlDisplay.moveRight.y = startY + height * i
+      this.playCtrlDisplay.moveRight.interactive = true
+      this.playCtrlDisplay.moveRight.buttonMode = true
+      this.stage.addChild(this.playCtrlDisplay.moveRight)
+      i += 1
+
+      this.playCtrlDisplay.moveDown = new Sprite(this.fieldSprites['btn_down.png'])
+      this.playCtrlDisplay.moveDown.x = 490
+      this.playCtrlDisplay.moveDown.y = startY + height * i
+      this.playCtrlDisplay.moveDown.interactive = true
+      this.playCtrlDisplay.moveDown.buttonMode = true
+      this.stage.addChild(this.playCtrlDisplay.moveDown)
     },
     initToolDisplay: function () {
       let me = this
@@ -2561,6 +2642,7 @@ export default {
     gameState: function (newVal, oldVal) {
       this.frame = 0
       if (newVal === 'dropping') {
+        this.ticker.remove(this.animateNextPuyos)
         this.activePair.freePuyo.visible = false
         this.activePair.axisPuyo.visible = false
         console.log('Checking drops')
@@ -2576,6 +2658,7 @@ export default {
           }
         }
       } else if (newVal === 'popping') {
+        this.ticker.remove(this.animateNextPuyos)
         this.activePair.axisPuyo.visible = false
         this.activePair.freePuyo.visible = false
         console.log('Checking pops')
