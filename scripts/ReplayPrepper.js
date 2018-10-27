@@ -27,8 +27,8 @@ const isPopping = function (matrix) {
   return false
 }
 
+// Determine which slides have pops going on
 let poppingSlides = []
-
 for (let i = 0; i < slides.length; i++) {
   let fieldText = slides[i].fieldData
   let fieldMatrix = Chainsim.stringTo2dArray(fieldText, fieldSettings.totalRows, fieldSettings.columns)
@@ -42,12 +42,29 @@ for (let i = 0; i < slides.length; i++) {
   }
 }
 
-console.log(poppingSlides)
+// Working from the last slide, update the preceeding slides 
+let currentShadowField = ''
+for (let i = slides.length - 1; i >= 0; i--) {
+  if (poppingSlides[i] === true) {
+    currentShadowField = slides[i].fieldData
+  }
+  slides[i].shadowData = currentShadowField
+  slides[i].advanceNext = true
+  slides[i].slideText = '...!'
+}
 
-// fs.writeFile('test_output.json', JSON.stringify(slides), function (err) {
-//   if (err) {
-//     return console.log(err)
-//   }
+// Log next queue
+let nextQueue = ''
+for (let i = 1; i < slides.length - 1; i++) {
+  nextQueue += slides[i].puyoPair
+}
 
-//   console.log('The file was saved!')
-// })
+console.log(nextQueue)
+
+fs.writeFile('test_output.json', JSON.stringify(slides), function (err) {
+  if (err) {
+    return console.log(err)
+  }
+
+  console.log('The file was saved!')
+})
