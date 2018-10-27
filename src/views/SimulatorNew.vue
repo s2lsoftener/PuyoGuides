@@ -19,6 +19,7 @@ export default {
   },
   data () {
     return {
+      // eslint-disable-next-line
       importedData: [
         {
           fieldData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',

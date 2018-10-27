@@ -74,6 +74,7 @@ export default {
       gameMode: 'editor', // editor, playable
       gameState: 'idle', // idle/playing -> dropping -> popping -> dropping/chainEnded || editor
       gameData: undefined,
+      gameReplay: true,
       gamePlayable: true,
 
       // Field Arrays
@@ -332,6 +333,7 @@ export default {
         }
         this.initChainCounter()
         this.initToolDisplay()
+        this.initKeyboardControls()
 
         // Marked game as loaded
         this.gameLoaded = true
@@ -971,6 +973,7 @@ export default {
       freePuyo.position.set(this.activeCoordArray[0][2].x, this.activeCoordArray[0][2].y)
       axisPuyo.cellPos = { x: 2, y: 1 }
       freePuyo.cellPos = { x: 2, y: 0 }
+      freePuyo.scale.set(0.9, 0.9)
       this.stage.addChild(axisPuyo)
       this.stage.addChild(freePuyo)
       this.activePair.axisPuyo = axisPuyo
@@ -1106,16 +1109,18 @@ export default {
             shadowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
             cursorData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
             arrowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-            autoDrop: true
+            autoDrop: true,
+            advanceNext: true
           })
         } else if (this.currentSlide < this.gameData.length - 1) {
           this.gameData[this.currentSlide + 1] = {
             fieldData: flatten2dTo1d(this.createNextFieldData()),
             fieldOriginal: flatten2dTo1d(this.createNextFieldData()),
-            shadowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
+            shadowData: this.gameData[this.currentSlide + 1].shadowData,
             cursorData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
             arrowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-            autoDrop: true
+            autoDrop: true,
+            advanceNext: true
           }
         }
         this.playToNextSlide()
@@ -2464,6 +2469,52 @@ export default {
           window.URL.revokeObjectURL(url)
         }, 0)
       }
+    },
+    keyboard: function (keyCode) {
+      let key = {}
+      key.code = keyCode
+      key.isDown = false
+      key.isUp = true
+      key.press = undefined
+      key.release = undefined
+
+      // Handle when the key is down.
+      key.downHandler = event => {
+        if (event.keyCode === key.code) {
+          if (key.isUp && key.press) key.press()
+          key.isDown = true
+          key.isUp = false
+        }
+        event.preventDefault()
+      }
+
+      // Handle when key is down
+      key.upHandler = event => {
+        if (event.keyCode === key.code) {
+          if (key.isDown && key.release) key.release()
+          key.isDown = false
+          key.isUp = true
+        }
+        event.preventDefault()
+      }
+
+      // Attach event listeners
+      window.addEventListener('keydown', key.downHandler.bind(key), false)
+      window.addEventListener('keyup', key.upHandler.bind(key), false)
+      return key
+    },
+    initKeyboardControls: function () {
+      let left = this.keyboard(37)
+      let right = this.keyboard(39)
+      let down = this.keyboard(40)
+      let ccw = this.keyboard(90)
+      let cw = this.keyboard(88)
+
+      left.press = () => this.slideActivePair('left')
+      right.press = () => this.slideActivePair('right')
+      down.press = () => this.dropActivePair()
+      ccw.press = () => this.rotateActivePair('ccw')
+      cw.press = () => this.rotateActivePair('cw')
     }
   },
   computed: {
@@ -2860,5 +2911,6 @@ export default {
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* Internet Explorer/Edge */
   user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+  background-color: #f3f5f7;
 }
 </style>

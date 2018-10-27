@@ -149,6 +149,60 @@ jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.tri
 jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
 jsonBody += `    },\n`
 
+jsonBody += `    "red_outlined.png": {\n`
+jsonBody += `      "frame": {"x": 0, "y": 648, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "green_outlined.png": {\n`
+jsonBody += `      "frame": {"x": 72, "y": 648, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "blue_outlined.png": {\n`
+jsonBody += `      "frame": {"x": 144, "y": 648, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "yellow_outlined.png": {\n`
+jsonBody += `      "frame": {"x": 216, "y": 648, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "purple_outlined.png": {\n`
+jsonBody += `      "frame": {"x": 288, "y": 648, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
+jsonBody += `    "spacer_outlined.png": {\n`
+jsonBody += `      "frame": {"x": 1900, "y": 572, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "rotated": false,\n`
+jsonBody += `      "trimmed": false,\n`
+jsonBody += `      "spriteSourceSize": {"x": 0, "y": 0, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "sourceSize": {"w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
+jsonBody += `      "pivot": {"x": 0.5, "y": 0.5}\n`
+jsonBody += `    },\n`
+
 jsonBody += `    "spacer_n.png": {\n`
 jsonBody += `      "frame": {"x": 1900, "y": 500, "w": ${sprite.trimmedWidth}, "h": ${sprite.trimmedHeight}},\n`
 jsonBody += `      "rotated": false,\n`
@@ -312,10 +366,10 @@ jsonAll += `    "scale": "1"\n`
 jsonAll += `  }\n`
 jsonAll += `}`
 
-fs.writeFile('../public/img/chain_font.json', jsonAll, function (err) {
-  if (err) {
-    return console.log(err)
-  }
+// fs.writeFile('../public/img/chain_font.json', jsonAll, function (err) {
+//   if (err) {
+//     return console.log(err)
+//   }
 
-  console.log('The file was saved!')
-})
+//   console.log('The file was saved!')
+// })
