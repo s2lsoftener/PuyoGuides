@@ -2128,6 +2128,7 @@ export default {
 
       if (t >= duration) {
         this.ticker.remove(this.animateNextPuyos)
+        this.gameData[this.currentSlide].puyoPair = `${this.nextPuyoData[this.nextQueuePosition]}${this.nextPuyoData[this.nextQueuePosition + 1]}`
         this.nextQueuePosition += 2
         this.timers.next = 0
         this.updateNextPuyoSprites()
