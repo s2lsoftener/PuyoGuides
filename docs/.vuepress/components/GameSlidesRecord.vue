@@ -1,13 +1,7 @@
 <template>
-  <div id="chainsim" @mousedown="setMouseDown(true)" @mouseup="setMouseDown(false)">
-    <!-- <p v-show="onTrack === false">You're off track!</p> -->
+  <div id="chainsim">
     <div class="game-container">
       <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
-    </div>
-    <div v-if="gameLoaded"> <!-- ensures that the v-for loops execute -->
-      <chainsim-control-button v-for="(sprite, index) in fieldControls" :key="`Control_${index}`"
-      :gameLoaded="gameLoaded" :fieldSprites="fieldSprites" :button="sprite" :buttonName="index"
-      v-on:controlField="controlField" />
     </div>
     <div class="error-container" :class="{ 'error-true': !onTrack }">
       You're off track! But that's OK. Hit undo, or keep experimenting.
@@ -19,9 +13,9 @@
 </template>
 
 <script>
-import * as PIXI from 'pixi.js'
+import '../assets/js/pixi.min.js'
 import Chainsim from '../assets/js/chainsim.js'
-import * as BezierEasing from 'bezier-easing'
+import '../assets/js/bezier-easing.js'
 
 const uniformMatrix = Chainsim.uniformMatrix // Generates a 2D matrix all filled with one value
 const stringTo2dArray = Chainsim.stringTo2dArray // Converts 1D string to 2D matrix
@@ -44,8 +38,6 @@ const Puyo = {
 export default {
   name: 'Chainsim',
   props: ['importedData', 'mersenneData', 'useRandomSeed', 'manualData', 'useManualData'],
-  components: {
-  },
   data () {
     return {
       /* Settings */
@@ -234,6 +226,54 @@ export default {
         ['0', '0', '0', '0', '0', '0']],
       droppedPair: false, // Prevents dropping multiple puyos by mashing
 
+      // Color blind settings
+      colorSettings: {
+        red: {
+          hue: 0,
+          brightness: 100,
+          contrast: 0,
+          saturate: 0
+        },
+        green: {
+          hue: 0,
+          brightness: 100,
+          contrast: 0,
+          saturate: 0
+        },
+        blue: {
+          hue: 0,
+          brightness: 100,
+          contrast: 0,
+          saturate: 0
+        },
+        yellow: {
+          hue: 0,
+          brightness: 100,
+          contrast: 0,
+          saturate: 0
+        },
+        purple: {
+          hue: 0,
+          brightness: 100,
+          contrast: 0,
+          saturate: 0
+        },
+        garbage: {
+          hue: 0,
+          brightness: 100,
+          contrast: 0,
+          saturate: 0
+        }
+      },
+      colorFilters: {
+        red: new PIXI.filters.ColorMatrixFilter(),
+        green: new PIXI.filters.ColorMatrixFilter(),
+        blue: new PIXI.filters.ColorMatrixFilter(),
+        yellow: new PIXI.filters.ColorMatrixFilter(),
+        purple: new PIXI.filters.ColorMatrixFilter(),
+        garbage: new PIXI.filters.ColorMatrixFilter()
+      },
+
       // Dump Matrix
       dumpCellContainer: undefined,
       droppingDumpCells: [[]],
@@ -249,9 +289,6 @@ export default {
     this.initGame()
   },
   methods: {
-    log: function (input) {
-      console.log(input)
-    },
     initData: function () {
       if (this.useManualData === true) {
         console.log('Using handmade color sequence')
@@ -299,73 +336,108 @@ export default {
       this.$refs.game.appendChild(this.renderer.view)
       this.stage = new PIXI.Container()
 
-      this.ticker = new PIXI.ticker.Ticker()
-      this.ticker.add(() => {
-        this.renderer.render(this.stage)
+      let waitForLoad = new Promise((resolve, reject) => {
+        setInterval(function () {
+          if (loader.progress < 100) {
+            console.log(loader.progress)
+            console.log('Chainsim says not loaded')
+          } else {
+            resolve('Chainsim Assets loaded...!')
+          }
+        }, 50)
       })
-      this.ticker.start()
 
-      let setup = () => {
-        // Mark textures as loaded
-        this.texturesLoaded = this.texturesToLoad.every((texture) => {
-          return resources[texture] !== undefined
-        })
-
-        // Assign loaded spritesheets to vue data
-        this.fieldSprites = resources['/img/field.json'].textures
-        this.puyoSprites = resources['/img/puyo.json'].textures
-        this.chainCountSprites = resources['/img/chain_font.json'].textures
-
-        // Place sprites on the field
-        this.initFieldDisplay()
-        this.initScoreDisplay()
-        this.initGameOverX()
-        this.initShadowDisplay()
-        this.initPuyoDisplay()
-        this.initDumpDisplay()
-        // this.initControlledPuyos()
-        this.initActivePair()
-        this.initCursorDisplay()
-        this.initArrowDisplay()
-        this.initGarbageDisplay()
-        this.initNextPuyos()
-        if (this.gamePlayable === false) {
-          this.initFieldControls()
-        } else {
-          this.initPlayControls()
+      waitForLoad.then((value) => {
+        console.log(value)
+        this.runSetup()
+      })
+    },
+    runSetup: function () {
+      // Retrieve color settings from localStorage
+      if (localStorage.getItem('puyocolors')) {
+        try {
+          this.colorSettings = JSON.parse(localStorage.getItem('puyocolors'))
+          console.log('Found color settings in localStorage')
+        } catch(e) {
+          console.log('Removing puyocolors from localStorage.')
+          localStorage.removeItem('puyocolors')
+          console.log('Using default color settings instead.')
+          this.colorSettings = {
+            red: {
+              hue: 0,
+              brightness: 100,
+              contrast: 0,
+              saturate: 0
+            },
+            green: {
+              hue: 0,
+              brightness: 100,
+              contrast: 0,
+              saturate: 0
+            },
+            blue: {
+              hue: 0,
+              brightness: 100,
+              contrast: 0,
+              saturate: 0
+            },
+            yellow: {
+              hue: 0,
+              brightness: 100,
+              contrast: 0,
+              saturate: 0
+            },
+            purple: {
+              hue: 0,
+              brightness: 100,
+              contrast: 0,
+              saturate: 0
+            },
+            garbage: {
+              hue: 0,
+              brightness: 100,
+              contrast: 0,
+              saturate: 0
+            }
+          }
         }
-        this.initChainCounter()
-        this.initToolDisplay()
-        this.initKeyboardControls()
-
-        // Marked game as loaded
-        this.gameLoaded = true
-
-        // Run the game loop
-        this.ticker.add(delta => this.gameLoop(delta))
-
-        // Draw the first puyo
-        this.dropActivePair()
       }
 
-      let loadProgressHandler = (loader, resource) => {
-        console.log(`Loading: ${resource.url}`)
-        console.log(`Progress: ${Math.floor(loader.progress)}%`)
-      }
+      // Mark textures as loaded
+      this.texturesLoaded = true
 
-      // Check if textures have already been loaded
-      this.texturesLoaded = this.texturesToLoad.every((texture) => {
-        return resources[texture] !== undefined
-      })
-      if (this.texturesLoaded === false) {
-        loader
-          .add(this.texturesToLoad)
-          .on('progress', loadProgressHandler)
-          .load(setup)
+      // Assign loaded spritesheets to vue data
+      this.fieldSprites = resources['/img/field.json'].textures
+      this.puyoSprites = resources['/img/puyo.json'].textures
+      this.chainCountSprites = resources['/img/chain_font.json'].textures
+
+      // Place sprites on field
+      this.initFieldDisplay()
+      this.initScoreDisplay()
+      this.initGameOverX()
+      this.initShadowDisplay()
+      this.initPuyoDisplay()
+      this.initDumpDisplay()
+      this.initActivePair()
+      this.initCursorDisplay()
+      this.initArrowDisplay()
+      this.initGarbageDisplay()
+      this.initNextPuyos()
+      if (this.gamePlayable === false) {
+        this.initFieldControls()
       } else {
-        loader
-          .load(setup)
+        this.initPlayControls()
       }
+      this.initChainCounter()
+      this.initToolDisplay()
+      this.initKeyboardControls()
+
+      // Mark the game as loaded
+      this.gameLoaded = true
+
+      this.ticker = new PIXI.ticker.Ticker()
+      this.ticker.add(delta => this.gameLoop(delta))
+      this.ticker.start()
     },
     initFieldDisplay: function () {
       // Character Background
@@ -1918,9 +1990,6 @@ export default {
 
       this.updatePuyoSprites()
       console.log('merged shadow layer')
-    },
-    setMouseDown: function (bool) {
-      this.isMouseDown = bool // true, false
     },
     // Simulation controls
     controlField: function (control) { // expects a string
