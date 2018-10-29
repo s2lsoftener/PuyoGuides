@@ -1,14 +1,15 @@
 <template>
   <div class="SimulatorNew">
     Chain Simulator Editor and Test Page.<br><br>
-    <chainsim
-    :importedData="importedData" :nextQueue="nextQueue">
+    <p>Chain seed: {{ seed }}</p>
+    <chainsim v-if="jsonLoaded"
+    :importedData="importedData" :manualData="manualData" :mersenneData="mersenneData"
+    :useRandomSeed="useRandomSeed" :useManualData="useManualData">
     </chainsim><br><br>
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
 import Chainsim from '@/components/Chainsim.vue'
 const MersenneTwister = require('mersenne-twister')
 
@@ -17,38 +18,61 @@ export default {
   components: {
     Chainsim
   },
-  data () {
+  data () { /* eslint-disable */
     return {
-      // eslint-disable-next-line
-      importedData: [
-        {
-          fieldData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-          // shadowData: '0000000000000000000000000000000R00000G0000000000000000000000000000000000000000',
-          shadowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-          cursorData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-          arrowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-          autoDrop: false,
-          puyoPair: '00'
-        }
-        // {
-        //   // fieldData: '000000000000000000000000000000R00000YR0000RRG000YRG00BYGBYPBYRGBYBRGBYPPRGBYPB',
-        //   fieldData: '000000000000000000000000000000RR0000YG0000RRG000YRG00BYGBYPBYRGBYBRGBYPPRGBYPB',
-        //   shadowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-        //   cursorData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-        //   arrowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-        //   autoDrop: true
-        // },
-        // {
-        //   fieldData: '000000000000000000000000000000RR0000YGG000RRG000YRGB0BYGBYPBYRGBYBRGBYPPRGBYPB',
-        //   shadowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-        //   cursorData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-        //   arrowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-        //   autoDrop: true
-        // }
-      ],
-      nextQueue: '',
+      jsonFileToLoad: '/chain_json/default.json',
+      jsonLoaded: false,
+      importedData: undefined,
+      mersenneData: '',
+      // importedData: null,
       // seed: Math.round(Math.random() * 128)
-      seed: 24
+      seed: 645,
+      useRandomSeed: true,
+      useManualData: false,
+      manualData: {
+        seed: 0,
+        nextQueue: 'RRBBRRBB'
+      }
+    }
+  },
+  created () {
+    if (this.useRandomSeed === true) {
+      this.seed = Math.round(Math.random() * 65535)
+    }
+    
+    if (this.useRandomSeed === false) {
+      this.jsonFileToLoad = '/chain_json/advanced/tanaka_special_1.json'
+    }
+
+    if (this.useManualData === true) {
+      this.manualData.nextQueue = this.manualData.nextQueue += this.generatedNextQueue.nextQueue
+      this.manualData.seed = this.generatedNextQueue.seed
+    }
+    
+    this.mersenneData = this.generatedNextQueue
+    this.setJSON()
+  },
+  methods: {
+    loadJSON: function (callback) {
+      let xobj = new XMLHttpRequest()
+      xobj.overrideMimeType('application/json')
+
+      xobj.open('GET', this.jsonFileToLoad, true)
+      xobj.onreadystatechange = function () {
+        // eslint-disable-next-line
+        if (xobj.readyState == 4 && xobj.status == '200') {
+          callback(xobj.responseText)
+        }
+      }
+
+      xobj.send(null)
+    },
+    setJSON: function () {
+      this.loadJSON((response) => {
+        this.importedData = JSON.parse(response)
+        this.jsonLoaded = true
+        console.log('JSON loaded!')
+      })
     }
   },
   computed: {
@@ -83,11 +107,11 @@ export default {
           ? colorString += shuffleArray[Math.floor(this.puyoGenerator.random_excl() * 3)]
           : colorString += shuffleArray[Math.floor(this.puyoGenerator.random_excl() * 4)]
       }
-      return colorString
+      return {
+        seed: this.seed,
+        nextQueue: colorString
+      }
     }
-  },
-  created () {
-    this.nextQueue = this.generatedNextQueue
   }
 }
 </script>

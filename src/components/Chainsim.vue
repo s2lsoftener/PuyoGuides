@@ -1,5 +1,6 @@
 <template>
   <div id="chainsim" @mousedown="setMouseDown(true)" @mouseup="setMouseDown(false)">
+    <!-- <p v-show="onTrack === false">You're off track!</p> -->
     <div class="game-container">
       <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
     </div>
@@ -8,18 +9,22 @@
       :gameLoaded="gameLoaded" :fieldSprites="fieldSprites" :button="sprite" :buttonName="index"
       v-on:controlField="controlField" />
     </div>
-    <!-- <button @click="prevSlide">Prev</button><button @click="nextSlide">Next</button><br> -->
-    <button @click="slideActivePair('left')">Left</button><button @click="slideActivePair('right')">Right</button><br>
-    <button @click="rotateActivePair('ccw')">CCW</button><button @click="dropActivePair">Draw/Place Puyo</button><button @click="rotateActivePair('cw')">CW</button><br>
+    <div class="error-container" :class="{ 'error-true': !onTrack }">
+      You're off track! But that's OK. Hit undo, or keep experimenting.
+    </div>
+    <button @click="prevSlide" class="undo">Undo</button><br>
+    <!-- <button @click="nextSlide">Next</button><br> -->
+    <!-- <button @click="slideActivePair('left')">Left</button><button @click="slideActivePair('right')">Right</button><br>
+    <button @click="rotateActivePair('ccw')">CCW</button><button @click="dropActivePair">Draw/Place Puyo</button><button @click="rotateActivePair('cw')">CW</button><br> -->
     <textarea rows="5" cols="40" v-model="copyPaster"></textarea>
     <button @click="saveJSON(copyPaster, 'chainJSON.json', 'text/plain')">Save JSON</button>
-    <p>In bounds?: {{ checkDropInBounds }}</p>
+    <!-- <p>In bounds?: {{ checkDropInBounds }}</p>
     <p>Game State: {{ gameState }} || stopGame: {{ stopGame }}</p>
     <p>isDropping: {{ isDropping }} || isPopping: {{ isPopping }}</p>
     <p>fieldData: '{{ fieldDataString }}',
     <br>shadowData: '{{ shadowDataString }}',
     <br>cursorData: '{{ cursorDataString }}',
-    <br>arrowData: '{{ arrowDataString }}'</p>
+    <br>arrowData: '{{ arrowDataString }}'</p> -->
   </div>
 </template>
 
@@ -49,7 +54,7 @@ const Puyo = {
 
 export default {
   name: 'Chainsim',
-  props: ['importedData', 'nextQueue', 'item'],
+  props: ['importedData', 'mersenneData', 'useRandomSeed', 'manualData', 'useManualData'],
   components: {
     ChainsimControlButton
   },
@@ -197,6 +202,7 @@ export default {
       },
       needToChangeSlides: false,
       slideChange: 1,
+      onTrack: true,
 
       // Editor
       editorCurrentTool: {
@@ -219,6 +225,7 @@ export default {
         { x: 556, y: 376 },
         { x: 556, y: 536 }
       ],
+      nextPuyoSeed: undefined,
 
       // Controlled Puyos
       controlPuyoData: [[]],
@@ -237,6 +244,7 @@ export default {
       activeMatrix: [['0', '0', '0', '0', '0', '0'],
         ['0', '0', '0', '0', '0', '0'],
         ['0', '0', '0', '0', '0', '0']],
+      droppedPair: false, // Prevents dropping multiple puyos by mashing
 
       // Dump Matrix
       dumpCellContainer: undefined,
@@ -257,19 +265,27 @@ export default {
       console.log(input)
     },
     initData: function () {
-      this.gameData = JSON.parse(JSON.stringify(this.importedData))
+      if (this.useManualData === true) {
+        console.log('Using handmade color sequence')
+        this.nextPuyoData = this.manualData.nextQueue
+        this.nextPuyoSeed = this.manualData.seed
+        this.gameData = JSON.parse(JSON.stringify(this.importedData.fields))
+      } else if (this.useRandomSeed === true) {
+        console.log('Using chain seeed from mersenne output')
+        this.nextPuyoData = this.mersenneData.nextQueue
+        this.nextPuyoSeed = this.mersenneData.seed
+        this.gameData = JSON.parse(JSON.stringify(this.importedData.fields))
+      } else {
+        console.log('Using imported chain seed.')
+        this.nextPuyoData = this.importedData.next.nextQueue
+        this.nextPuyoSeed = this.importedData.next.seed
+        this.gameData = JSON.parse(JSON.stringify(this.importedData.fields))
+      }
       this.fieldData = stringTo2dArray(this.gameData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.fieldOriginal = stringTo2dArray(this.gameData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.shadowData = stringTo2dArray(this.gameData[this.currentSlide].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.cursorData = stringTo2dArray(this.gameData[this.currentSlide].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.arrowData = stringTo2dArray(this.gameData[this.currentSlide].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.controlPuyoData = uniformMatrix('0', 6, this.fieldSettings.columns)
-      this.controlPuyoData = [['0', '0', '0', '0', '0', '0'],
-        ['0', '0', '0', '0', '0', '0'],
-        ['0', '0', '0', '0', '0', '0'],
-        ['0', '0', 'B', '0', '0', '0'],
-        ['0', '0', 'R', '0', '0', '0'],
-        ['0', '0', '0', '0', '0', '0']]
       this.connectionData = uniformMatrix('n', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.colorNameData = uniformMatrix('spacer', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
@@ -282,7 +298,6 @@ export default {
       this.dumpPuyoStates = uniformMatrix('idle', this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dumpCellTimer = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
       this.dumpVelocity = uniformMatrix(3.75, this.fieldSettings.totalRows, this.fieldSettings.columns)
-      this.nextPuyoData = this.nextQueue
     },
     initGame: function () {
       // eslint-disable-next-line
@@ -317,11 +332,11 @@ export default {
         this.initFieldDisplay()
         this.initScoreDisplay()
         this.initGameOverX()
+        this.initShadowDisplay()
         this.initPuyoDisplay()
         this.initDumpDisplay()
-        this.initControlledPuyos()
+        // this.initControlledPuyos()
         this.initActivePair()
-        this.initShadowDisplay()
         this.initCursorDisplay()
         this.initArrowDisplay()
         this.initGarbageDisplay()
@@ -463,7 +478,7 @@ export default {
       let me = this
       for (let y = 0; y < this.Field.totalRows; y++) {
         for (let x = 0; x < this.Field.columns; x++) {
-          this.puyoDisplay[y][x].interactive = true
+          if (this.gameReplay === false) this.puyoDisplay[y][x].interactive = true
           this.puyoDisplay[y][x].editPuyo = function () {
             me.isMouseDown = true
             if (me.editorCurrentTool.layer === 'main' && me.gameState === 'idle') {
@@ -870,7 +885,9 @@ export default {
           }
           spriteArray[y][x] = new Sprite(this.puyoSprites[`${color}_n.png`])
           spriteArray[y][x].anchor.set(0.5)
-          spriteArray[y][x].alpha = 0.4
+          this.gameReplay === true
+            ? spriteArray[y][x].alpha = 0.2
+            : spriteArray[y][x].alpha = 0.4
           spriteArray[y][x].x = this.coordArray[y][x].x
           spriteArray[y][x].y = this.coordArray[y][x].y
           this.stage.addChild(spriteArray[y][x])
@@ -912,37 +929,37 @@ export default {
         }
       }
     },
-    initControlledPuyos: function () {
-      let spriteArray = []
-      let nameArray = []
+    // initControlledPuyos: function () {
+    //   let spriteArray = []
+    //   let nameArray = []
 
-      for (let y = 0; y < this.controlPuyoData.length; y++) {
-        nameArray[y] = []
-        for (let x = 0; x < this.controlPuyoData[0].length; x++) {
-          switch (this.controlPuyoData[y][x]) {
-            case 'R': nameArray[y][x] = 'red'; break
-            case 'G': nameArray[y][x] = 'green'; break
-            case 'B': nameArray[y][x] = 'blue'; break
-            case 'Y': nameArray[y][x] = 'yellow'; break
-            case 'P': nameArray[y][x] = 'purple'; break
-            default: nameArray[y][x] = 'spacer'
-          }
-        }
-      }
+    //   for (let y = 0; y < this.controlPuyoData.length; y++) {
+    //     nameArray[y] = []
+    //     for (let x = 0; x < this.controlPuyoData[0].length; x++) {
+    //       switch (this.controlPuyoData[y][x]) {
+    //         case 'R': nameArray[y][x] = 'red'; break
+    //         case 'G': nameArray[y][x] = 'green'; break
+    //         case 'B': nameArray[y][x] = 'blue'; break
+    //         case 'Y': nameArray[y][x] = 'yellow'; break
+    //         case 'P': nameArray[y][x] = 'purple'; break
+    //         default: nameArray[y][x] = 'spacer'
+    //       }
+    //     }
+    //   }
 
-      for (let y = 0; y < this.controlPuyoData.length; y++) {
-        spriteArray[y] = []
-        for (let x = 0; x < this.controlPuyoData[0].length; x++) {
-          spriteArray[y][x] = new Sprite(this.puyoSprites[`${nameArray[y][x]}_n.png`])
-          spriteArray[y][x].anchor.set(0.5)
-          spriteArray[y][x].x = this.coordArray[y][x].x
-          spriteArray[y][x].y = this.coordArray[y][x].y - spriteArray[y][x].height * 5
-          spriteArray[y][x].visible = false
-          this.stage.addChild(spriteArray[y][x])
-        }
-      }
-      this.controlPuyoSprites = spriteArray
-    },
+    //   for (let y = 0; y < this.controlPuyoData.length; y++) {
+    //     spriteArray[y] = []
+    //     for (let x = 0; x < this.controlPuyoData[0].length; x++) {
+    //       spriteArray[y][x] = new Sprite(this.puyoSprites[`${nameArray[y][x]}_n.png`])
+    //       spriteArray[y][x].anchor.set(0.5)
+    //       spriteArray[y][x].x = this.coordArray[y][x].x
+    //       spriteArray[y][x].y = this.coordArray[y][x].y - spriteArray[y][x].height * 5
+    //       spriteArray[y][x].visible = false
+    //       this.stage.addChild(spriteArray[y][x])
+    //     }
+    //   }
+    //   this.controlPuyoSprites = spriteArray
+    // },
     initActivePair: function () { // One-letter strings
       // Get the colors from the input string
       let colors = []
@@ -973,7 +990,6 @@ export default {
       freePuyo.position.set(this.activeCoordArray[0][2].x, this.activeCoordArray[0][2].y)
       axisPuyo.cellPos = { x: 2, y: 1 }
       freePuyo.cellPos = { x: 2, y: 0 }
-      freePuyo.scale.set(0.9, 0.9)
       this.stage.addChild(axisPuyo)
       this.stage.addChild(freePuyo)
       this.activePair.axisPuyo = axisPuyo
@@ -1100,7 +1116,11 @@ export default {
       }
     },
     dropActivePair: function () {
-      if (this.gameState === 'idle') {
+      if (this.gameState === 'idle' && this.droppedPair === false) {
+        this.droppedPair = true
+        // let shadowSlide = 2
+        // if (this.currentSlide === this.gameData.length - 2) shadowSlide = 0
+
         console.log(this.gameData)
         if (this.currentSlide === this.gameData.length - 1) {
           this.gameData.push({
@@ -1113,15 +1133,17 @@ export default {
             advanceNext: true
           })
         } else if (this.currentSlide < this.gameData.length - 1) {
-          this.gameData[this.currentSlide + 1] = {
-            fieldData: flatten2dTo1d(this.createNextFieldData()),
-            fieldOriginal: flatten2dTo1d(this.createNextFieldData()),
-            shadowData: this.gameData[this.currentSlide + 1].shadowData,
-            cursorData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-            arrowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-            autoDrop: true,
-            advanceNext: true
-          }
+          // this.gameData[this.currentSlide + 1] = {
+          //   fieldData: flatten2dTo1d(this.createNextFieldData()),
+          //   fieldOriginal: flatten2dTo1d(this.createNextFieldData()),
+          //   shadowData: this.gameData[this.currentSlide + shadowSlide].shadowData,
+          //   cursorData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
+          //   arrowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
+          //   autoDrop: true,
+          //   advanceNext: true
+          // }
+          this.gameData[this.currentSlide + 1].fieldData = flatten2dTo1d(this.createNextFieldData())
+          this.gameData[this.currentSlide + 1].fieldOriginal = flatten2dTo1d(this.createNextFieldData())
         }
         this.playToNextSlide()
       } else {
@@ -1933,7 +1955,7 @@ export default {
       } else if (control === 'play') {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
-          if (this.needToChangeSlides === false) {
+          if (this.needToChangeSlides === false && this.gameReplay === false) {
             this.mergeInShadowLayer(true)
           }
           this.simulationSpeed = 1
@@ -1944,7 +1966,7 @@ export default {
       } else if (control === 'auto') {
         if (this.gameState === 'idle') {
           this.fieldOriginal = JSON.parse(JSON.stringify(this.fieldData))
-          if (this.needToChangeSlides === false) {
+          if (this.needToChangeSlides === false && this.gameReplay === false) {
             this.mergeInShadowLayer(true)
           }
           this.simulationSpeed = 1
@@ -2138,6 +2160,7 @@ export default {
         this.timers.next = 0
         this.updateNextPuyoSprites()
         this.updateActivePair()
+        this.droppedPair = false
         return
       }
       this.timers.next += 1
@@ -2238,7 +2261,7 @@ export default {
       })
     },
     prevSlide: function () {
-      if (this.currentSlide > 0 && this.gameState === 'idle') {
+      if (this.currentSlide === 2 && this.gameState === 'idle') {
         // Reset to the original field in case the user made some edits.
         this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
         this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
@@ -2273,6 +2296,45 @@ export default {
             this.updateArrowSprite(x, y)
           }
         }
+        this.updateActivePair()
+        this.checkIfOnTrack()
+      } else if (this.currentSlide > 2 && this.gameState === 'idle') {
+        // Reset to the original field in case the user made some edits.
+        this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.dropDistances = uniformMatrix(0, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.score = 0
+        this.stepScore = 0
+        this.garbage = 0
+        this.stepGarbage = 0
+        this.garbagePoints = 0
+        this.leftoverGarbagePoints = 0
+        this.chainLength = 0
+        this.fieldData = stringTo2dArray(this.gameData[this.currentSlide - 2].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.needToReset = false
+        this.needToChangeSlides = false
+        this.nextQueuePosition -= 4 // Next Queue Position
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            this.dumpDisplay[y][x].visible = false
+          }
+        }
+        this.shadowData = stringTo2dArray(this.gameData[this.currentSlide - 2].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.cursorData = stringTo2dArray(this.gameData[this.currentSlide - 2].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+        this.arrowData = stringTo2dArray(this.gameData[this.currentSlide - 2].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
+
+        this.currentSlide -= 2
+        this.updatePuyoSprites()
+        this.updateNextPuyoSprites()
+        for (let y = 0; y < this.Field.totalRows; y++) {
+          for (let x = 0; x < this.Field.columns; x++) {
+            this.updateShadowSprite(x, y)
+            this.updateCursorSprite(x, y)
+            this.updateArrowSprite(x, y)
+          }
+        }
+        this.updateActivePair()
+        this.playToNextSlide()
       }
     },
     nextSlide: function () {
@@ -2511,11 +2573,53 @@ export default {
       let ccw = this.keyboard(90)
       let cw = this.keyboard(88)
 
-      left.press = () => this.slideActivePair('left')
-      right.press = () => this.slideActivePair('right')
-      down.press = () => this.dropActivePair()
-      ccw.press = () => this.rotateActivePair('ccw')
-      cw.press = () => this.rotateActivePair('cw')
+      left.press = () => {
+        this.slideActivePair('left')
+        this.playCtrlDisplay.moveLeft.texture = this.fieldSprites[`btn_left_pressed.png`]
+      }
+      right.press = () => {
+        this.slideActivePair('right')
+        this.playCtrlDisplay.moveRight.texture = this.fieldSprites[`btn_right_pressed.png`]
+      }
+      down.press = () => {
+        this.dropActivePair()
+        this.playCtrlDisplay.moveDown.texture = this.fieldSprites[`btn_down_pressed.png`]
+      }
+      ccw.press = () => {
+        this.rotateActivePair('ccw')
+        this.playCtrlDisplay.rotateLeft.texture = this.fieldSprites[`btn_rotateleft_pressed.png`]
+      }
+      cw.press = () => {
+        this.rotateActivePair('cw')
+        this.playCtrlDisplay.rotateRight.texture = this.fieldSprites[`btn_rotateright_pressed.png`]
+      }
+
+      left.release = () => {
+        this.playCtrlDisplay.moveLeft.texture = this.fieldSprites[`btn_left.png`]
+      }
+      right.release = () => {
+        this.playCtrlDisplay.moveRight.texture = this.fieldSprites[`btn_right.png`]
+      }
+      down.release = () => {
+        this.playCtrlDisplay.moveDown.texture = this.fieldSprites[`btn_down.png`]
+      }
+      ccw.release = () => {
+        this.playCtrlDisplay.rotateLeft.texture = this.fieldSprites[`btn_rotateleft.png`]
+      }
+      cw.release = () => {
+        this.playCtrlDisplay.rotateRight.texture = this.fieldSprites[`btn_rotateright.png`]
+      }
+    },
+    checkIfOnTrack: function () {
+      let matching = true
+      for (let y = 0; y < this.fieldSettings.totalRows; y++) {
+        for (let x = 0; x < this.fieldSettings.columns; x++) {
+          if (this.fieldData[y][x] !== '0' && this.fieldData[y][x] !== this.shadowData[y][x]) {
+            matching = false
+          }
+        }
+      }
+      this.onTrack = matching
     }
   },
   computed: {
@@ -2730,7 +2834,13 @@ export default {
       return string
     },
     copyPaster: function () {
-      return JSON.stringify(this.gameData)
+      return JSON.stringify({
+        fields: this.gameData,
+        next: {
+          seed: this.nextPuyoSeed,
+          nextQueue: this.nextPuyoData
+        }
+      })
     }
   },
   watch: {
@@ -2769,6 +2879,7 @@ export default {
               this.dumpDisplay[y][x].visible = false
             }
           }
+          this.checkIfOnTrack()
           this.ticker.add(this.animateNextPuyos)
         })
       }
@@ -2785,7 +2896,9 @@ export default {
       } else {
         for (let y = 0; y < this.Field.totalRows; y++) {
           for (let x = 0; x < this.Field.columns; x++) {
-            this.shadowDisplay[y][x].visible = false
+            if (this.gameReplay === false) {
+              this.shadowDisplay[y][x].visible = false
+            }
             this.cursorDisplay[y][x].visible = false
             this.arrowDisplay[y][x].visible = false
           }
@@ -2845,7 +2958,7 @@ export default {
       if (newVal === true) {
         for (let y = 0; y < this.Field.totalRows; y++) {
           for (let x = 0; x < this.Field.columns; x++) {
-            this.shadowDisplay[y][x].visible = false
+            if (this.gameReplay === false) this.shadowDisplay[y][x].visible = false
             this.cursorDisplay[y][x].visible = false
             this.arrowDisplay[y][x].visible = false
           }
@@ -2905,6 +3018,9 @@ export default {
 </script>
 
 <style scoped>
+#chainsim {
+  position: relative;
+}
 #game {
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none; /* Safari */
@@ -2913,5 +3029,17 @@ export default {
   -ms-user-select: none; /* Internet Explorer/Edge */
   user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
   background-color: #f3f5f7;
+}
+
+.error-container {
+  position: relative;
+  padding: 4px;
+  background-color: rgba(0,0,0,0);
+  color: rgba(0,0,0,0);
+}
+
+.error-true {
+  background-color: #4caf50;
+  color: black;
 }
 </style>

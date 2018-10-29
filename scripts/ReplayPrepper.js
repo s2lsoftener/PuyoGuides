@@ -18,7 +18,7 @@ const fieldSettings = {
 
 const isPopping = function (matrix) {
   for (let y = 0; y < fieldSettings.totalRows; y++) {
-    for (let x = 0; x< fieldSettings.columns; x++) {
+    for (let x = 0; x < fieldSettings.columns; x++) {
       if (matrix[y][x] === true) {
         return true
       }
@@ -42,15 +42,32 @@ for (let i = 0; i < slides.length; i++) {
   }
 }
 
-// Working from the last slide, update the preceeding slides 
+// Create array with shadow slides.
+
 let currentShadowField = ''
 for (let i = slides.length - 1; i >= 0; i--) {
-  if (poppingSlides[i] === true) {
+  if (poppingSlides[i] === true && i > 0) {
     currentShadowField = slides[i].fieldData
+    slides[i - 1].shadowData = currentShadowField
+    slides[i - 1].advanceNext = true
+    slides[i - 1].slideText = '...!'
+    continue
   }
-  slides[i].shadowData = currentShadowField
-  slides[i].advanceNext = true
-  slides[i].slideText = '...!'
+
+  if (i === slides.length - 1) {
+    currentShadowField = slides[i].fieldData
+    slides[i].shadowData = currentShadowField
+    slides[i].advanceNext = true
+    slides[i].slideText = '...!'
+  } else if (i === 0) {
+    slides[i].shadowData = currentShadowField
+    slides[i].advanceNext = true
+    slides[i].slideText = '...!'
+  } else {
+    slides[i - 1].shadowData = currentShadowField
+    slides[i - 1].advanceNext = true
+    slides[i - 1].slideText = '...!'
+  }
 }
 
 // Log next queue
