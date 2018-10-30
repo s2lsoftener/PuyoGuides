@@ -44,13 +44,17 @@ export default {
       console.log(`Progress: ${Math.floor(loader.progress)}%`)
     }
 
-    loader
-      .add(this.texturesToLoad)
-      .on('progress', loadProgressHandler)
-      .on('complete', () => {
-        EventBus.setLoaded()
-      })
-      .load()
+    if (loader.progress === 0) {
+      loader
+        .add(this.texturesToLoad)
+        .on('progress', loadProgressHandler)
+        .on('complete', () => {
+          EventBus.setLoaded()
+        })
+        .load()
+    } else {
+      window.location.reload()
+    }
   }
 }
 </script>

@@ -2,7 +2,7 @@
   <div id="slideshow-wrapper">
     <div id="slideshow">
       <div class="chainsim-container">
-        <chain-drill-maker v-if="jsonLoaded && renderGame"
+        <chain-drill-maker v-if="jsonLoaded"
         :importedData="importedData" :manualData="manualData" :mersenneData="mersenneData"
         :useRandomSeed="useRandomSeed" :useManualData="useManualData" :slideText="slideText"
         v-on:change-comment-input="updateSlideText" v-on:reload="reloadGame">
