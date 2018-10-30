@@ -1,5 +1,5 @@
 <template>
-  <div id="chainsim" class="game-container" @mousedown="isMouseOver = true" @mouseout="isMouseOver = false" @mouseover="changeSlideText">
+  <div class="game-container" @mousedown="isMouseOver = true" @mouseout="isMouseOver = false" @mouseover="changeSlideText">
     <div class="game-wrapper">
       <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
     </div>

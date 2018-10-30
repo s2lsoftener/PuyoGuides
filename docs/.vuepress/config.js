@@ -16,15 +16,29 @@ module.exports = {
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Tutorial', link: '/tutorial/' },
-      { text: 'Drills', link: '/tools/chainrecord'}
+      { text: 'Drills', link: '/drills/chainrecord'}
     ],
     sidebar: {
-      '/tools/': [
+      '/drills/': [
         {
           title: 'Drill Creator',
           collapsable: true,
           children: [
-            '/tools/chainrecord'
+            '/drills/chainrecord',
+          ]
+        },
+        {
+          title: 'Yoshi100_Aus',
+          collapsable: true,
+          children: [
+            '/drills/yoshi100_1'
+          ]
+        },
+        {
+          title: 'histy',
+          collapsable: true,
+          children: [
+            '/drills/histy_1'
           ]
         }
       ],
