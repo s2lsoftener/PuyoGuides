@@ -13,19 +13,20 @@
 </template>
 
 <script>
-import '../assets/js/pixi.min.js'
 import Chainsim from '../assets/js/chainsim.js'
 import ChainsimControlButton from './ChainsimControlButton'
-import '../assets/js/bezier-easing.js'
 import { EventBus } from './eventbus.js'
 
 const uniformMatrix = Chainsim.uniformMatrix // Generates a 2D matrix all filled with one value
 const stringTo2dArray = Chainsim.stringTo2dArray // Converts 1D string to 2D matrix
 const flatten2dTo1d = Chainsim.flatten2dTo1d // Converts 2D array to 1D array
 
+const PIXI = window.PIXI
 const loader = PIXI.loader // eslint-disable-line no-unused-vars
 const resources = PIXI.loader.resources // eslint-disable-line no-unused-vars
 const Sprite = PIXI.Sprite // eslint-disable-line no-unused-vars
+
+const BezierEasing = window.BezierEasing
 
 const Puyo = {
   Red: Chainsim.Constants.Puyo.Red, // R

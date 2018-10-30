@@ -1,7 +1,8 @@
 ---
 title: The Basics of Chaining
 ---
-<!-- <AssetLoader /> -->
+<ClientOnly>
+<AssetLoader />
 # The Basics of Chaining
 ## Overview
 In **Puyo Puyo**, the goal of the game is to connect 4+ Puyos of the same color, which causes them to pop and disappear. Hover over the chainsim below to see it in action.
@@ -130,3 +131,4 @@ If you keep separating the colors, one at a time, you can make even longer chain
   }]" :nextQueue="'GBGGYGYYYY'" />
 
 <ChainsimModal />
+</ClientOnly>

@@ -5,10 +5,17 @@
 </template>
 
 <script>
-import '../assets/js/pixi.min.js'
+import isNode from 'detect-node'
 
-const loader = PIXI.loader // eslint-disable-line no-unused-vars
-const resources = PIXI.loader.resources // eslint-disable-line no-unused-vars
+let PIXI = null
+let loader = null
+let resources = null
+
+if (!isNode) {
+  PIXI = window.PIXI
+  loader = PIXI.loader
+  resources = PIXI.loader.resources
+}
 
 export default {
   data () {

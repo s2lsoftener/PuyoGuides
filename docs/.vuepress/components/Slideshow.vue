@@ -19,7 +19,6 @@
 </template>
 
 <script>
-import '../assets/js/pixi.min.js'
 import ChainImgField from './ChainImgField'
 
 export default {

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "bezier-easing": "^2.1.0",
+    "detect-node": "^2.0.4",
     "gsap": "^2.0.2",
     "mersenne-twister": "^1.1.0",
     "pixi.js": "^4.8.2",

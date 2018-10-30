@@ -17,18 +17,27 @@
 </template>
 
 <script>
-import '../assets/js/pixi.min.js'
 import Chainsim from '../assets/js/chainsim.js'
-import '../assets/js/bezier-easing.js'
 import prepareReplay from '../assets/js/replayprepper.js'
+import isNode from 'detect-node'
+
+let PIXI = null
+let loader = null
+let resources = null
+let Sprite = null
+let BezierEasing = null
+
+if (!isNode) {
+  PIXI = window.PIXI
+  loader = PIXI.loader
+  resources = PIXI.loader.resources
+  Sprite = PIXI.Sprite
+  BezierEasing = window.BezierEasing
+}
 
 const uniformMatrix = Chainsim.uniformMatrix // Generates a 2D matrix all filled with one value
 const stringTo2dArray = Chainsim.stringTo2dArray // Converts 1D string to 2D matrix
 const flatten2dTo1d = Chainsim.flatten2dTo1d // Converts 2D array to 1D array
-
-const loader = PIXI.loader // eslint-disable-line no-unused-vars
-const resources = PIXI.loader.resources // eslint-disable-line no-unused-vars
-const Sprite = PIXI.Sprite // eslint-disable-line no-unused-vars
 
 const Puyo = {
   Red: Chainsim.Constants.Puyo.Red, // R

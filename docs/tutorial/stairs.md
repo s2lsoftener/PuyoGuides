@@ -1,7 +1,8 @@
 ---
 title: Stairs
 ---
-<!-- <AssetLoader /> -->
+<ClientOnly>
+<AssetLoader />
 # Stairs
 
 ## 3-1 Stairs
@@ -86,3 +87,4 @@ title: Stairs
   }]" :nextQueue="'RRBBBGYRRY'" />
 
 <ChainsimModal />
+</ClientOnly>

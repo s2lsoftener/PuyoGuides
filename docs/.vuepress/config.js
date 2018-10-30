@@ -8,6 +8,10 @@ module.exports = {
       .modules
       .add(path.resolve(__dirname, './node_modules'))
   },
+  head: [
+    ['script', { src: '/js/pixi.min.js' }],
+    ['script', { src: '/js/bezier-easing.js' }]
+  ],
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },

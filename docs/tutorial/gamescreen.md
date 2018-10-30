@@ -1,7 +1,8 @@
 ---
 title: The Game Screen
 ---
-<!-- <AssetLoader /> -->
+<ClientOnly>
+<AssetLoader />
 # The Game Screen
 If you're completely new to Puyo Puyo, you should skim through this page to get familiar with the game interface.
 
@@ -51,3 +52,4 @@ If anything gets set in the top-most row, column 3, you'll lose the game. Fever 
 
 
 <ChainsimModal />
+</ClientOnly>
