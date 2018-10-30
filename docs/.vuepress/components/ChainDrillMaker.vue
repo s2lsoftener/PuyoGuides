@@ -1,13 +1,14 @@
 <template>
-  <div id="chainsim">
-    <div class="game-container">
+  <div id="chainsim" class="game-container" @mousedown="isMouseOver = true" @mouseout="isMouseOver = false" @mouseover="changeSlideText">
+    <div class="game-wrapper">
       <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
     </div>
-    <div class="error-container" :class="{ 'error-true': !onTrack }">
+    <div class="error-container" :class="{ 'error-true': onTrack  && gameState === 'idle' && currentSlide !== gameData.length &&
+    (isDropping === false || isPopping === false) && droppedPair === false }">
       You're off track! But that's OK. Hit undo, or keep experimenting.
     </div>
     <button @click="prevSlide" class="undo">Undo</button><br>
-    <textarea rows="5" cols="40" v-model="copyPaster"></textarea>
+    <textarea rows="1" cols="10" v-model="copyPaster" style="vertical-align: middle;"></textarea>
     <button @click="saveJSON(copyPaster, 'chainJSON.json', 'text/plain')">Save JSON</button>
   </div>
 </template>
@@ -36,8 +37,8 @@ const Puyo = {
 }
 
 export default {
-  name: 'Chainsim',
-  props: ['importedData', 'mersenneData', 'useRandomSeed', 'manualData', 'useManualData'],
+  name: 'ChainDrillMaker',
+  props: ['importedData', 'mersenneData', 'useRandomSeed', 'manualData', 'useManualData', 'slideText'],
   data () {
     return {
       /* Settings */
@@ -167,6 +168,7 @@ export default {
       simulationSpeed: 1,
       needToReset: false,
       isMouseDown: false,
+      isMouseOver: false,
       frame: 0,
       delta: 0,
       stopGame: false,
@@ -332,7 +334,8 @@ export default {
         resolution: 1
       })
       this.renderer.view.style.width = `${this.modeSettings.simple.width * this.scaleFactor}px`
-      this.renderer.view.style.height = `${this.modeSettings.simple.height * this.scaleFactor}px`
+      this.renderer.view.style.height = `${(this.modeSettings.simple.height) * this.scaleFactor}px`
+      this.renderer.view.height = this.modeSettings.simple.height
       this.$refs.game.appendChild(this.renderer.view)
       this.stage = new PIXI.Container()
 
@@ -438,6 +441,9 @@ export default {
       this.ticker = new PIXI.ticker.Ticker()
       this.ticker.add(delta => this.gameLoop(delta))
       this.ticker.start()
+
+      // Drop the first pair
+      this.dropActivePair()
     },
     initFieldDisplay: function () {
       // Character Background
@@ -584,6 +590,16 @@ export default {
           this.puyoDisplay[y][x].scale.set(1, 1)
         }
       }
+
+      if (this.gameLoaded === false) {
+        // I only want to bother PIXI to update these settings once, not every time the puyos change. 
+        this.colorFilters.red.hue(this.colorSettings.red.hue)
+        this.colorFilters.green.hue(this.colorSettings.green.hue)
+        this.colorFilters.blue.hue(this.colorSettings.blue.hue)
+        this.colorFilters.yellow.hue(this.colorSettings.yellow.hue)
+        this.colorFilters.purple.hue(this.colorSettings.purple.hue)
+        this.colorFilters.garbage.hue(this.colorSettings.garbage.hue)
+      }
       console.log('updated sprites')
     },
     updateShadowSprite: function (x, y) {
@@ -604,6 +620,9 @@ export default {
         color = 'spacer'
       }
       this.shadowDisplay[y][x].texture = this.puyoSprites[`${color}_n.png`]
+      if (color !== 'spacer') {
+        this.shadowDisplay[y][x].filters = [this.colorFilters[`${color}`]]  
+      }
       console.log('Updated the shadow sprite.')
     },
     updateCursorSprite: function (x, y) {
@@ -780,6 +799,13 @@ export default {
         let freePuyo = new Sprite(this.puyoSprites[`${color2}_n.png`])
         axisPuyo.y += 60
 
+        if (color1 !== 'spacer') {
+          axisPuyo.filters = [this.colorFilters[`${color1}`]]
+        }
+        if (color2 !== 'spacer') {
+          freePuyo.filters = [this.colorFilters[`${color2}`]] 
+        }
+
         this.nextPuyoPairs[i] = new PIXI.Container()
         this.nextPuyoPairs[i].addChild(axisPuyo)
         this.nextPuyoPairs[i].addChild(freePuyo)
@@ -950,6 +976,9 @@ export default {
             : spriteArray[y][x].alpha = 0.4
           spriteArray[y][x].x = this.coordArray[y][x].x
           spriteArray[y][x].y = this.coordArray[y][x].y
+          if (color !== 'spacer') {
+            spriteArray[y][x].filters = [this.colorFilters[`${color}`]]
+          }
           this.stage.addChild(spriteArray[y][x])
         }
       }
@@ -989,37 +1018,6 @@ export default {
         }
       }
     },
-    // initControlledPuyos: function () {
-    //   let spriteArray = []
-    //   let nameArray = []
-
-    //   for (let y = 0; y < this.controlPuyoData.length; y++) {
-    //     nameArray[y] = []
-    //     for (let x = 0; x < this.controlPuyoData[0].length; x++) {
-    //       switch (this.controlPuyoData[y][x]) {
-    //         case 'R': nameArray[y][x] = 'red'; break
-    //         case 'G': nameArray[y][x] = 'green'; break
-    //         case 'B': nameArray[y][x] = 'blue'; break
-    //         case 'Y': nameArray[y][x] = 'yellow'; break
-    //         case 'P': nameArray[y][x] = 'purple'; break
-    //         default: nameArray[y][x] = 'spacer'
-    //       }
-    //     }
-    //   }
-
-    //   for (let y = 0; y < this.controlPuyoData.length; y++) {
-    //     spriteArray[y] = []
-    //     for (let x = 0; x < this.controlPuyoData[0].length; x++) {
-    //       spriteArray[y][x] = new Sprite(this.puyoSprites[`${nameArray[y][x]}_n.png`])
-    //       spriteArray[y][x].anchor.set(0.5)
-    //       spriteArray[y][x].x = this.coordArray[y][x].x
-    //       spriteArray[y][x].y = this.coordArray[y][x].y - spriteArray[y][x].height * 5
-    //       spriteArray[y][x].visible = false
-    //       this.stage.addChild(spriteArray[y][x])
-    //     }
-    //   }
-    //   this.controlPuyoSprites = spriteArray
-    // },
     initActivePair: function () { // One-letter strings
       // Get the colors from the input string
       let colors = []
@@ -1050,16 +1048,18 @@ export default {
       freePuyo.position.set(this.activeCoordArray[0][2].x, this.activeCoordArray[0][2].y)
       axisPuyo.cellPos = { x: 2, y: 1 }
       freePuyo.cellPos = { x: 2, y: 0 }
+
+      if (colors[0] !== 'spacer') {
+        axisPuyo.filters = [this.colorFilters[`${colors[0]}`]]
+      }
+      if (colors[1] !== 'spacer') {
+        freePuyo.filters = [this.colorFilters[`${colors[1]}`]] 
+      }
+
       this.stage.addChild(axisPuyo)
       this.stage.addChild(freePuyo)
       this.activePair.axisPuyo = axisPuyo
       this.activePair.freePuyo = freePuyo
-
-      // this.ticker.add(() => {
-      //   this.activePair.sprites.rotation += 2 * Math.PI / 180
-      //   this.activePair.sprites.children[0].rotation -= 2 * Math.PI / 180
-      //   this.activePair.sprites.children[1].rotation -= 2 * Math.PI / 180
-      // })
     },
     updateActivePair: function () {
       this.activePair.data = `${this.nextPuyoData[this.nextQueuePosition - 2]}${this.nextPuyoData[this.nextQueuePosition - 1]}`
@@ -1084,6 +1084,13 @@ export default {
       }
       if (colors[1] === undefined) {
         colors[0] = 'spacer'
+      }
+
+      if (colors[0] !== 'spacer') {
+        axisPuyo.filters = [this.colorFilters[`${colors[0]}`]]
+      }
+      if (colors[1] !== 'spacer') {
+        freePuyo.filters = [this.colorFilters[`${colors[1]}`]] 
       }
 
       axisPuyo.visible = true
@@ -1342,6 +1349,9 @@ export default {
           this.dumpDisplay[y][x].anchor.set(0.5)
           this.dumpDisplay[y][x].x = this.coordArray[y][x].x
           this.dumpDisplay[y][x].y = this.coordArray[y][x].y - 60 * 13
+          if (color !== 'spacer') {
+            this.dumpDisplay[y][x].filters = [this.colorFilters[`${color}`]]
+          }
         }
       }
 
@@ -2202,7 +2212,7 @@ export default {
       let t = this.timers.next
       let duration = 12
 
-      this.nextPuyoPairs[0].y = this.nextCoord[0].y - ((this.nextCoord[0].y - 106) / duration) * t
+      this.nextPuyoPairs[0].y = this.nextCoord[0].y - ((this.nextCoord[0].y - 80) / duration) * t
 
       this.nextPuyoPairs[1].x = this.nextCoord[1].x - ((this.nextCoord[1].x - this.nextCoord[0].x) / duration) * t
       this.nextPuyoPairs[1].y = this.nextCoord[1].y - ((this.nextCoord[1].y - this.nextCoord[0].y) / duration) * t
@@ -2600,22 +2610,26 @@ export default {
 
       // Handle when the key is down.
       key.downHandler = event => {
-        if (event.keyCode === key.code) {
-          if (key.isUp && key.press) key.press()
-          key.isDown = true
-          key.isUp = false
+        if (this.isMouseOver === true) {
+          if (event.keyCode === key.code) {
+            if (key.isUp && key.press) key.press()
+            key.isDown = true
+            key.isUp = false
+          }
+          event.preventDefault()
         }
-        event.preventDefault()
       }
 
       // Handle when key is down
       key.upHandler = event => {
-        if (event.keyCode === key.code) {
-          if (key.isDown && key.release) key.release()
-          key.isDown = false
-          key.isUp = true
+        if (this.isMouseOver === true) {
+          if (event.keyCode === key.code) {
+            if (key.isDown && key.release) key.release()
+            key.isDown = false
+            key.isUp = true
+          }
+          event.preventDefault()
         }
-        event.preventDefault()
       }
 
       // Attach event listeners
@@ -2677,6 +2691,10 @@ export default {
         }
       }
       this.onTrack = matching
+    },
+    changeSlideText: function () {
+      console.log('Updating slide text.')
+      this.gameData[this.currentSlide].slideText = this.slideText
     }
   },
   computed: {
@@ -3000,17 +3018,6 @@ export default {
         }
       }
     },
-    // gameData: {
-    //   handler: function () {
-    //     this.fieldData = stringTo2dArray(this.gameData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-    //     this.fieldOriginal = stringTo2dArray(this.gameData[this.currentSlide].fieldData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-    //     this.shadowData = stringTo2dArray(this.gameData[this.currentSlide].shadowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-    //     this.cursorData = stringTo2dArray(this.gameData[this.currentSlide].cursorData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-    //     this.arrowData = stringTo2dArray(this.gameData[this.currentSlide].arrowData, this.fieldSettings.totalRows, this.fieldSettings.columns)
-    //     this.resetField()
-    //   },
-    //   deep: true
-    // },
     needToChangeSlides: function (newVal, oldVal) {
       if (newVal === true) {
         for (let y = 0; y < this.Field.totalRows; y++) {
@@ -3069,15 +3076,15 @@ export default {
       } else {
         this.chainCountSprites.secondDigit.texture = this.chainCountSprites[`spacer.png`]
       }
+    },
+    currentSlide: function () {
+      this.$emit('change-comment-input', this.gameData[this.currentSlide].slideText)
     }
   }
 }
 </script>
 
 <style scoped>
-#chainsim {
-  position: relative;
-}
 #game {
   -webkit-touch-callout: none; /* iOS Safari */
   -webkit-user-select: none; /* Safari */
@@ -3085,14 +3092,16 @@ export default {
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* Internet Explorer/Edge */
   user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
-  background-color: #f3f5f7;
+  /* background-color: #f3f5f7; */
 }
 
 .error-container {
-  position: relative;
   padding: 4px;
   background-color: rgba(0,0,0,0);
   color: rgba(0,0,0,0);
+  width: 273.6px;
+  line-height: 1em;
+  font-size: 0.8em;
 }
 
 .error-true {

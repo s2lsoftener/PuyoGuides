@@ -2,20 +2,21 @@
   <div id="slideshow-wrapper">
     <div id="slideshow">
       <div class="chainsim-container">
-        <game-slides-record v-if="jsonLoaded"
+        <chain-drill-maker v-if="jsonLoaded"
         :importedData="importedData" :manualData="manualData" :mersenneData="mersenneData"
-        :useRandomSeed="useRandomSeed" :useManualData="useManualData">
-        </game-slides-record>
+        :useRandomSeed="useRandomSeed" :useManualData="useManualData" :slideText="slideText"
+        v-on:change-comment-input="updateSlideText">
+        </chain-drill-maker>
       </div>
       <div class="text-container">
         <div class="slide-controls">
-          <button @click="goToPrevSlide">&larr;</button>
+          <!-- <button @click="goToPrevSlide">&larr;</button>
           Slide: {{ slideshowSlide + 1 }} / {{ this.importedData.fields.length }}
-          <button @click="goToNextSlide">&rarr;</button>
+          <button @click="goToNextSlide">&rarr;</button> -->
         </div>
         <div class="slide-text">
           <!-- {{ importedData[slideshowSlide].slideText }} -->
-          Slide Text
+          <textarea rows="5" cols="30" v-model="slideText"></textarea>
         </div>
       </div>
     </div>
@@ -23,14 +24,14 @@
 </template>
 
 <script>
-import GameSlidesRecord from './GameSlidesRecord'
+import ChainDrillMaker from './ChainDrillMaker'
 const MersenneTwister = require('mersenne-twister')
 
 export default {
   name: 'GameSlides',
-  props: ['jsonFileToLoad'],
+  props: ['jsonFileToLoad', 'useRandomSeed', 'useManualData', 'manualData'],
   components: {
-    GameSlidesRecord
+    ChainDrillMaker
   },
   data () {
     return {
@@ -41,12 +42,14 @@ export default {
       // importedData: null,
       // seed: Math.round(Math.random() * 128)
       seed: 645,
-      useRandomSeed: true,
-      useManualData: false,
-      manualData: {
-        seed: 0,
-        nextQueue: 'RRBBRRBB'
-      }
+      editText: true,
+      slideText: 'OK'
+      // useRandomSeed: true,
+      // useManualData: false,
+      // manualData: {
+      //   seed: 0,
+      //   nextQueue: 'RRBBRRBB'
+      // }
     }
   },
   created () {
@@ -56,9 +59,9 @@ export default {
     }
     
     // Load default slide template if jsonFileToLoad isn't passed in as a prop
-    if (this.jsonFileToLoad === undefined) {
-      this.jsonFileToLoad = '/chain_json/default.json'
-    }
+    // if (this.jsonFileToLoad === undefined) {
+    //   this.jsonFileToLoad = '/chain_json/default.json'
+    // }
 
     // Use manually defined chain seed.
     if (this.useManualData === true) {
@@ -71,10 +74,17 @@ export default {
   },
   methods: {
     loadJSON: function (callback) {
+      let jsonfile
+      if (this.jsonFileToLoad === undefined) {
+        jsonfile = 'default.json'
+      } else {
+        jsonfile = this.jsonFileToLoad
+      }
+      
       let xobj = new XMLHttpRequest()
       xobj.overrideMimeType('application/json')
 
-      xobj.open('GET', this.jsonFileToLoad, true)
+      xobj.open('GET', `/chain_json/${jsonfile}`, true)
       xobj.onreadystatechange = function () {
         // eslint-disable-next-line
         if (xobj.readyState == 4 && xobj.status == '200') {
@@ -90,6 +100,9 @@ export default {
         this.jsonLoaded = true
         console.log('JSON loaded!')
       })
+    },
+    updateSlideText: function (text) {
+      this.slideText = text
     }
   },
   computed: {
