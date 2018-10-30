@@ -1,7 +1,7 @@
 ---
 title: Introduction
 ---
-<AssetLoader />
+<!-- <AssetLoader /> -->
 # Introduction
 **Puyo Puyo Esports** is coming out!!
 

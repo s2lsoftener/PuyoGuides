@@ -1,7 +1,7 @@
 ---
 title: Stairs
 ---
-<AssetLoader />
+<!-- <AssetLoader /> -->
 # Stairs
 
 ## 3-1 Stairs

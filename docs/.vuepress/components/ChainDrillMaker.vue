@@ -3,13 +3,16 @@
     <div class="game-wrapper">
       <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
     </div>
-    <div class="error-container" :class="{ 'error-true': onTrack  && gameState === 'idle' && currentSlide !== gameData.length &&
+    <div class="error-container" :class="{ 'error-true': !onTrack  && gameState === 'idle' &&
     (isDropping === false || isPopping === false) && droppedPair === false }">
       You're off track! But that's OK. Hit undo, or keep experimenting.
     </div>
-    <button @click="prevSlide" class="undo">Undo</button><br>
-    <textarea rows="1" cols="10" v-model="copyPaster" style="vertical-align: middle;"></textarea>
-    <button @click="saveJSON(copyPaster, 'chainJSON.json', 'text/plain')">Save JSON</button>
+    <button @click="prevSlide" class="undo">Undo</button><br><br>
+
+    <button @click="saveJSON(copyPaster, 'chainJSON.json', 'text/plain')">Save JSON</button><br>
+    <!-- <button @click="$emit('reload', copyPaster)">Load JSON</button> -->
+    <textarea rows="10" cols="20" v-model="copyPaster" style="vertical-align: middle;"></textarea>
+    <!-- <button @click="parseJSON">Parse JSON</button> -->
   </div>
 </template>
 
@@ -17,6 +20,7 @@
 import '../assets/js/pixi.min.js'
 import Chainsim from '../assets/js/chainsim.js'
 import '../assets/js/bezier-easing.js'
+import prepareReplay from '../assets/js/replayprepper.js'
 
 const uniformMatrix = Chainsim.uniformMatrix // Generates a 2D matrix all filled with one value
 const stringTo2dArray = Chainsim.stringTo2dArray // Converts 1D string to 2D matrix
@@ -185,6 +189,7 @@ export default {
       needToChangeSlides: false,
       slideChange: 1,
       onTrack: true,
+      changingSlideText: false,
 
       // Editor
       editorCurrentTool: {
@@ -584,6 +589,9 @@ export default {
         for (let x = 0; x < this.Field.columns; x++) {
           this.puyoDisplay[y][x].x = this.coordArray[y][x].x
           this.puyoDisplay[y][x].y = this.coordArray[y][x].y
+          if (this.colorNameData[y][x] !== 'spacer') {
+            this.puyoDisplay[y][x].filters = [this.colorFilters[`${this.colorNameData[y][x]}`]]  
+          }
           this.puyoDisplay[y][x].spritename = `${this.colorNameData[y][x]}_${this.connectionData[y][x]}.png`
           this.puyoDisplay[y][x].texture = this.puyoSprites[`${this.colorNameData[y][x]}_${this.connectionData[y][x]}.png`]
           this.puyoDisplay[y][x].anchor.set(0.5, 0.5)
@@ -2909,13 +2917,25 @@ export default {
       return string
     },
     copyPaster: function () {
-      return JSON.stringify({
-        fields: this.gameData,
-        next: {
-          seed: this.nextPuyoSeed,
-          nextQueue: this.nextPuyoData
+      if (this.gameLoaded === true) {
+        if (this.gameData.length > 1) {
+          return JSON.stringify(prepareReplay({
+            fields: this.gameData,
+            next: {
+              seed: this.nextPuyoSeed,
+              nextQueue: this.nextPuyoData
+            }
+          }))
+        } else {
+          return JSON.stringify({
+            fields: this.gameData,
+            next: {
+              seed: this.nextPuyoSeed,
+              nextQueue: this.nextPuyoData
+            }
+          })
         }
-      })
+      }
     }
   },
   watch: {
@@ -3079,6 +3099,9 @@ export default {
     },
     currentSlide: function () {
       this.$emit('change-comment-input', this.gameData[this.currentSlide].slideText)
+    },
+    slideText: function () {
+      this.gameData[this.currentSlide].slideText = this.slideText
     }
   }
 }

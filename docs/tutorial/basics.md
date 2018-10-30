@@ -1,7 +1,7 @@
 ---
 title: The Basics of Chaining
 ---
-<AssetLoader />
+<!-- <AssetLoader /> -->
 # The Basics of Chaining
 ## Overview
 In **Puyo Puyo**, the goal of the game is to connect 4+ Puyos of the same color, which causes them to pop and disappear. Hover over the chainsim below to see it in action.
@@ -128,58 +128,5 @@ If you keep separating the colors, one at a time, you can make even longer chain
     advanceNext: true,
     slideText: 'Now, the Yellow Puyos are the trigger for your chain. If you pop it, you\'ll get a 4 Chain. Let\'s do that.'
   }]" :nextQueue="'GBGGYGYYYY'" />
-
-## Planning Ahead
-Think back on the chains above. Did you notice anything about their general structure? When we were making each **link**, we focused on making a group of three first; worrying about the fourth Puyo came after.
--- x2 Chainsim --
-
-Unless you're really lucky, making chains won't always be this straightforward. Sometimes, you'll only get two of the Puyos you'll need.
--- Chainsim --
-
-Or maybe you'll only get one of the color you want.
--- Chainsim --
-
-Or, maybe, the game will hand you colors you don't even "need" right now.
--- Chainsim --
-
-Maybe you'll get loads of a color you already have?
--- Chainsim --
-
-You'll need to know how to handle each of these **color distributions** if you want to make consistent chains.
-
-### A. Visualize Potential Shapes
-Remember, the goal of Puyo Puyo is to make four of the same color connect. So actually, it doesn't really matter how you group things as long as you can make the groups of four happen eventually.
-
--- a group of three and a group of 1 --
--- a group of two and a group of two --
--- a group of 1 and a group of three --
--- three more --
-
-### B. Visualize Future Links
-It's very easy to get tunnel visioned on the link you're currently working on.
--- where does this go?? --
-
-It also doesn't help that, in a real match, you're going to feel pressure to play fast. If the Puyos you're holding don't have an obvious use, it's easy to get in the habit of throwing them off to the side.
--- NoHOHO Stacking, disappointed emoji.--
-
-You should try your best to have some sort of plan though. In the chainsim below, the immediate link needs Blues and Reds.
--- from the earlier chain --
-
-But if you look at the NEXT Window, only Greens and Yellows are available. How do we begin to use these colors? 
--- 4 chain from the beginning --
-
-Let's start by revisiting the 4 Chain we made at the beginning of this page. 
-
-
-
-<ChainImg :importedData="
-  [{fieldData: '00000000000000000000000000000000000000000000000000000000B00000GR0000BBR000BRR0',
-    shadowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-    cursorData: '000000000000000000000000000000000000000000000000000000000000000000001100001000',
-    arrowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
-    autoDrop: false
-  }]" :nextQueue="''" :hasCaption="true">The blue Puyos won't pop because there's only three of them.</ChainImg>
-
-However, you won't always get to finish the group of three first. 
 
 <ChainsimModal />

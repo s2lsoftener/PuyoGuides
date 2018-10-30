@@ -11,7 +11,7 @@ features:
   details: This is a WIP, but if you have trouble telling the colors apart, you can edit the hues of the Puyos below.
 footer: Thank you to everyone supporting the Puyo Nexus Patreon.
 ---
-<AssetLoader />
+<AssetLoader></AssetLoader>
 This site makes heavy use of WebGL to render the chainsims and other content. If your browser doesn't have it enabled, or if it's not very fast, then you're going to have a... bad time.
 
 # Recent Content

@@ -2,10 +2,10 @@
   <div id="slideshow-wrapper">
     <div id="slideshow">
       <div class="chainsim-container">
-        <chain-drill-maker v-if="jsonLoaded"
+        <chain-drill-maker v-if="jsonLoaded && renderGame"
         :importedData="importedData" :manualData="manualData" :mersenneData="mersenneData"
         :useRandomSeed="useRandomSeed" :useManualData="useManualData" :slideText="slideText"
-        v-on:change-comment-input="updateSlideText">
+        v-on:change-comment-input="updateSlideText" v-on:reload="reloadGame">
         </chain-drill-maker>
       </div>
       <div class="text-container">
@@ -16,7 +16,7 @@
         </div>
         <div class="slide-text">
           <!-- {{ importedData[slideshowSlide].slideText }} -->
-          <textarea rows="5" cols="30" v-model="slideText"></textarea>
+          <textarea rows="20" cols="30" v-model="slideText"></textarea>
         </div>
       </div>
     </div>
@@ -43,7 +43,8 @@ export default {
       // seed: Math.round(Math.random() * 128)
       seed: 645,
       editText: true,
-      slideText: 'OK'
+      slideText: 'OK',
+      renderGame: true
       // useRandomSeed: true,
       // useManualData: false,
       // manualData: {
@@ -103,6 +104,18 @@ export default {
     },
     updateSlideText: function (text) {
       this.slideText = text
+    },
+    reloadGame: function (data) {
+      let newData = JSON.parse(data)
+      this.renderGame = false
+      this.importedData = newData
+      this.mersenneData = {
+        seed: newData.next.seed,
+        nextQueue: newData.next.nextQueue
+      }
+      setTimeout(() => {
+        this.renderGame = true
+      }, 100)
     }
   },
   computed: {

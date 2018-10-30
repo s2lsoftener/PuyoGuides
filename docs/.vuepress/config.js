@@ -12,12 +12,12 @@ module.exports = {
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Tutorial', link: '/tutorial/' },
-      { text: 'Tools', link: '/tools/'}
+      { text: 'Drills', link: '/tools/chainrecord'}
     ],
     sidebar: {
       '/tools/': [
         {
-          title: 'Drill Making Tools',
+          title: 'Drill Creator',
           collapsable: true,
           children: [
             '/tools/chainrecord'
@@ -34,8 +34,14 @@ module.exports = {
             '/tutorial/gamescreen',
             '/tutorial/basics',
             '/tutorial/stairs',
-            '/tutorial/test',
             '/tutorial/test2'
+          ]
+        },
+        {
+          title: 'How to Get Puyo Games',
+          collapsable: false,
+          children: [
+            '/tutorial/getesports'
           ]
         }
       ]

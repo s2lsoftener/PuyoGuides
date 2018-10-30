@@ -1,14 +1,14 @@
 ---
 title: The Game Screen
 ---
-<AssetLoader />
+<!-- <AssetLoader /> -->
 # The Game Screen
 If you're completely new to Puyo Puyo, you should skim through this page to get familiar with the game interface.
 
 -- img --
 
 ## Game Field
-Puyo players usually refer to the playable area as the **board** or **game field**. The visible area is 6 columns wide and 12 rows tall. If you listen to people commentate on matches, they'll reference the columns by number from 1 to 6, left to right.
+The playable area is called the **board** or **game field**. The visible space is 6 columns wide and 12 rows tall. If you listen to people commentate on matches, they'll reference the columns by number from 1 to 6, left to right.
 
 There's a hidden "13th" row above the game field with special properties. Puyos in the 13th row don't connect to the Puyos below, so you can use it to make tricky or sneaky chains.
 
