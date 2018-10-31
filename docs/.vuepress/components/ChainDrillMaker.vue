@@ -4,8 +4,8 @@
       <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
     </div>
     <div class="error-container" v-if="replay === true" :class="{ 'error-true': !onTrack  && gameState === 'idle' &&
-    (isDropping === false || isPopping === false) && droppedPair === false }">
-      You're off track! But that's OK. Hit undo, or keep experimenting.
+    (isDropping === false || isPopping === false) && droppedPair === false && chainLength === 0 }">
+      You're off track...!
     </div>
     <button @click="prevSlide" class="undo">Undo</button><br><br>
 
@@ -1215,6 +1215,7 @@ export default {
             shadowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
             cursorData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
             arrowData: '000000000000000000000000000000000000000000000000000000000000000000000000000000',
+            slideText: this.gameData[this.currentSlide].slideText,
             autoDrop: true,
             advanceNext: true
           })
@@ -3114,6 +3115,7 @@ export default {
     },
     currentSlide: function () {
       this.$emit('change-comment-input', this.gameData[this.currentSlide].slideText)
+      this.gameData[this.currentSlide].slideText = this.slideText
     },
     slideText: function () {
       this.gameData[this.currentSlide].slideText = this.slideText

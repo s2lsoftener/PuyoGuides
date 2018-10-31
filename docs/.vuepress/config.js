@@ -20,11 +20,21 @@ module.exports = {
     ],
     sidebar: {
       '/drills/': [
+        '/drills/',
         {
           title: 'Drill Creator',
           collapsable: true,
           children: [
             '/drills/chainrecord',
+          ]
+        },
+        {
+          title: 'Basic Chaining',
+          collapsable: true,
+          children: [
+            '/drills/basics/2chain_a',
+            '/drills/basics/2chain_lshape_b',
+            '/drills/basics/2chain_b',
           ]
         },
         {

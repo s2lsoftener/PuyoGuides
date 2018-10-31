@@ -18,13 +18,11 @@
         <div v-if="replay === undefined || replay === false" class="slide-text"
         @mouseover="inputtingText = true" @mouseout="inputtingText = false">
           Write a helpful hint.
-          <textarea rows="20" cols="30" v-model="slideText"></textarea><br>
-          {{ inputtingText }}
+          <textarea rows="20" cols="30" v-model="slideText"></textarea>
         </div>
         <div v-if="replay === true" class="slide-text"
         @mouseover="inputtingText = true" @mouseout="inputtingText = false">
-          <textarea rows="20" cols="30" v-model="slideText" readonly></textarea><br>
-          {{ inputtingText }}
+          <textarea rows="20" cols="30" v-model="slideText" readonly></textarea>
         </div>
       </div>
     </div>
