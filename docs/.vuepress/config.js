@@ -33,8 +33,8 @@ module.exports = {
           collapsable: true,
           children: [
             '/drills/basics/2chain_a',
-            '/drills/basics/2chain_lshape_b',
             '/drills/basics/2chain_b',
+            '/drills/basics/3chain_lshape_a'
           ]
         },
         {
