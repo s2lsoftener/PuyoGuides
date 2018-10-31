@@ -11,7 +11,7 @@
 
     <button @click="saveJSON(copyPaster, 'chainJSON.json', 'text/plain')">Save JSON</button><br>
     <!-- <button @click="$emit('reload', copyPaster)">Load JSON</button> -->
-    <!-- <textarea rows="10" cols="20" v-model="copyPaster" style="vertical-align: middle;"></textarea> -->
+    <textarea rows="10" cols="20" v-model="copyPaster" style="vertical-align: middle;"></textarea>
     <!-- <button @click="parseJSON">Parse JSON</button> -->
   </div>
 </template>
