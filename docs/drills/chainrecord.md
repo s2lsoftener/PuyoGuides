@@ -5,4 +5,4 @@ title: Make Drill - Random Seed
 
 Reload the page for a different chain seed.
 Click into the game area to activate keyboard controls (arrow pad, Z = rotate left, X = rotate right)
-<ClientOnly><GameSlides :useRandomSeed="true" :useManualData="false"></GameSlides></ClientOnly>
+<ClientOnly><GameSlides :useRandomSeed="true" :useManualData="false" :replay="false"></GameSlides></ClientOnly>

@@ -1,17 +1,17 @@
 <template>
-  <div class="game-container" @mousedown="isMouseOver = true" @mouseout="isMouseOver = false" @mouseover="changeSlideText">
+  <div class="game-container">
     <div class="game-wrapper">
       <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
     </div>
-    <div class="error-container" :class="{ 'error-true': !onTrack  && gameState === 'idle' &&
+    <div class="error-container" v-if="replay === true" :class="{ 'error-true': !onTrack  && gameState === 'idle' &&
     (isDropping === false || isPopping === false) && droppedPair === false }">
       You're off track! But that's OK. Hit undo, or keep experimenting.
     </div>
     <button @click="prevSlide" class="undo">Undo</button><br><br>
 
-    <button @click="saveJSON(copyPaster, 'chainJSON.json', 'text/plain')">Save JSON</button><br>
+    <button v-if="replay === false" @click="saveJSON(copyPaster, 'chainJSON.json', 'text/plain')">Save JSON</button><br>
     <!-- <button @click="$emit('reload', copyPaster)">Load JSON</button> -->
-    <textarea rows="10" cols="20" v-model="copyPaster" style="vertical-align: middle;"></textarea>
+    <textarea v-if="replay === false" rows="10" cols="20" v-model="copyPaster" style="vertical-align: middle;"></textarea>
     <!-- <button @click="parseJSON">Parse JSON</button> -->
   </div>
 </template>
@@ -51,7 +51,7 @@ const Puyo = {
 
 export default {
   name: 'ChainDrillMaker',
-  props: ['importedData', 'mersenneData', 'useRandomSeed', 'manualData', 'useManualData', 'slideText'],
+  props: ['importedData', 'mersenneData', 'useRandomSeed', 'manualData', 'useManualData', 'slideText', 'replay', 'inputtingText'],
   data () {
     return {
       /* Settings */
@@ -75,6 +75,7 @@ export default {
       gameData: undefined,
       gameReplay: true,
       gamePlayable: true,
+      gameInFocus: true,
 
       // Field Arrays
       fieldData: [[]], // 2D string array with the main field representation
@@ -199,6 +200,7 @@ export default {
       slideChange: 1,
       onTrack: true,
       changingSlideText: false,
+      rewindingSlide: false,
 
       // Editor
       editorCurrentTool: {
@@ -2245,6 +2247,7 @@ export default {
         this.updateNextPuyoSprites()
         this.updateActivePair()
         this.droppedPair = false
+        this.rewindingSlide = false
         return
       }
       this.timers.next += 1
@@ -2345,7 +2348,7 @@ export default {
       })
     },
     prevSlide: function () {
-      if (this.currentSlide === 2 && this.gameState === 'idle') {
+      if (this.currentSlide === 2 && this.gameState === 'idle' && (this.isDropping === false || this.isPopping === false) && this.droppedPair === false && this.rewindingSlide === false) {
         // Reset to the original field in case the user made some edits.
         this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
         this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
@@ -2380,9 +2383,11 @@ export default {
             this.updateArrowSprite(x, y)
           }
         }
+        
+        this.rewindingSlide = true
         this.updateActivePair()
         this.checkIfOnTrack()
-      } else if (this.currentSlide > 2 && this.gameState === 'idle') {
+      } else if (this.currentSlide > 2 && this.gameState === 'idle' && (this.isDropping === false || this.isPopping === false) && this.droppedPair === false &&  this.rewindingSlide === false) {
         // Reset to the original field in case the user made some edits.
         this.poppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
         this.droppingCells = uniformMatrix(false, this.fieldSettings.totalRows, this.fieldSettings.columns)
@@ -2417,6 +2422,7 @@ export default {
             this.updateArrowSprite(x, y)
           }
         }
+        this.rewindingSlide = true
         this.updateActivePair()
         this.playToNextSlide()
       }
@@ -2627,7 +2633,7 @@ export default {
 
       // Handle when the key is down.
       key.downHandler = event => {
-        if (this.isMouseOver === true) {
+        if (this.inputtingText === false) {
           if (event.keyCode === key.code) {
             if (key.isUp && key.press) key.press()
             key.isDown = true
@@ -2639,7 +2645,7 @@ export default {
 
       // Handle when key is down
       key.upHandler = event => {
-        if (this.isMouseOver === true) {
+        if (this.inputtingText === false) {
           if (event.keyCode === key.code) {
             if (key.isDown && key.release) key.release()
             key.isDown = false
@@ -2708,11 +2714,11 @@ export default {
         }
       }
       this.onTrack = matching
-    },
-    changeSlideText: function () {
-      console.log('Updating slide text.')
-      this.gameData[this.currentSlide].slideText = this.slideText
     }
+    // changeSlideText: function () {
+    //   console.log('Updating slide text.')
+    //   this.gameData[this.currentSlide].slideText = this.slideText
+    // }
   },
   computed: {
     chainDiff: function () {
@@ -3111,6 +3117,9 @@ export default {
     },
     slideText: function () {
       this.gameData[this.currentSlide].slideText = this.slideText
+    },
+    inputtingText: function () {
+      console.log('hovering over input box')
     }
   }
 }

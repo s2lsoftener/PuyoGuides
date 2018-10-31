@@ -5,6 +5,7 @@
         <chain-drill-maker v-if="jsonLoaded"
         :importedData="importedData" :manualData="manualData" :mersenneData="mersenneData"
         :useRandomSeed="useRandomSeed" :useManualData="useManualData" :slideText="slideText"
+        :replay="replay" :inputtingText="inputtingText"
         v-on:change-comment-input="updateSlideText" v-on:reload="reloadGame">
         </chain-drill-maker>
       </div>
@@ -14,9 +15,16 @@
           Slide: {{ slideshowSlide + 1 }} / {{ this.importedData.fields.length }}
           <button @click="goToNextSlide">&rarr;</button> -->
         </div>
-        <div class="slide-text">
-          <!-- {{ importedData[slideshowSlide].slideText }} -->
-          <textarea rows="20" cols="30" v-model="slideText"></textarea>
+        <div v-if="replay === undefined || replay === false" class="slide-text"
+        @mouseover="inputtingText = true" @mouseout="inputtingText = false">
+          Write a helpful hint.
+          <textarea rows="20" cols="30" v-model="slideText"></textarea><br>
+          {{ inputtingText }}
+        </div>
+        <div v-if="replay === true" class="slide-text"
+        @mouseover="inputtingText = true" @mouseout="inputtingText = false">
+          <textarea rows="20" cols="30" v-model="slideText" readonly></textarea><br>
+          {{ inputtingText }}
         </div>
       </div>
     </div>
@@ -29,7 +37,7 @@ const MersenneTwister = require('mersenne-twister')
 
 export default {
   name: 'GameSlides',
-  props: ['jsonFileToLoad', 'useRandomSeed', 'useManualData', 'manualData'],
+  props: ['jsonFileToLoad', 'useRandomSeed', 'useManualData', 'manualData', 'replay'],
   components: {
     ChainDrillMaker
   },
@@ -39,18 +47,11 @@ export default {
       jsonLoaded: false,
       importedData: undefined,
       mersenneData: '',
-      // importedData: null,
-      // seed: Math.round(Math.random() * 128)
       seed: 645,
       editText: true,
       slideText: 'OK',
-      renderGame: true
-      // useRandomSeed: true,
-      // useManualData: false,
-      // manualData: {
-      //   seed: 0,
-      //   nextQueue: 'RRBBRRBB'
-      // }
+      renderGame: true,
+      inputtingText: false,
     }
   },
   created () {
