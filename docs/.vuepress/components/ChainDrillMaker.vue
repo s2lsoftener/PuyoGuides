@@ -283,14 +283,6 @@ export default {
           saturate: 0
         }
       },
-      // colorFilters: {
-      //   red: new PIXI.filters.ColorMatrixFilter(),
-      //   green: new PIXI.filters.ColorMatrixFilter(),
-      //   blue: new PIXI.filters.ColorMatrixFilter(),
-      //   yellow: new PIXI.filters.ColorMatrixFilter(),
-      //   purple: new PIXI.filters.ColorMatrixFilter(),
-      //   garbage: new PIXI.filters.ColorMatrixFilter()
-      // },
 
       // Dump Matrix
       dumpCellContainer: undefined,
@@ -373,50 +365,50 @@ export default {
     },
     runSetup: function () {
       // Retrieve color settings from localStorage
-      if (localStorage.getItem('puyocolors')) {
+      if (localStorage.getItem('puyotint')) {
         try {
-          this.colorSettings = JSON.parse(localStorage.getItem('puyocolors'))
+          this.colorSettings = JSON.parse(localStorage.getItem('puyotint'))
           console.log('Found color settings in localStorage')
         } catch(e) {
-          console.log('Removing puyocolors from localStorage.')
-          localStorage.removeItem('puyocolors')
+          console.log('Removing puyotint from localStorage.')
+          localStorage.removeItem('puyotint')
           console.log('Using default color settings instead.')
           this.colorSettings = {
             red: {
-              hue: 0,
-              brightness: 100,
-              contrast: 0,
-              saturate: 0
+              r: 255,
+              g: 255,
+              b: 255,
+              tint: true
             },
             green: {
-              hue: 0,
-              brightness: 100,
-              contrast: 0,
-              saturate: 0
+              r: 255,
+              g: 255,
+              b: 255,
+              tint: true
             },
             blue: {
-              hue: 0,
-              brightness: 100,
-              contrast: 0,
-              saturate: 0
+              r: 255,
+              g: 255,
+              b: 255,
+              tint: true
             },
             yellow: {
-              hue: 0,
-              brightness: 100,
-              contrast: 0,
-              saturate: 0
+              r: 255,
+              g: 255,
+              b: 255,
+              tint: true
             },
             purple: {
-              hue: 0,
-              brightness: 100,
-              contrast: 0,
-              saturate: 0
+              r: 255,
+              g: 255,
+              b: 255,
+              tint: true
             },
             garbage: {
-              hue: 0,
-              brightness: 100,
-              contrast: 0,
-              saturate: 0
+              r: 255,
+              g: 255,
+              b: 255,
+              tint: true
             }
           }
         }
@@ -593,6 +585,13 @@ export default {
       }
       this.updatePuyoSprites()
     },
+    componentToHex: function (c) {
+      let hex = c.toString(16)
+      return hex.length === 1 ? '0' + hex : hex
+    },
+    rgbToHex: function (r, g, b) {
+      return parseInt(this.componentToHex(parseInt(r, 10)) + this.componentToHex(parseInt(g, 10)) + this.componentToHex(parseInt(b, 10)), 16)
+    },
     updatePuyoSprites: function () {
       this.determineConnections()
       this.determineColorNames()
@@ -600,25 +599,15 @@ export default {
         for (let x = 0; x < this.Field.columns; x++) {
           this.puyoDisplay[y][x].x = this.coordArray[y][x].x
           this.puyoDisplay[y][x].y = this.coordArray[y][x].y
-          // if (this.colorNameData[y][x] !== 'spacer') {
-          //   this.puyoDisplay[y][x].filters = [this.colorFilters[`${this.colorNameData[y][x]}`]]  
-          // }
+          if (this.colorNameData[y][x] !== 'spacer') {
+            this.puyoDisplay[y][x].tint = this.rgbToHex(this.colorSettings[`${this.colorNameData[y][x]}`].r, this.colorSettings[`${this.colorNameData[y][x]}`].g, this.colorSettings[`${this.colorNameData[y][x]}`].b)
+          }
           this.puyoDisplay[y][x].spritename = `${this.colorNameData[y][x]}_${this.connectionData[y][x]}.png`
           this.puyoDisplay[y][x].texture = this.puyoSprites[`${this.colorNameData[y][x]}_${this.connectionData[y][x]}.png`]
           this.puyoDisplay[y][x].anchor.set(0.5, 0.5)
           this.puyoDisplay[y][x].scale.set(1, 1)
         }
       }
-
-      // if (this.gameLoaded === false) {
-      //   // I only want to bother PIXI to update these settings once, not every time the puyos change. 
-      //   this.colorFilters.red.hue(this.colorSettings.red.hue)
-      //   this.colorFilters.green.hue(this.colorSettings.green.hue)
-      //   this.colorFilters.blue.hue(this.colorSettings.blue.hue)
-      //   this.colorFilters.yellow.hue(this.colorSettings.yellow.hue)
-      //   this.colorFilters.purple.hue(this.colorSettings.purple.hue)
-      //   this.colorFilters.garbage.hue(this.colorSettings.garbage.hue)
-      // }
       console.log('updated sprites')
     },
     updateShadowSprite: function (x, y) {
@@ -639,9 +628,6 @@ export default {
         color = 'spacer'
       }
       this.shadowDisplay[y][x].texture = this.puyoSprites[`${color}_n.png`]
-      // if (color !== 'spacer') {
-      //   this.shadowDisplay[y][x].filters = [this.colorFilters[`${color}`]]  
-      // }
       console.log('Updated the shadow sprite.')
     },
     updateCursorSprite: function (x, y) {

@@ -1,7 +1,7 @@
 ---
 title: Make Drill - Random Seed
 ---
-<AssetLoader />
+<AssetLoader :reloadOnce="true" />
 
 Reload the page for a different chain seed.
 Click into the game area to activate keyboard controls (arrow pad, Z = rotate left, X = rotate right)

@@ -45,7 +45,39 @@ module.exports = {
           children: [
             '/drills/basics/2chain_a',
             '/drills/basics/2chain_b',
-            '/drills/basics/3chain_lshape_a'
+            '/drills/basics/3chain_lshape_a',
+            '/drills/basics/3chain_stairs_a',
+            '/drills/basics/4chain_yayoi_a',
+            '/drills/basics/6chain_a'
+          ]
+        },
+        {
+          title: 'Stairs',
+          collapsable: true,
+          children: [
+            '/drills/stairs/5chain_a',
+            '/drills/stairs/8chain_a'
+          ]
+        },
+        {
+          title: 'L-Shape',
+          collapsable: true,
+          children: [
+            '/drills/lshape/6chain_a'
+          ]
+        },
+        {
+          title: 'GTR',
+          collapsable: true,
+          children: [
+            '/drills/gtr/14chain_a'
+          ]
+        },
+        {
+          title: 'Tailing',
+          collapsable: true,
+          children: [
+            '/drills/tailing/11chain_a'
           ]
         },
         {

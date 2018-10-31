@@ -17,6 +17,8 @@ if (!isNode) {
 }
 
 export default {
+  name: 'AssetLoader',
+  props: ['reloadOnce'],
   data () {
     return {
       texturesToLoad: [
@@ -52,8 +54,10 @@ export default {
           EventBus.setLoaded()
         })
         .load()
-    } else {
-      window.location.reload()
+    } else if (this.reloadOnce !== undefined) {
+      if (this.reloadOnce === true) {
+        window.location.reload()
+      }
     }
   }
 }
