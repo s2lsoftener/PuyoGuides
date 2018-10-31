@@ -8,22 +8,22 @@
               style="vertical-align: middle;" /> {{ Math.round(computedSettings[currentChoice].hue) }} / 360
         </div>
         <!-- <div @mouseover="currentMode = 'brightness'"> -->
-        <div>
+        <!-- <div>
           Brightness: <input type="range" min="0" max="300" step="1" v-model="colorSettings[currentChoice].brightness"
               style="vertical-align: middle;" /> {{ Math.round(computedSettings[currentChoice].brightness * 100) }} / 100
-        </div>
+        </div> -->
         <!-- <div @mouseover="currentMode = 'contrast'"> -->
-        <div>
+        <!-- <div>
           Contrast: <input type="range" min="0" max="300" step="1" v-model="colorSettings[currentChoice].contrast"
               style="vertical-align: middle;" /> {{ Math.round(computedSettings[currentChoice].contrast * 100) }} / 100
-        </div>
+        </div> -->
         <!-- <div @mouseover="currentMode = 'saturate'"> -->
-        <div>
+        <!-- <div>
           Saturate: <input type="range" min="0" max="300" step="1 / 100" v-model="colorSettings[currentChoice].saturate"
               style="vertical-align: middle;" /> {{ Math.round(computedSettings[currentChoice].saturate * 100) }} / 100
-        </div>
+        </div> -->
         <div>
-          <button @click="saveSettings">Save Settings(???)</button>
+          <button @click="saveSettings">Save Settings</button>
         </div>
       </div>
     </div>

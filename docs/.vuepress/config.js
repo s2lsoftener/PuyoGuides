@@ -1,7 +1,7 @@
 const path = require('path')
 
 module.exports = {
-  title: 'Puyo Puyo Tutorials',
+  title: 'S2\'s Puyo Puyo Tutorials',
   description: 'New guides for playing Puyo Puyo!',
   chainWebpack: (config, isServer) => {
     config.resolveLoader
@@ -14,9 +14,20 @@ module.exports = {
   ],
   themeConfig: {
     nav: [
-      { text: 'Home', link: '/' },
       { text: 'Tutorial', link: '/tutorial/' },
-      { text: 'Drills', link: '/drills/'}
+      { text: 'Forms', link: 'https://puyonexus.com/wiki/List_of_Chaining_Forms'},
+      { text: 'Drills', link: '/drills/'},
+      { text: 'eSports', link: '/esports/' },
+      { text: 'Streamers', link: '/streamers/s2lsoftener'},
+      {
+        text: 'Community',
+        items: [
+          { text: 'Discord', link: 'http://bit.ly/puyodiscord' },
+          { text: 'Patreon', link: 'https://www.patreon.com/puyonexus' },
+          { text: 'Reddit', link: 'https://www.reddit.com/r/puyopop' }
+        ]
+      },
+      { text: 'Settings', link: '/settings/settings'}
     ],
     sidebar: {
       '/drills/': [
@@ -72,6 +83,26 @@ module.exports = {
             '/tutorial/getesports'
           ]
         }
+      ],
+
+      '/streamers/': [
+        {
+          title: 'Legends of Japan (~R2800+)',
+          collapsable: true,
+          children: [
+          ],
+        },
+        {
+          title: 'Strong Western Players (R2300+)',
+          collapsible: true,
+          children: [
+            '/streamers/s2lsoftener'
+          ]
+        }
+      ],
+
+      '/settings/': [
+        '/settings/settings'
       ]
     }
   }
