@@ -20,3 +20,13 @@ If you make a mistake, a notification will let you know.
 
 
 You can press **Undo** to take a step back and try again.
+
+# Contributors
+* S2  
+  - Twitter: [@S2LSOFTENER](www.twitter.com/S2LSOFTENER)  
+  - YouTube: [/S2LSOFTENER](www.youtube.com/S2LSOFTENER)  
+  - Twitch: [/S2LSOFTENER](www.twitch.tv/S2LSOFTENER)
+
+* Yoshi100_Aus
+  - Twitter: [@Yoshi100_Aus](https://twitter.com/yoshi100_aus)
+  - Twitch: [@Yoshi100_Aus](https://www.twitch.tv/yoshi100_aus)
