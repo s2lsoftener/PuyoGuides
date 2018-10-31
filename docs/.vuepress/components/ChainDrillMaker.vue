@@ -11,7 +11,7 @@
 
     <button @click="saveJSON(copyPaster, 'chainJSON.json', 'text/plain')">Save JSON</button><br>
     <!-- <button @click="$emit('reload', copyPaster)">Load JSON</button> -->
-    <textarea rows="10" cols="20" v-model="copyPaster" style="vertical-align: middle;"></textarea>
+    <!-- <textarea rows="10" cols="20" v-model="copyPaster" style="vertical-align: middle;"></textarea> -->
     <!-- <button @click="parseJSON">Parse JSON</button> -->
   </div>
 </template>
@@ -281,14 +281,14 @@ export default {
           saturate: 0
         }
       },
-      colorFilters: {
-        red: new PIXI.filters.ColorMatrixFilter(),
-        green: new PIXI.filters.ColorMatrixFilter(),
-        blue: new PIXI.filters.ColorMatrixFilter(),
-        yellow: new PIXI.filters.ColorMatrixFilter(),
-        purple: new PIXI.filters.ColorMatrixFilter(),
-        garbage: new PIXI.filters.ColorMatrixFilter()
-      },
+      // colorFilters: {
+      //   red: new PIXI.filters.ColorMatrixFilter(),
+      //   green: new PIXI.filters.ColorMatrixFilter(),
+      //   blue: new PIXI.filters.ColorMatrixFilter(),
+      //   yellow: new PIXI.filters.ColorMatrixFilter(),
+      //   purple: new PIXI.filters.ColorMatrixFilter(),
+      //   garbage: new PIXI.filters.ColorMatrixFilter()
+      // },
 
       // Dump Matrix
       dumpCellContainer: undefined,
@@ -598,9 +598,9 @@ export default {
         for (let x = 0; x < this.Field.columns; x++) {
           this.puyoDisplay[y][x].x = this.coordArray[y][x].x
           this.puyoDisplay[y][x].y = this.coordArray[y][x].y
-          if (this.colorNameData[y][x] !== 'spacer') {
-            this.puyoDisplay[y][x].filters = [this.colorFilters[`${this.colorNameData[y][x]}`]]  
-          }
+          // if (this.colorNameData[y][x] !== 'spacer') {
+          //   this.puyoDisplay[y][x].filters = [this.colorFilters[`${this.colorNameData[y][x]}`]]  
+          // }
           this.puyoDisplay[y][x].spritename = `${this.colorNameData[y][x]}_${this.connectionData[y][x]}.png`
           this.puyoDisplay[y][x].texture = this.puyoSprites[`${this.colorNameData[y][x]}_${this.connectionData[y][x]}.png`]
           this.puyoDisplay[y][x].anchor.set(0.5, 0.5)
@@ -608,15 +608,15 @@ export default {
         }
       }
 
-      if (this.gameLoaded === false) {
-        // I only want to bother PIXI to update these settings once, not every time the puyos change. 
-        this.colorFilters.red.hue(this.colorSettings.red.hue)
-        this.colorFilters.green.hue(this.colorSettings.green.hue)
-        this.colorFilters.blue.hue(this.colorSettings.blue.hue)
-        this.colorFilters.yellow.hue(this.colorSettings.yellow.hue)
-        this.colorFilters.purple.hue(this.colorSettings.purple.hue)
-        this.colorFilters.garbage.hue(this.colorSettings.garbage.hue)
-      }
+      // if (this.gameLoaded === false) {
+      //   // I only want to bother PIXI to update these settings once, not every time the puyos change. 
+      //   this.colorFilters.red.hue(this.colorSettings.red.hue)
+      //   this.colorFilters.green.hue(this.colorSettings.green.hue)
+      //   this.colorFilters.blue.hue(this.colorSettings.blue.hue)
+      //   this.colorFilters.yellow.hue(this.colorSettings.yellow.hue)
+      //   this.colorFilters.purple.hue(this.colorSettings.purple.hue)
+      //   this.colorFilters.garbage.hue(this.colorSettings.garbage.hue)
+      // }
       console.log('updated sprites')
     },
     updateShadowSprite: function (x, y) {
@@ -637,9 +637,9 @@ export default {
         color = 'spacer'
       }
       this.shadowDisplay[y][x].texture = this.puyoSprites[`${color}_n.png`]
-      if (color !== 'spacer') {
-        this.shadowDisplay[y][x].filters = [this.colorFilters[`${color}`]]  
-      }
+      // if (color !== 'spacer') {
+      //   this.shadowDisplay[y][x].filters = [this.colorFilters[`${color}`]]  
+      // }
       console.log('Updated the shadow sprite.')
     },
     updateCursorSprite: function (x, y) {
@@ -816,12 +816,12 @@ export default {
         let freePuyo = new Sprite(this.puyoSprites[`${color2}_n.png`])
         axisPuyo.y += 60
 
-        if (color1 !== 'spacer') {
-          axisPuyo.filters = [this.colorFilters[`${color1}`]]
-        }
-        if (color2 !== 'spacer') {
-          freePuyo.filters = [this.colorFilters[`${color2}`]] 
-        }
+        // if (color1 !== 'spacer') {
+        //   axisPuyo.filters = [this.colorFilters[`${color1}`]]
+        // }
+        // if (color2 !== 'spacer') {
+        //   freePuyo.filters = [this.colorFilters[`${color2}`]] 
+        // }
 
         this.nextPuyoPairs[i] = new PIXI.Container()
         this.nextPuyoPairs[i].addChild(axisPuyo)
@@ -993,9 +993,9 @@ export default {
             : spriteArray[y][x].alpha = 0.4
           spriteArray[y][x].x = this.coordArray[y][x].x
           spriteArray[y][x].y = this.coordArray[y][x].y
-          if (color !== 'spacer') {
-            spriteArray[y][x].filters = [this.colorFilters[`${color}`]]
-          }
+          // if (color !== 'spacer') {
+          //   spriteArray[y][x].filters = [this.colorFilters[`${color}`]]
+          // }
           this.stage.addChild(spriteArray[y][x])
         }
       }
@@ -1066,12 +1066,12 @@ export default {
       axisPuyo.cellPos = { x: 2, y: 1 }
       freePuyo.cellPos = { x: 2, y: 0 }
 
-      if (colors[0] !== 'spacer') {
-        axisPuyo.filters = [this.colorFilters[`${colors[0]}`]]
-      }
-      if (colors[1] !== 'spacer') {
-        freePuyo.filters = [this.colorFilters[`${colors[1]}`]] 
-      }
+      // if (colors[0] !== 'spacer') {
+      //   axisPuyo.filters = [this.colorFilters[`${colors[0]}`]]
+      // }
+      // if (colors[1] !== 'spacer') {
+      //   freePuyo.filters = [this.colorFilters[`${colors[1]}`]] 
+      // }
 
       this.stage.addChild(axisPuyo)
       this.stage.addChild(freePuyo)
@@ -1103,12 +1103,12 @@ export default {
         colors[0] = 'spacer'
       }
 
-      if (colors[0] !== 'spacer') {
-        axisPuyo.filters = [this.colorFilters[`${colors[0]}`]]
-      }
-      if (colors[1] !== 'spacer') {
-        freePuyo.filters = [this.colorFilters[`${colors[1]}`]] 
-      }
+      // if (colors[0] !== 'spacer') {
+      //   axisPuyo.filters = [this.colorFilters[`${colors[0]}`]]
+      // }
+      // if (colors[1] !== 'spacer') {
+      //   freePuyo.filters = [this.colorFilters[`${colors[1]}`]] 
+      // }
 
       axisPuyo.visible = true
       freePuyo.visible = true
@@ -1366,9 +1366,9 @@ export default {
           this.dumpDisplay[y][x].anchor.set(0.5)
           this.dumpDisplay[y][x].x = this.coordArray[y][x].x
           this.dumpDisplay[y][x].y = this.coordArray[y][x].y - 60 * 13
-          if (color !== 'spacer') {
-            this.dumpDisplay[y][x].filters = [this.colorFilters[`${color}`]]
-          }
+          // if (color !== 'spacer') {
+          //   this.dumpDisplay[y][x].filters = [this.colorFilters[`${color}`]]
+          // }
         }
       }
 
