@@ -15,12 +15,13 @@ module.exports = {
   themeConfig: {
     nav: [
       { text: 'Tutorial', link: '/tutorial/' },
-      { text: 'Forms', link: 'https://puyonexus.com/wiki/List_of_Chaining_Forms'},
+      { text: 'Form List', link: 'https://puyonexus.com/wiki/List_of_Chaining_Forms'},
       { text: 'Drills', link: '/drills/'},
       {
         text: 'eSports',
         items: [
           { text: 'Overview', link: '/esports/overview' },
+          { text: 'Buying Puyo eSports', link: '/esports/translation/purchasing' },
           { text: 'Menu Translation', link: '/esports/translation/menus' }
         ]
       },
@@ -114,22 +115,36 @@ module.exports = {
 
       '/tutorial/': [
         {
-          title: 'Tutorial',
-          collapsable: true,
+          title: 'Introduction',
+          collapsable: false,
           children: [
             '/tutorial/',
             '/tutorial/gamescreen',
-            '/tutorial/basics',
+            '/tutorial/basics'
+          ]
+        },
+        {
+          title: 'Chaining',
+          collapsable: false,
+          children: [
             '/tutorial/stairs',
             '/tutorial/test2'
           ]
         },
         {
-          title: 'How to Get Puyo Games',
+          title: 'Fighting',
           collapsable: false,
-          children: [
-            '/tutorial/getesports'
-          ]
+          children: []
+        },
+        {
+          title: 'Fever mode',
+          collapsable: false,
+          children: []
+        },
+        {
+          title: 'Links',
+          collapsable: false,
+          children: []
         }
       ],
 
@@ -151,6 +166,7 @@ module.exports = {
 
       '/esports/': [
         '/esports/overview',
+        '/esports/translation/purchasing',
         '/esports/translation/menus'
       ],
 

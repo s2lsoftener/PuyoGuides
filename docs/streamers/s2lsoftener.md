@@ -6,6 +6,7 @@ title: S2LSOFTENER (S2PID)
 * Location: Atlanta, GA (United States)
 * Puyo Experience: ~10 years
 * Playstyle: Observation-focused, simple chaining
+* Twitter: [@S2LSOFTENER](https://twitter.com/S2LSOFTENER)
 
 hi i lose a lot but i love puyo to death I'LL NEVER STOP!!
 
