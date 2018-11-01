@@ -27,6 +27,6 @@ You can press **Undo** to take a step back and try again.
   - YouTube: [/S2LSOFTENER](https://www.youtube.com/S2LSOFTENER)  
   - Twitch: [/S2LSOFTENER](https://www.twitch.tv/S2LSOFTENER)
 
-* Yoshi100_Aus
+<!-- * Yoshi100_Aus
   - Twitter: [@Yoshi100_Aus](https://twitter.com/yoshi100_aus)
-  - Twitch: [@Yoshi100_Aus](https://www.twitch.tv/yoshi100_aus)
+  - Twitch: [@Yoshi100_Aus](https://www.twitch.tv/yoshi100_aus) -->

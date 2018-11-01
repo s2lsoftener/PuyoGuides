@@ -378,37 +378,37 @@ export default {
               r: 255,
               g: 255,
               b: 255,
-              tint: true
+              tint: false
             },
             green: {
               r: 255,
               g: 255,
               b: 255,
-              tint: true
+              tint: false
             },
             blue: {
               r: 255,
               g: 255,
               b: 255,
-              tint: true
+              tint: false
             },
             yellow: {
               r: 255,
               g: 255,
               b: 255,
-              tint: true
+              tint: false
             },
             purple: {
               r: 255,
               g: 255,
               b: 255,
-              tint: true
+              tint: false
             },
             garbage: {
               r: 255,
               g: 255,
               b: 255,
-              tint: true
+              tint: false
             }
           }
         }
@@ -600,7 +600,9 @@ export default {
           this.puyoDisplay[y][x].x = this.coordArray[y][x].x
           this.puyoDisplay[y][x].y = this.coordArray[y][x].y
           if (this.colorNameData[y][x] !== 'spacer') {
-            this.puyoDisplay[y][x].tint = this.rgbToHex(this.colorSettings[`${this.colorNameData[y][x]}`].r, this.colorSettings[`${this.colorNameData[y][x]}`].g, this.colorSettings[`${this.colorNameData[y][x]}`].b)
+            if (this.colorSettings[`${this.colorNameData[y][x]}`].tint === true) {
+              this.puyoDisplay[y][x].tint = this.rgbToHex(this.colorSettings[`${this.colorNameData[y][x]}`].r, this.colorSettings[`${this.colorNameData[y][x]}`].g, this.colorSettings[`${this.colorNameData[y][x]}`].b)
+            }
           }
           this.puyoDisplay[y][x].spritename = `${this.colorNameData[y][x]}_${this.connectionData[y][x]}.png`
           this.puyoDisplay[y][x].texture = this.puyoSprites[`${this.colorNameData[y][x]}_${this.connectionData[y][x]}.png`]
@@ -1188,7 +1190,7 @@ export default {
       }
     },
     dropActivePair: function () {
-      if (this.gameState === 'idle' && this.droppedPair === false) {
+      if (this.gameState === 'idle' && this.droppedPair === false && this.checkDropInBounds === true) {
         this.droppedPair = true
         // let shadowSlide = 2
         // if (this.currentSlide === this.gameData.length - 2) shadowSlide = 0

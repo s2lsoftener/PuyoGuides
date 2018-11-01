@@ -17,7 +17,13 @@ module.exports = {
       { text: 'Tutorial', link: '/tutorial/' },
       { text: 'Forms', link: 'https://puyonexus.com/wiki/List_of_Chaining_Forms'},
       { text: 'Drills', link: '/drills/'},
-      { text: 'eSports', link: '/esports/' },
+      {
+        text: 'eSports',
+        items: [
+          { text: 'Overview', link: '/esports/overview' },
+          { text: 'Menu Translation', link: '/esports/translation/menus' }
+        ]
+      },
       { text: 'Streamers', link: '/streamers/s2lsoftener'},
       {
         text: 'Community',
@@ -43,7 +49,6 @@ module.exports = {
           title: 'Basic Chaining',
           collapsable: true,
           children: [
-            '/drills/basics/2chain_a',
             '/drills/basics/2chain_b',
             '/drills/basics/3chain_lshape_a',
             '/drills/basics/3chain_stairs_a',
@@ -60,9 +65,18 @@ module.exports = {
           ]
         },
         {
+          title: 'Sandwich',
+          collapsable: true,
+          children: [
+            '/drills/sandwich/6chain_a'
+          ]
+        },
+        {
           title: 'L-Shape',
           collapsable: true,
           children: [
+            '/drills/lshape/2chain_a',
+            '/drills/lshape/4chain_a',
             '/drills/lshape/6chain_a'
           ]
         },
@@ -77,6 +91,8 @@ module.exports = {
           title: 'Tailing',
           collapsable: true,
           children: [
+            '/drills/tailing/4chain_kumastacking_a',
+            '/drills/tailing/10chain_3columnavalanche_a',
             '/drills/tailing/11chain_a'
           ]
         },
@@ -131,6 +147,11 @@ module.exports = {
             '/streamers/s2lsoftener'
           ]
         }
+      ],
+
+      '/esports/': [
+        '/esports/overview',
+        '/esports/translation/menus'
       ],
 
       '/settings/': [
