@@ -45,7 +45,7 @@ Press Y to choose a random character. Press - or + to select all characters imme
 
 You can check the [Puyo Nexus wiki](https://puyonexus.com/wiki/Puyo_Puyo_eSports) for the names of the playable characters.
 
-## Match Setup Screen (Tsu)
+## Match Setup Screen
 <br>
 <Figure :imgUrl="'/img/esports/match_setup.jpg'" />
 
@@ -77,6 +77,17 @@ You can check the [Puyo Nexus wiki](https://puyonexus.com/wiki/Puyo_Puyo_eSports
 * **Chain Requirement**: Chains won't send garbage unless the link's number is greater than or equal to this setting.
 * **Target Point**: Setting this lower than the default increases the amount of garbage sent by chains. See [Scoring](https://puyonexus.com/wiki/Scoring)
 * **Puyos to Pop**: The number of Puyos that have to be connected in order to pop.
+
+### Game Settings (Fever)
+<br>
+<Figure :imgUrl="'/img/esports/fever_setup.jpg'" />
+
+* **Fever Count**: The number of Fever gauge orbs that fill when you counterattack.
+* **Fever Correction(?)**: I think this is a percentage that adjusts your damage output in Fever mode.
+* **Margin Time**:  Garbage sent by chains will increase after this interval in seconds.
+* **Chain Requirement**: Chains won't send garbage unless the link's number is greater than or equal to this setting.
+* **Target Point**: Setting this lower than the default increases the amount of garbage sent by chains. See [Scoring](https://puyonexus.com/wiki/Scoring)
+
 
 ## Pause Screen
 <br>
