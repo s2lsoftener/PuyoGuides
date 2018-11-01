@@ -115,9 +115,17 @@ At least, I think this is what this pop-up translates to.
 <br>
 <Figure :imgUrl="'/img/esports/my_icon.jpg'" />
 
+You can find the list of available characters here: [Puyo Nexus wiki](https://puyonexus.com/wiki/Puyo_Puyo_eSports)
+
 ### Player - My Character
 <br>
 <Figure :imgUrl="'/img/esports/my_character.jpg'" />
+
+You can find the list of available characters here: [Puyo Nexus wiki](https://puyonexus.com/wiki/Puyo_Puyo_eSports)
+
+U.S. state names in katakana: [Link](http://www.bnb32.com/misc/japanese-stuff/u-s-state-names-japanese/)
+
+Country names in katakana: [Link](http://nihongo.monash.edu/countrynames.html)
 
 ### Player - My Decor Settings
 <br>
