@@ -6,11 +6,14 @@ title: The Game Screen
 # The Game Screen
 If you're completely new to Puyo Puyo, you should skim through this page to get familiar with the game interface.
 
--- img --
+<Figure :imgUrl="'/img/guides/gamefield.jpg'" :big="true" />
 
 ## Game Field
-The playable area is called the **board** or **game field**. The visible space is 6 columns wide and 12 rows tall. If you listen to people commentate on matches, they'll reference the columns by number from 1 to 6, left to right.
+The playable area is called the **board** or **game field**. The visible space is 6 columns wide and 12 rows tall. If you listen to any Puyo match commentary, the commentators will reference the columns by number.
 
+<Figure :imgUrl="'/img/guides/column_numbers.jpg'" />
+
+<br>
 There's a hidden "13th" row above the game field with special properties. Puyos in the 13th row don't connect to the Puyos below, so you can use it to make tricky or sneaky chains.
 
 <ChainImg :importedData="
@@ -29,12 +32,14 @@ There's a hidden "13th" row above the game field with special properties. Puyos 
   }]" :nextQueue="''" :hasCaption="true">The <RedPuyo /> in the 13th row will connect once it drops down.</ChainImg>
 
 ## Active Piece (Pair)
-The game will generate pairs of Puyos for you to place on the game field. When you press a rotate button, the pair will rotate around the Puyo with the flashing white outline (the Puyo that starts out on the bottom).
--img rotate-
+The game will generate pairs of Puyos for you to place on the game field. When you press a rotate button, the pair will rotate around the Puyo with the flashing white outline.
+
+<Figure :imgUrl="'/img/guides/activepair.gif'" />
 
 ## Garbage Tray
-The **garbage tray** appears over your game field. It tells you how many <GarbagePuyo />Garbage Puyos are about to drop on you.
--- garbagetray crop --
+The **garbage tray** appears over your game field. It indicates how many Garbage Puyos are about to drop on your field.
+
+<Figure :imgUrl="'/img/guides/garbage_tray.jpg'" />
 
 ## Score Display
 The numbers below the game field show you many points you've earned from chaining and soft-dropping your Puyos. It's mostly visual flair, but it's nice to see if you understand the [scoring formula](https://puyonexus.com/wiki/Scoring)

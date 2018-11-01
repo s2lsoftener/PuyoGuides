@@ -40,11 +40,14 @@ module.exports = {
       '/drills/': [
         '/drills/',
         {
-          title: 'Drill Creator',
-          collapsable: true,
-          children: [
-            '/drills/chainrecord',
-          ]
+          title: ' ',
+          collapsable: false,
+          children: []
+        },
+        {
+          title: 'Main Drills',
+          collapsable: false,
+          children: []
         },
         {
           title: 'Basic Chaining',
@@ -98,17 +101,53 @@ module.exports = {
           ]
         },
         {
+          title: ' ',
+          collapsable: false,
+          children: []
+        },
+        {
+          title: 'Player Chains',
+          collapsable: false,
+          children: []
+        },
+        {
           title: 'Yoshi100_Aus',
           collapsable: true,
           children: [
-            '/drills/yoshi100_1'
+            '/drills/playermade/yoshi100_1'
           ]
         },
         {
           title: 'histy',
           collapsable: true,
           children: [
-            '/drills/histy_1'
+            '/drills/playermade/histy_1'
+          ]
+        },
+        {
+          title: 'DdR_Dan',
+          collapsable: true,
+          children: [
+            '/drills/playermade/ddrdan_1'
+          ]
+        },
+        {
+          title: 'Shiningbolt',
+          collapsable: true,
+          children: [
+            '/drills/playermade/shiningbolt_1'
+          ]
+        },
+        {
+          title: ' ',
+          collapsable: false,
+          children: []
+        },
+        {
+          title: 'Tools',
+          collapsable: true,
+          children: [
+            '/drills/chainrecord'
           ]
         }
       ],

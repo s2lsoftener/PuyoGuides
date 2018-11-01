@@ -10,6 +10,7 @@
 
 <script>
 export default {
+	props: ['path'],
 	data() {
 		return {};
 	}, 
@@ -17,7 +18,7 @@ export default {
 		recentFiles() {
 			let files = this.$site.pages.filter(p => {
         
-        return p.path.indexOf('/tutorial/') >= 0;
+        return p.path.indexOf(this.path) >= 0;
 			}).sort((a,b) => {
 				let aDate = new Date(a.frontmatter.published).getTime();
 				let bDate = new Date(b.frontmatter.published).getTime();
@@ -25,8 +26,9 @@ export default {
 				if(diff < 0) return -1;
 				if(diff > 0) return 1;
 				return 0;
-			}).slice(0,5);
-
+			}).reverse().slice(0,5);
+			
+			console.log(files)
 			return files;
 		}
 	}

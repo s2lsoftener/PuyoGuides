@@ -1,5 +1,5 @@
 ---
-title: TestSlideshow with lots of stuff
+title: TestSlideshow
 ---
 <ClientOnly>
 <AssetLoader />

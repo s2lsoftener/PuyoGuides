@@ -1,6 +1,6 @@
 <template>
   <div id="figure-wrapper">
-    <div id="figure">
+    <div id="figure" :class="{ big: big }">
       <div class="image-container">
         <img :src="imgUrl">
       </div>
@@ -14,7 +14,7 @@
 <script>
 export default {
   name: 'Figure',
-  props: ['imgUrl', 'caption'],
+  props: ['imgUrl', 'caption', 'big'],
   data () {
     return {
       figureSlide: 0
@@ -57,5 +57,8 @@ export default {
   text-align: center;
   padding-top: 8px;
   padding-bottom: 4px;
+}
+.big {
+  max-width: 640px !important;
 }
 </style>

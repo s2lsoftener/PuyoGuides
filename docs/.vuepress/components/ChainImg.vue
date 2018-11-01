@@ -57,6 +57,7 @@ export default {
   margin-left: 8px;
   margin-right: 8px;
   margin-bottom: 8px;
+  margin-top: 8px;
   padding-left: 4px;
   padding-right: 4px;
   border-radius: 8px;
