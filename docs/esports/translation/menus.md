@@ -1,5 +1,5 @@
 ---
-title: Menu Translation (Nintendo Switch)
+title: Menu Translation
 ---
 # Puyo Puyo eSports Menu Translation (Nintendo Switch)
 
@@ -140,3 +140,41 @@ Press X to mark a replay as a favorite. This should prevent it from getting dele
 
 * **League Settings**: Change whether to look for a Tsu or Fever matches, or both.
 
+### Casual Matches
+<br>
+<Figure :imgUrl="'/img/esports/room_select.jpg'" />
+
+Press Y to refresh the list of rooms. Press X to create a room.
+
+#### Room Creation
+<br>
+<Figure :imgUrl="'/img/esports/roomcreate_1.jpg'" />
+
+Set settings for joining the room.
+
+* **Password**: Use かけない for no password, かける to enable password. You will be prompted to enter a 4 digit number once you finish the rest of the room settings.
+* **Connection Strength**: Your connection strength must be at this level or higher to join the room.
+
+<br>
+<Figure :imgUrl="'/img/esports/roomcreate_2.jpg'" />
+
+Press left and right to cycle through the multiple tabs on the top. You can change the game settings just like in offline matches. At the pictured screen, you can set the maximum number of players for the room.
+
+<br>
+<Figure :imgUrl="'/img/esports/roomcreate_3.jpg'" />
+
+* **Greeting**: Say a little something to your foe. [Translations by Miz](https://cdn.discordapp.com/attachments/491470008082366465/505160964975362059/unknown.png)
+* **Ready**: Mark yourself as ready. Once all the other players mark themselves as ready, the match will start.
+* **Force Start**: Start the match even if not all players have marked themselves as ready.
+
+## Everybody Puyo Puyo
+<br>
+<Figure :imgUrl="'/img/esports/minna_play_mode.jpg'" />
+
+* **VS**: Play set-matches with your friends and optional computer opponents.
+* **Tournament**: Set up a single elimination bracket.
+
+
+## Notes
+There are some leftover menus that aren't translated, but I left those out because I thought they were self-explanatory.
+If you have any questions, suggestions, or need help navigating the menus still, please ask on the [Puyo Discord](http://bit.ly/puyodiscord)
