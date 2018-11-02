@@ -77,14 +77,21 @@ module.exports = {
           collapsable: true,
           children: [
             '/drills/stairs/5chain_a',
-            '/drills/stairs/8chain_a'
+            '/drills/stairs/8chain_a',
+            '/drills/5chain_stairs_nov2',
+            '/drills/11chain_stairs_nov2'
           ]
         },
         {
           title: 'Sandwich',
           collapsable: true,
           children: [
-            '/drills/sandwich/6chain_a'
+            '/drills/sandwich/6chain_a',
+            '/drills/8chain_sandwich_b_nov2',
+            '/drills/8chain_sandwich_nov2',
+            '/drills/8chain_sandwich_lshape_nov2',
+            '/drills/9chain_sandwich_nov2',
+            '/drills/14chain_sandwich_nov2'
           ]
         },
         {
@@ -93,14 +100,49 @@ module.exports = {
           children: [
             '/drills/lshape/2chain_a',
             '/drills/lshape/4chain_a',
-            '/drills/lshape/6chain_a'
+            '/drills/lshape/6chain_a',
+            '/drills/9chain_lshape_nov2',
+            '/drills/10chain_lshape_nov2',
+            '/drills/11chain_lshape_nov2',
+            '/drills/12chain_lshape_nov2'
           ]
         },
         {
           title: 'GTR',
           collapsable: true,
           children: [
-            '/drills/gtr/14chain_a'
+            '/drills/7chain_GTR_nov2',
+            '/drills/10chain_GTR_nov2',
+            '/drills/11chain_gtr_b_nov2',
+            '/drills/11chain_gtr_nov2',
+            '/drills/12chain_gtr_nov2',
+            '/drills/13chain_gtr_nov2',
+            '/drills/gtr/14chain_a',
+            '/drills/14chain_gtr_cushion_nov2',
+            '/drills/14chain_gtr_nov2'
+          ]
+        },
+        {
+          title: 'Yayoi',
+          collapsable: true,
+          children: [
+            '/drills/8chain_yayoi_nov2',
+            '/drills/10chain_yayoi_nov2',
+            '/drills/13chain_yayoi_nov2'
+          ]
+        },
+        {
+          title: 'New GTR',
+          collapsable: true,
+          children: [
+            '/drills/14chain_newGTR_nov2'
+          ]
+        },
+        {
+          title: 'Fukigen GTR',
+          collapsable: true,
+          children: [
+            '/drills/9chain_fukigen_GTR_nov2'
           ]
         },
         {
@@ -108,8 +150,13 @@ module.exports = {
           collapsable: true,
           children: [
             '/drills/tailing/4chain_kumastacking_a',
+            '/drills/4chain_tanakaspecial_nov2',
+            '/drills/6chain_3columnavalanche_nov2',
+            '/drills/8chain_avalanche_nov2',
+            '/drills/8chain_avalanche_b_nov2',
             '/drills/tailing/10chain_3columnavalanche_a',
-            '/drills/tailing/11chain_a'
+            '/drills/tailing/11chain_a',
+            '/drills/12chain_tanakaspecial_nov2'
           ]
         },
         {

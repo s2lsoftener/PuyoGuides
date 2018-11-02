@@ -30,6 +30,7 @@
             <option>lshape</option>
             <option>tailing</option>
             <option>gtr</option>
+            <option>newgtr</option>
             <option>yayoi</option>
             <option>flatstacking</option>
             <option>fukigen</option>

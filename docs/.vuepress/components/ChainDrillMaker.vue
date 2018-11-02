@@ -9,7 +9,7 @@
     </div>
     <button @click="prevSlide" class="undo">Undo</button><button v-if="replay" @click="playAnswer">Next</button><br><br>
 
-    <button v-if="replay === false" @click="saveJSON(copyPaster, 'chainJSON_', 'text/plain')">Save JSON</button><br>
+    <button v-if="replay === false" @click="saveJSON(copyPaster, `${maxchain}chain_${chainType}_`, 'text/plain')">Save JSON</button><br>
     <!-- <button @click="$emit('reload', copyPaster)">Load JSON</button> -->
     <textarea v-if="replay === false" rows="10" cols="20" v-model="copyPaster" style="vertical-align: middle;"></textarea>
     <!-- <button @click="parseJSON">Parse JSON</button> -->
@@ -97,6 +97,7 @@ export default {
       garbagePoints: 0,
       leftoverGarbagePoints: 0,
       chainLength: 0,
+      maxchain: 0,
       garbageIcons: ['spacer_n', 'spacer_n', 'spacer_n', 'spacer_n', 'spacer_n', 'spacer_n'],
 
       // Animation data arrays
@@ -3094,11 +3095,15 @@ export default {
         }
       }
     },
-    chainLength: function () {
+    chainLength: function (newVal, oldVal) {
       this.ticker.remove(this.animateChainCounter)
       this.timers.chainLength = 0
       this.chainCountDisplay.y = this.chainCountDisplay.origY
       this.ticker.add(this.animateChainCounter)
+
+      if (newVal >= this.maxchain && newVal > oldVal) {
+        this.maxchain = this.chainLength
+      }
     },
     garbage: function () {
       this.ticker.remove(this.animateGarbageTray)
