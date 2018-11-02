@@ -23,8 +23,8 @@
         @mouseover="inputtingText = true" @mouseout="inputtingText = false">
           Type: <select v-model="chainType">
             <option disabled value="">Please select one</option>
-            <option>basics</option>
             <option>playermade</option>
+            <option>basics</option>
             <option>stairs</option>
             <option>sandwich</option>
             <option>lshape</option>
@@ -32,6 +32,7 @@
             <option>gtr</option>
             <option>yayoi</option>
             <option>flatstacking</option>
+            <option>fukigen</option>
             <option>other</option>
           </select>
         </div>

@@ -3154,6 +3154,9 @@ export default {
     },
     gameTitle: function () {
       this.gameData.title = this.gameTitle
+    },
+    chainType: function () {
+      this.gameData.category = this.chainType
     }
   }
 }
