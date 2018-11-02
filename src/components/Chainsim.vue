@@ -20,11 +20,11 @@
     <button @click="saveJSON(copyPaster, 'chainJSON.json', 'text/plain')">Save JSON</button>
     <!-- <p>In bounds?: {{ checkDropInBounds }}</p>
     <p>Game State: {{ gameState }} || stopGame: {{ stopGame }}</p>
-    <p>isDropping: {{ isDropping }} || isPopping: {{ isPopping }}</p>
+    <p>isDropping: {{ isDropping }} || isPopping: {{ isPopping }}</p> -->
     <p>fieldData: '{{ fieldDataString }}',
     <br>shadowData: '{{ shadowDataString }}',
     <br>cursorData: '{{ cursorDataString }}',
-    <br>arrowData: '{{ arrowDataString }}'</p> -->
+    <br>arrowData: '{{ arrowDataString }}'</p>
   </div>
 </template>
 
@@ -80,7 +80,7 @@ export default {
       gameState: 'idle', // idle/playing -> dropping -> popping -> dropping/chainEnded || editor
       gameData: undefined,
       gameReplay: true,
-      gamePlayable: true,
+      gamePlayable: false,
 
       // Field Arrays
       fieldData: [[]], // 2D string array with the main field representation

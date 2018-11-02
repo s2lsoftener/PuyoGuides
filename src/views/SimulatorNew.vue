@@ -28,7 +28,7 @@ export default {
       // seed: Math.round(Math.random() * 128)
       seed: 645,
       useRandomSeed: true,
-      useManualData: false,
+      useManualData: true,
       manualData: {
         seed: 0,
         nextQueue: 'RRBBRRBB'
@@ -41,7 +41,7 @@ export default {
     }
     
     if (this.useRandomSeed === false) {
-      this.jsonFileToLoad = '/chain_json/advanced/tanaka_special_1.json'
+      this.jsonFileToLoad = '/chain_json/default.json'
     }
 
     if (this.useManualData === true) {
@@ -68,11 +68,18 @@ export default {
       xobj.send(null)
     },
     setJSON: function () {
-      this.loadJSON((response) => {
-        this.importedData = JSON.parse(response)
+      if (this.useManualData === false) {
+        this.loadJSON((response) => {
+          this.importedData = JSON.parse(response)
+          this.jsonLoaded = true
+          console.log('JSON loaded!')
+        })
+      } else {
+        console.log('using custom data')
+        // eslint-disable-next-line
+        this.importedData = {"fields":[{"fieldData":["Y","0","0","B","R","0","G","Y","0","Y","Y","R","G","Y","R","B","Y","Y","Y","B","B","R","R","G","G","Y","G","B","R","G","G","R","B","Y","Y","R","G","Y","B","R","R","Y","Y","Y","R","B","R","Y","R","R","B","R","Y","R","Y","Y","B","G","R","R","Y","B","Y","G","B","G","G","G","G","B","G","G","B","B","B","Y","B","B"],"fieldOriginal":["Y","0","0","B","R","0","G","Y","0","Y","Y","R","G","Y","R","B","Y","Y","Y","B","B","R","R","G","G","Y","G","B","R","G","G","R","B","Y","Y","R","G","Y","B","R","R","Y","Y","Y","R","B","R","Y","R","R","B","R","Y","R","Y","Y","B","G","R","R","Y","B","Y","G","B","G","G","G","G","B","G","G","B","B","B","Y","B","B"],"shadowData":"000000000000000000000000000000000000000000000000000000000000000000000000000000","cursorData":"000000000000000000000000000000000000000000000000000000000000000000000000000000","arrowData":"000000000000000000000000000000000000000000000000000000000000000000000000000000","slideText":"...!","autoDrop":true,"advanceNext":true,"puyoPair":"GG"}],"next":{"seed":30400,"nextQueue":"GBBYGBBYYGYRGBBGRGRYBGRYBRYGYRBBRRYYBYGRGGRGYGRYBYGYRBBRRYRRRGRRBRRBGRRYYYRYYRRBYB"}}
         this.jsonLoaded = true
-        console.log('JSON loaded!')
-      })
+      }
     }
   },
   computed: {

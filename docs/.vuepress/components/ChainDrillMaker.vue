@@ -7,7 +7,7 @@
     (isDropping === false || isPopping === false) && droppedPair === false && chainLength === 0 }">
       You're off track...!
     </div>
-    <button @click="prevSlide" class="undo">Undo</button><br><br>
+    <button @click="prevSlide" class="undo">Undo</button><button v-if="replay" @click="playAnswer">Next</button><br><br>
 
     <button v-if="replay === false" @click="saveJSON(copyPaster, 'chainJSON.json', 'text/plain')">Save JSON</button><br>
     <!-- <button @click="$emit('reload', copyPaster)">Load JSON</button> -->
@@ -247,40 +247,40 @@ export default {
       // Color blind settings
       colorSettings: {
         red: {
-          hue: 0,
-          brightness: 100,
-          contrast: 0,
-          saturate: 0
+          r: 255,
+          g: 255,
+          b: 255,
+          tint: false
         },
         green: {
-          hue: 0,
-          brightness: 100,
-          contrast: 0,
-          saturate: 0
+          r: 255,
+          g: 255,
+          b: 255,
+          tint: false
         },
         blue: {
-          hue: 0,
-          brightness: 100,
-          contrast: 0,
-          saturate: 0
+          r: 255,
+          g: 255,
+          b: 255,
+          tint: false
         },
         yellow: {
-          hue: 0,
-          brightness: 100,
-          contrast: 0,
-          saturate: 0
+          r: 255,
+          g: 255,
+          b: 255,
+          tint: false
         },
         purple: {
-          hue: 0,
-          brightness: 100,
-          contrast: 0,
-          saturate: 0
+          r: 255,
+          g: 255,
+          b: 255,
+          tint: false
         },
         garbage: {
-          hue: 0,
-          brightness: 100,
-          contrast: 0,
-          saturate: 0
+          r: 255,
+          g: 255,
+          b: 255,
+          tint: false
         }
       },
 
@@ -630,6 +630,13 @@ export default {
         color = 'spacer'
       }
       this.shadowDisplay[y][x].texture = this.puyoSprites[`${color}_n.png`]
+
+      if (color !== 'spacer') {
+        if (this.colorSettings[color].tint === true) {
+          this.shadowDisplay[y][x].tint = this.rgbToHex(this.colorSettings[color].r, this.colorSettings[color].g, this.colorSettings[color].b)
+        }
+      }
+
       console.log('Updated the shadow sprite.')
     },
     updateCursorSprite: function (x, y) {
@@ -684,6 +691,14 @@ export default {
         }
         this.nextPuyoPairs[i].children[0].texture = this.puyoSprites[`${color1}_n.png`]
         this.nextPuyoPairs[i].children[1].texture = this.puyoSprites[`${color2}_n.png`]
+
+        if (color1 !== 'spacer' && this.colorSettings[color1].tint === true) {
+          this.nextPuyoPairs[i].children[0].tint = this.rgbToHex(this.colorSettings[color1].r, this.colorSettings[color1].g, this.colorSettings[color1].b)
+        }
+
+        if (color2 !== 'spacer' && this.colorSettings[color2].tint === true) {
+          this.nextPuyoPairs[i].children[1].tint = this.rgbToHex(this.colorSettings[color2].r, this.colorSettings[color2].g, this.colorSettings[color2].b)
+        }
       }
 
       this.nextPuyoPairs[0].scale.set(1, 1)
@@ -806,12 +821,13 @@ export default {
         let freePuyo = new Sprite(this.puyoSprites[`${color2}_n.png`])
         axisPuyo.y += 60
 
-        // if (color1 !== 'spacer') {
-        //   axisPuyo.filters = [this.colorFilters[`${color1}`]]
-        // }
-        // if (color2 !== 'spacer') {
-        //   freePuyo.filters = [this.colorFilters[`${color2}`]] 
-        // }
+        if (color1 !== 'spacer' && this.colorSettings[color1].tint === true) {
+          axisPuyo.tint = this.rgbToHex(this.colorSettings[color1].r, this.colorSettings[color1].g, this.colorSettings[color1].b)
+        }
+
+        if (color2 !== 'spacer' && this.colorSettings[color2].tint === true) {
+          freePuyo.tint = this.rgbToHex(this.colorSettings[color2].r, this.colorSettings[color2].g, this.colorSettings[color2].b)
+        }
 
         this.nextPuyoPairs[i] = new PIXI.Container()
         this.nextPuyoPairs[i].addChild(axisPuyo)
@@ -983,9 +999,11 @@ export default {
             : spriteArray[y][x].alpha = 0.4
           spriteArray[y][x].x = this.coordArray[y][x].x
           spriteArray[y][x].y = this.coordArray[y][x].y
-          // if (color !== 'spacer') {
-          //   spriteArray[y][x].filters = [this.colorFilters[`${color}`]]
-          // }
+
+          if (color !== 'spacer' && this.colorSettings[color].tint === true) {
+            spriteArray[y][x].tint = this.rgbToHex(this.colorSettings[color].r, this.colorSettings[color].g, this.colorSettings[color].b)
+          }
+
           this.stage.addChild(spriteArray[y][x])
         }
       }
@@ -1044,7 +1062,7 @@ export default {
         colors[0] = 'spacer'
       }
       if (colors[1] === undefined) {
-        colors[0] = 'spacer'
+        colors[1] = 'spacer'
       }
 
       let axisPuyo = new Sprite(this.puyoSprites[`${colors[0]}_n.png`])
@@ -1056,12 +1074,13 @@ export default {
       axisPuyo.cellPos = { x: 2, y: 1 }
       freePuyo.cellPos = { x: 2, y: 0 }
 
-      // if (colors[0] !== 'spacer') {
-      //   axisPuyo.filters = [this.colorFilters[`${colors[0]}`]]
-      // }
-      // if (colors[1] !== 'spacer') {
-      //   freePuyo.filters = [this.colorFilters[`${colors[1]}`]] 
-      // }
+      if (colors[0] !== 'spacer' && this.colorSettings[colors[0]].tint === true) {
+        axisPuyo.tint = this.rgbToHex(this.colorSettings[colors[0]].r, this.colorSettings[colors[0]].g, this.colorSettings[colors[0]].b)
+      }
+
+      if (colors[1] !== 'spacer' && this.colorSettings[colors[1]].tint === true) {
+        freePuyo.tint = this.rgbToHex(this.colorSettings[colors[1]].r, this.colorSettings[colors[1]].g, this.colorSettings[colors[1]].b)
+      }
 
       this.stage.addChild(axisPuyo)
       this.stage.addChild(freePuyo)
@@ -1090,15 +1109,16 @@ export default {
         colors[0] = 'spacer'
       }
       if (colors[1] === undefined) {
-        colors[0] = 'spacer'
+        colors[1] = 'spacer'
       }
 
-      // if (colors[0] !== 'spacer') {
-      //   axisPuyo.filters = [this.colorFilters[`${colors[0]}`]]
-      // }
-      // if (colors[1] !== 'spacer') {
-      //   freePuyo.filters = [this.colorFilters[`${colors[1]}`]] 
-      // }
+      if (colors[0] !== 'spacer' && this.colorSettings[colors[0]].tint === true) {
+        axisPuyo.tint = this.rgbToHex(this.colorSettings[colors[0]].r, this.colorSettings[colors[0]].g, this.colorSettings[colors[0]].b)
+      }
+
+      if (colors[1] !== 'spacer' && this.colorSettings[colors[1]].tint === true) {
+        freePuyo.tint = this.rgbToHex(this.colorSettings[colors[1]].r, this.colorSettings[colors[1]].g, this.colorSettings[colors[1]].b)
+      }
 
       axisPuyo.visible = true
       freePuyo.visible = true
@@ -1222,7 +1242,19 @@ export default {
         }
         this.playToNextSlide()
       } else {
-        console.log('You can only place Puyos while the board is in an idle state.')
+        console.log('Can\'t put Puyo here.')
+      }
+    },
+    playAnswer: function () {
+      if (this.gameState === 'idle' && this.droppedPair === false && this.checkDropInBounds === true) {
+        if (this.currentSlide === this.gameData.length - 1) {
+          console.log('No more slides')
+        } else if (this.currentSlide < this.gameData.length - 1) {
+          this.droppedPair = true
+          this.playToNextSlide()
+        }
+      } else {
+        console.log('Error??')
       }
     },
     initCursorDisplay: function () {
@@ -1357,9 +1389,10 @@ export default {
           this.dumpDisplay[y][x].anchor.set(0.5)
           this.dumpDisplay[y][x].x = this.coordArray[y][x].x
           this.dumpDisplay[y][x].y = this.coordArray[y][x].y - 60 * 13
-          // if (color !== 'spacer') {
-          //   this.dumpDisplay[y][x].filters = [this.colorFilters[`${color}`]]
-          // }
+
+          if (color !== 'spacer' && this.colorSettings[color].tint === true) {
+            this.dumpDisplay[y][x].tint = this.rgbToHex(this.colorSettings[color].r, this.colorSettings[color].g, this.colorSettings[color].b)
+          }
         }
       }
 
@@ -1905,9 +1938,9 @@ export default {
       }
 
       // Advance frame
-      if (this.stopGame === false) {
-        this.frame += 1
-      }
+      // if (this.stopGame === false) {
+      //   this.frame += 1
+      // }
     },
     animatePopPuyos: function (delta) {
       let t = this.frame
@@ -2475,6 +2508,9 @@ export default {
             nonEmpty.unshift(element)
           })
 
+          // If the column exceeds 13 rows, remove a puyo from the beginning of the array
+          if (nonEmpty.length > 13) nonEmpty.shift()
+
           // Replace the column in the next field data
           for (let y = 0; y < this.Field.totalRows; y++) {
             nextFieldData[y].splice([axisPuyo.cellPos.x], 1, nonEmpty[y])
@@ -2791,14 +2827,14 @@ export default {
         let axisPuyo = this.activePair.axisPuyo
         let freePuyo = this.activePair.freePuyo
         if (axisPuyo.cellPos.x === freePuyo.cellPos.x) {
-          // If the puyos are in the same column, then make sure the current column has 2 cells open.
+          // If the puyos are in the same column, then make sure the current column has 1 cell open.
           let nonEmpty = [] // Cells of a column that aren't empty
           for (let y = 0; y < this.Field.totalRows; y++) {
             if (this.fieldData[y][axisPuyo.cellPos.x] !== '0') {
               nonEmpty.push(this.fieldData[y][axisPuyo.cellPos.x])
             }
           }
-          if (nonEmpty.length <= this.Field.totalRows - 2) {
+          if (nonEmpty.length <= this.Field.totalRows - 1) {
             return true
           } else {
             return false

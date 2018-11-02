@@ -45,6 +45,18 @@ module.exports = {
           children: []
         },
         {
+          title: 'Tools',
+          collapsable: false,
+          children: [
+            '/drills/chainrecord'
+          ]
+        },
+        {
+          title: ' ',
+          collapsable: false,
+          children: []
+        },
+        {
           title: 'Main Drills',
           collapsable: false,
           children: []
@@ -121,7 +133,27 @@ module.exports = {
           title: 'histy',
           collapsable: true,
           children: [
-            '/drills/playermade/histy_1'
+            '/drills/playermade/histy_1',
+            '/drills/playermade/histy_nov2/chain1_stairs',
+            '/drills/playermade/histy_nov2/chain2_sandwich',
+            '/drills/playermade/histy_nov2/chain3_gtr',
+            '/drills/playermade/histy_nov2/chain4_flat',
+            '/drills/playermade/histy_nov2/chain5_gtr',
+            '/drills/playermade/histy_nov2/chain6_sandwich',
+            '/drills/playermade/histy_nov2/chain7_gtrlong',
+            '/drills/playermade/histy_nov2/chain8_gtr',
+            '/drills/playermade/histy_nov2/chain9_lshape',
+            '/drills/playermade/histy_nov2/chain10_sandwich',
+            '/drills/playermade/histy_nov2/chain11_sandwich',
+            '/drills/playermade/histy_nov2/chain12_avalanche',
+            '/drills/playermade/histy_nov2/chain13_flat',
+            '/drills/playermade/histy_nov2/chain14_lshape',
+            '/drills/playermade/histy_nov2/chain15_sandwich',
+            '/drills/playermade/histy_nov2/chain16_',
+            '/drills/playermade/histy_nov2/chain17_kumastacking',
+            '/drills/playermade/histy_nov2/chain18_flat',
+            '/drills/playermade/histy_nov2/chain19_sandwich',
+            '/drills/playermade/histy_nov2/chain20_kumastacking'
           ]
         },
         {
@@ -139,15 +171,24 @@ module.exports = {
           ]
         },
         {
-          title: ' ',
-          collapsable: false,
-          children: []
-        },
-        {
-          title: 'Tools',
+          title: 'Pyro Jay',
           collapsable: true,
           children: [
-            '/drills/chainrecord'
+            '/drills/playermade/pyrojay_1'
+          ]
+        },
+        {
+          title: 'Raikon',
+          collapsable: true,
+          children: [
+            '/drills/playermade/raikon_1'
+          ]
+        },
+        {
+          title: 'Lon',
+          collapsable: true,
+          children: [
+            '/drills/playermade/lon_1'
           ]
         }
       ],
