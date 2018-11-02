@@ -25,7 +25,7 @@ module.exports = {
           { text: 'Menu Translation', link: '/esports/translation/menus' }
         ]
       },
-      { text: 'Streamers', link: '/streamers/s2lsoftener'},
+      { text: 'Streamers', link: '/streamers/'},
       {
         text: 'Community',
         items: [
@@ -236,10 +236,14 @@ module.exports = {
           ],
         },
         {
-          title: 'Strong Western Players (R2300+)',
+          title: 'Strong Western Players (R2400+)',
           collapsible: true,
           children: [
-            '/streamers/s2lsoftener'
+            '/streamers/',
+            '/streamers/shiro',
+            '/streamers/raikon',
+            '/streamers/yoshi100',
+            '/streamers/caneofpacci'
           ]
         }
       ],

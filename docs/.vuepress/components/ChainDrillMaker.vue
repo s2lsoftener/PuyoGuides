@@ -5,11 +5,11 @@
     </div>
     <div class="error-container" v-if="replay === true" :class="{ 'error-true': !onTrack  && gameState === 'idle' &&
     (isDropping === false || isPopping === false) && droppedPair === false && chainLength === 0 }">
-      You're off track...!
+      😠
     </div>
     <button @click="prevSlide" class="undo">Undo</button><button v-if="replay" @click="playAnswer">Next</button><br><br>
 
-    <button v-if="replay === false" @click="saveJSON(copyPaster, 'chainJSON.json', 'text/plain')">Save JSON</button><br>
+    <button v-if="replay === false" @click="saveJSON(copyPaster, 'chainJSON_', 'text/plain')">Save JSON</button><br>
     <!-- <button @click="$emit('reload', copyPaster)">Load JSON</button> -->
     <textarea v-if="replay === false" rows="10" cols="20" v-model="copyPaster" style="vertical-align: middle;"></textarea>
     <!-- <button @click="parseJSON">Parse JSON</button> -->
@@ -51,7 +51,7 @@ const Puyo = {
 
 export default {
   name: 'ChainDrillMaker',
-  props: ['importedData', 'mersenneData', 'useRandomSeed', 'manualData', 'useManualData', 'slideText', 'replay', 'inputtingText'],
+  props: ['importedData', 'mersenneData', 'useRandomSeed', 'manualData', 'useManualData', 'slideText', 'replay', 'inputtingText', 'gameTitle'],
   data () {
     return {
       /* Settings */
@@ -2632,20 +2632,25 @@ export default {
       }
     },
     saveJSON: function (data, filename, type) {
-      let file = new Blob([data], { type: type })
-      if (window.navigator.msSaveOrOpenBlob) {
-        window.navigator.msSaveOrOpenBlob(file, filename)
+      if (this.gameTitle.length > 0 && this.slideText.length > 0) {
+        let time = new Date().getTime()
+        let file = new Blob([data], { type: type })
+        if (window.navigator.msSaveOrOpenBlob) {
+          window.navigator.msSaveOrOpenBlob(file, filename + time + '.json')
+        } else {
+          let a = document.createElement('a')
+          let url = URL.createObjectURL(file)
+          a.href = url
+          a.download = filename + time + '.json'
+          document.body.appendChild(a)
+          a.click()
+          setTimeout(function () {
+            document.body.removeChild(a)
+            window.URL.revokeObjectURL(url)
+          }, 0)
+        }
       } else {
-        let a = document.createElement('a')
-        let url = URL.createObjectURL(file)
-        a.href = url
-        a.download = filename
-        document.body.appendChild(a)
-        a.click()
-        setTimeout(function () {
-          document.body.removeChild(a)
-          window.URL.revokeObjectURL(url)
-        }, 0)
+        alert('Please enter a game title and hint.\n\nFor the hint, it\'s helpful if you say something like "Target: 5 Chain"')
       }
     },
     keyboard: function (keyCode) {
@@ -3146,6 +3151,9 @@ export default {
     },
     inputtingText: function () {
       console.log('hovering over input box')
+    },
+    gameTitle: function () {
+      this.gameData.title = this.gameTitle
     }
   }
 }

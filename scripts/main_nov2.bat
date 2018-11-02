@@ -1,0 +1,2 @@
+node makeDrillFiles.js drill_input/4chain_tanakaspecial.json "4 Chain - Tanaka Special" tailing 4chain_tanakaspecial_nov2 manual "true" "Target: 4 Chain"
+node makeDrillFiles.js drill_input/5chain_stairs.json "5 Chain - Stairs" tailing 5chain_stairs_nov2 manual "true" "Target: 5 Chain"

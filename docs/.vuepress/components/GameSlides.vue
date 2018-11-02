@@ -5,7 +5,7 @@
         <chain-drill-maker v-if="jsonLoaded"
         :importedData="importedData" :manualData="manualData" :mersenneData="mersenneData"
         :useRandomSeed="useRandomSeed" :useManualData="useManualData" :slideText="slideText"
-        :replay="replay" :inputtingText="inputtingText"
+        :replay="replay" :inputtingText="inputtingText" :gameTitle="gameTitle"
         v-on:change-comment-input="updateSlideText" v-on:reload="reloadGame">
         </chain-drill-maker>
       </div>
@@ -14,6 +14,10 @@
           <!-- <button @click="goToPrevSlide">&larr;</button>
           Slide: {{ slideshowSlide + 1 }} / {{ this.importedData.fields.length }}
           <button @click="goToNextSlide">&rarr;</button> -->
+        </div>
+        <div v-if="replay === undefined || replay === false" class="slide-text"
+        @mouseover="inputtingText = true" @mouseout="inputtingText = false">
+          Title: <input v-model="gameTitle" v-if="replay === false" />
         </div>
         <div v-if="replay === undefined || replay === false" class="slide-text"
         @mouseover="inputtingText = true" @mouseout="inputtingText = false">
@@ -50,6 +54,7 @@ export default {
       slideText: 'OK',
       renderGame: true,
       inputtingText: false,
+      gameTitle: ''
     }
   },
   created () {
