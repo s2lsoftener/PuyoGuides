@@ -112,7 +112,6 @@ module.exports = {
           collapsable: true,
           children: [
             '/drills/7chain_GTR_nov2',
-            '/drills/10chain_GTR_nov2',
             '/drills/11chain_gtr_b_nov2',
             '/drills/11chain_gtr_nov2',
             '/drills/12chain_gtr_nov2',
