@@ -111,15 +111,15 @@ module.exports = {
           title: 'GTR',
           collapsable: true,
           children: [
-            '/drills/7chain_gtr_nov2',
-            '/drills/10chain_gtr_nov2',
-            '/drills/11chain_gtr_b_nov2',
-            '/drills/11chain_gtr_nov2',
-            '/drills/12chain_gtr_nov2',
-            '/drills/13chain_gtr_nov2',
+            '/drills/7chain_gtr_nov_2',
+            '/drills/10chain_gtr_nov_2',
+            '/drills/11chain_gtr_b_nov_2',
+            '/drills/11chain_gtr_nov_2',
+            '/drills/12chain_gtr_nov_2',
+            '/drills/13chain_gtr_nov_2',
             '/drills/gtr/14chain_a',
-            '/drills/14chain_gtr_cushion_nov2',
-            '/drills/14chain_gtr_nov2'
+            '/drills/14chain_gtr_cushion_nov_2',
+            '/drills/14chain_gtr_nov_2'
           ]
         },
         {
@@ -135,14 +135,14 @@ module.exports = {
           title: 'New GTR',
           collapsable: true,
           children: [
-            '/drills/14chain_newgtr_nov2'
+            '/drills/14chain_newgtr_nov_2'
           ]
         },
         {
           title: 'Fukigen GTR',
           collapsable: true,
           children: [
-            '/drills/9chain_fukigen_gtr_nov2'
+            '/drills/9chain_fukigen_gtr_nov_2'
           ]
         },
         {
