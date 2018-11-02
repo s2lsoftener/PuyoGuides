@@ -73,6 +73,8 @@ export default function prepareReplay (json) {
 
   // Create object
   let newJSON = {
+    title: json.title,
+    chaintype: json.chaintype,
     fields: slides,
     next: {
       seed: json.next.seed,
