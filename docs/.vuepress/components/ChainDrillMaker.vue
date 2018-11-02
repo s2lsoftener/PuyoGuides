@@ -2966,6 +2966,8 @@ export default {
       if (this.gameLoaded === true) {
         if (this.gameData.length > 1) {
           return JSON.stringify(prepareReplay({
+            title: this.gameTitle,
+            chaintype: this.chainType,
             fields: this.gameData,
             next: {
               seed: this.nextPuyoSeed,
@@ -2974,6 +2976,8 @@ export default {
           }))
         } else {
           return JSON.stringify({
+            title: this.gameTitle,
+            chaintype: this.chainType,
             fields: this.gameData,
             next: {
               seed: this.nextPuyoSeed,
@@ -3156,12 +3160,6 @@ export default {
     },
     inputtingText: function () {
       console.log('hovering over input box')
-    },
-    gameTitle: function () {
-      this.gameData.title = this.gameTitle
-    },
-    chainType: function () {
-      this.gameData.category = this.chainType
     }
   }
 }
