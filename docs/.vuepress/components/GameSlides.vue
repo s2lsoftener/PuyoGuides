@@ -5,7 +5,7 @@
         <chain-drill-maker v-if="jsonLoaded"
         :importedData="importedData" :manualData="manualData" :mersenneData="mersenneData"
         :useRandomSeed="useRandomSeed" :useManualData="useManualData" :slideText="slideText"
-        :replay="replay" :inputtingText="inputtingText" :gameTitle="gameTitle"
+        :replay="replay" :inputtingText="inputtingText" :gameTitle="gameTitle" :chainType="chainType"
         v-on:change-comment-input="updateSlideText" v-on:reload="reloadGame">
         </chain-drill-maker>
       </div>
@@ -19,6 +19,24 @@
         @mouseover="inputtingText = true" @mouseout="inputtingText = false">
           Title: <input v-model="gameTitle" v-if="replay === false" />
         </div>
+        <div v-if="replay === undefined || replay === false" class="slide-text"
+        @mouseover="inputtingText = true" @mouseout="inputtingText = false">
+          Type: <select v-model="chainType">
+            <option disabled value="">Please select one</option>
+            <option>basics</option>
+            <option>playermade</option>
+            <option>stairs</option>
+            <option>sandwich</option>
+            <option>lshape</option>
+            <option>tailing</option>
+            <option>gtr</option>
+            <option>yayoi</option>
+            <option>flatstacking</option>
+            <option>other</option>
+          </select>
+        </div>
+
+        
         <div v-if="replay === undefined || replay === false" class="slide-text"
         @mouseover="inputtingText = true" @mouseout="inputtingText = false">
           Write a helpful hint.
@@ -54,7 +72,8 @@ export default {
       slideText: 'OK',
       renderGame: true,
       inputtingText: false,
-      gameTitle: ''
+      gameTitle: '',
+      chainType: ''
     }
   },
   created () {

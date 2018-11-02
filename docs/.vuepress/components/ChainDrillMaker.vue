@@ -51,7 +51,7 @@ const Puyo = {
 
 export default {
   name: 'ChainDrillMaker',
-  props: ['importedData', 'mersenneData', 'useRandomSeed', 'manualData', 'useManualData', 'slideText', 'replay', 'inputtingText', 'gameTitle'],
+  props: ['importedData', 'mersenneData', 'useRandomSeed', 'manualData', 'useManualData', 'slideText', 'replay', 'inputtingText', 'gameTitle', 'chainType'],
   data () {
     return {
       /* Settings */
@@ -2632,7 +2632,7 @@ export default {
       }
     },
     saveJSON: function (data, filename, type) {
-      if (this.gameTitle.length > 0 && this.slideText.length > 0) {
+      if (this.gameTitle.length > 0 && this.slideText.length > 0 && this.chainType !== '') {
         let time = new Date().getTime()
         let file = new Blob([data], { type: type })
         if (window.navigator.msSaveOrOpenBlob) {
@@ -2650,7 +2650,7 @@ export default {
           }, 0)
         }
       } else {
-        alert('Please enter a game title and hint.\n\nFor the hint, it\'s helpful if you say something like "Target: 5 Chain"')
+        alert('Please enter a game title, hint, and chaintype.\n\nFor the hint, it\'s helpful if you say something like "Target: 5 Chain"')
       }
     },
     keyboard: function (keyCode) {
