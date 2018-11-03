@@ -48,7 +48,8 @@ module.exports = {
           title: 'Tools',
           collapsable: false,
           children: [
-            '/drills/chainrecord'
+            '/drills/chainrecord',
+            '/drills/drill_loader'
           ]
         },
         {

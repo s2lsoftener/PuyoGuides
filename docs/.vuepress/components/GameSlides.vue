@@ -59,7 +59,7 @@ const MersenneTwister = require('mersenne-twister')
 
 export default {
   name: 'GameSlides',
-  props: ['jsonFileToLoad', 'useRandomSeed', 'useManualData', 'manualData', 'replay'],
+  props: ['jsonFileToLoad', 'useRandomSeed', 'useManualData', 'manualData', 'replay', 'loaderData'],
   components: {
     ChainDrillMaker
   },
@@ -75,7 +75,8 @@ export default {
       renderGame: true,
       inputtingText: false,
       gameTitle: '',
-      chainType: ''
+      chainType: '',
+      gatherJSON: {}
     }
   },
   created () {
@@ -97,6 +98,26 @@ export default {
     
     this.mersenneData = this.generatedNextQueue
     this.setJSON()
+  },
+  mounted () {
+    if (localStorage.getItem('gatherJSON')) {
+      try {
+        this.gatherJSON = JSON.parse(localStorage.getItem('gatherJSON'))
+        console.log('Found gatherJSON')
+      } catch(e) {
+        console.log('Removing gatherJSON from localStorage')
+        localStorage.removeItem('gatherJSON')
+      }
+    }
+
+    this.gatherJSON[this.jsonFileToLoad] = {
+      title: this.jsonFileToLoad,
+      completed: false,
+      dateComplete: null
+    }
+
+    localStorage.setItem('gatherJSON', JSON.stringify(this.gatherJSON))
+    console.log(JSON.stringify(this.gatherJSON))
   },
   methods: {
     loadJSON: function (callback) {
@@ -121,11 +142,16 @@ export default {
       xobj.send(null)
     },
     setJSON: function () {
-      this.loadJSON((response) => {
-        this.importedData = JSON.parse(response)
+      if (this.loaderData === undefined) {
+        this.loadJSON((response) => {
+          this.importedData = JSON.parse(response)
+          this.jsonLoaded = true
+          console.log('JSON loaded!')
+        })
+      } else {
+        this.importedData = this.loaderData
         this.jsonLoaded = true
-        console.log('JSON loaded!')
-      })
+      }
     },
     updateSlideText: function (text) {
       this.slideText = text

@@ -1,9 +1,9 @@
 ---
 title: 11 Chain - New GTR
 ---
-<ClientOnly><AssetLoader :reloadOnce="true" />
 # 11 Chain - New GTR
-
-<br><br><GameSlides :jsonFileToLoad="'newgtr/11chain_gtr_nov2.json'" :useRandomSeed="false" :useManualData="false" :replay="true"></GameSlides>
+<ClientOnly>
+<AssetLoader :reloadOnce="true" />
+<GameSlides :jsonFileToLoad="'newgtr/11chain_newgtr.json'" :useRandomSeed="false" :useManualData="false" :replay="true"></GameSlides>
 
 </ClientOnly>

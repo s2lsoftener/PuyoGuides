@@ -26,7 +26,7 @@ export default {
 				if(diff < 0) return -1;
 				if(diff > 0) return 1;
 				return 0;
-			}).reverse().slice(0,5);
+			}).slice(0,10);
 			
 			console.log(files)
 			return files;

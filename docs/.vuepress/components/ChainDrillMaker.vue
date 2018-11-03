@@ -7,7 +7,7 @@
     (isDropping === false || isPopping === false) && droppedPair === false && chainLength === 0 }">
       😠
     </div>
-    <button @click="prevSlide" class="undo">Undo</button><button v-if="replay" @click="playAnswer">Next</button><br><br>
+    <button @click="prevSlide" class="undo">Undo</button><button @click="playAnswer">Next/Redo</button><br><br>
 
     <button v-if="replay === false" @click="saveJSON(copyPaster, `${maxchain}chain_${chainType}_`, 'text/plain')">Save JSON</button><br>
     <!-- <button @click="$emit('reload', copyPaster)">Load JSON</button> -->
