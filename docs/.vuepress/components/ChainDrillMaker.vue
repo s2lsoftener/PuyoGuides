@@ -1,5 +1,6 @@
 <template>
   <div class="game-container">
+    {{ simulationSpeed }}
     <div class="game-wrapper">
       <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
     </div>
@@ -1862,7 +1863,7 @@ export default {
                   this.puyoDisplay[y][x].anchor.set(0.5, 1)
                 }
               } else if (this.puyoStates[y][x] === 'bouncing') {
-                this.cellTimer[y][x] += 1
+                this.cellTimer[y][x] += 1 * this.simulationSpeed
                 if (this.cellTimer[y][x] <= 8) {
                   this.puyoDisplay[y][x].scale.y -= 0.2 / 8
                   this.puyoDisplay[y][x].scale.x += 0.2 / 8
@@ -1914,7 +1915,7 @@ export default {
                   this.dumpDisplay[y][x].anchor.set(0.5, 1)
                 }
               } else if (this.dumpPuyoStates[y][x] === 'bouncing') {
-                this.dumpCellTimer[y][x] += 1
+                this.dumpCellTimer[y][x] += 1 * this.simulationSpeed
                 if (this.dumpCellTimer[y][x] <= 8) {
                   this.dumpDisplay[y][x].scale.y -= 0.2 / 8
                   this.dumpDisplay[y][x].scale.x += 0.2 / 8
@@ -1959,7 +1960,7 @@ export default {
                 ? this.puyoDisplay[y][x].alpha = 1
                 : this.puyoDisplay[y][x].alpha = 0
 
-              this.cellTimer[y][x] += 1
+              this.cellTimer[y][x] += 1 * this.simulationSpeed
               if (this.cellTimer[y][x] >= 24) {
                 console.log('need to finish popping')
                 this.puyoStates[y].splice(x, 1, 'checkDrops')
@@ -1979,7 +1980,7 @@ export default {
 
       // Advance frame
       if (this.stopGame === false) {
-        this.frame += 1
+        this.frame += 1 * this.simulationSpeed
       }
     },
     animateCursors: function (delta) {
@@ -2067,7 +2068,7 @@ export default {
           if (this.needToChangeSlides === false && this.gameReplay === false) {
             this.mergeInShadowLayer(true)
           }
-          this.simulationSpeed = 1
+          this.rewindingSlide ? this.simulationSpeed = 24 : this.simulationSpeed = 1
         } else if (this.gameState === 'popping' || this.gameState === 'dropping') {
           this.simulationSpeed = 24
         }
@@ -2078,7 +2079,7 @@ export default {
           if (this.needToChangeSlides === false && this.gameReplay === false) {
             this.mergeInShadowLayer(true)
           }
-          this.simulationSpeed = 1
+          this.rewindingSlide ? this.simulationSpeed = 24 : this.simulationSpeed = 1
         } else if ((this.gameState === 'popping' || this.gameState === 'dropping') && this.simulationSpeed === 8) {
           this.simulationSpeed = 24
         } else if (this.gameState === 'popping' || this.gameState === 'dropping') {
@@ -2269,8 +2270,10 @@ export default {
         this.timers.next = 0
         this.updateNextPuyoSprites()
         this.updateActivePair()
-        this.droppedPair = false
-        this.rewindingSlide = false
+        this.ticker.addOnce(() => { // Hopefully this prevents mashing...
+          this.droppedPair = false
+          this.rewindingSlide = false
+        })
         return
       }
       this.timers.next += 1

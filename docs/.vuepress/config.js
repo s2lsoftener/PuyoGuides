@@ -49,7 +49,8 @@ module.exports = {
           collapsable: false,
           children: [
             '/drills/chainrecord',
-            '/drills/drill_loader'
+            '/drills/drill_loader',
+            '/drills/drill_loader_random_seed'
           ]
         },
         {

@@ -59,7 +59,7 @@ const MersenneTwister = require('mersenne-twister')
 
 export default {
   name: 'GameSlides',
-  props: ['jsonFileToLoad', 'useRandomSeed', 'useManualData', 'manualData', 'replay', 'loaderData'],
+  props: ['jsonFileToLoad', 'useRandomSeed', 'useManualData', 'manualData', 'replay', 'loaderData', 'manualSeed'],
   components: {
     ChainDrillMaker
   },
@@ -69,7 +69,7 @@ export default {
       jsonLoaded: false,
       importedData: undefined,
       mersenneData: '',
-      seed: 645,
+      seed: 0,
       editText: true,
       slideText: 'OK',
       renderGame: true,
@@ -81,8 +81,11 @@ export default {
   },
   created () {
     // Set seed of mersenne twister to random number
-    if (this.useRandomSeed === true) {
-      this.seed = Math.round(Math.random() * 65535)
+    if (this.useRandomSeed === false && this.manualSeed !== undefined) {
+      this.seed = this.manualSeed
+      console.log(this.seed)
+    } else if (this.useRandomSeed === true) {
+      this.seed = Math.round(Math.random() * 65535 * 2424)
     }
     
     // Load default slide template if jsonFileToLoad isn't passed in as a prop
