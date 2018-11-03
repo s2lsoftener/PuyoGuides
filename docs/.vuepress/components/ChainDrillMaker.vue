@@ -1,6 +1,5 @@
 <template>
   <div class="game-container">
-    {{ simulationSpeed }}
     <div class="game-wrapper">
       <div id="game" ref="game"></div> <!-- PIXI.js app stage goes in here -->
     </div>

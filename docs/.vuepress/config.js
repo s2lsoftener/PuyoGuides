@@ -50,7 +50,7 @@ module.exports = {
           children: [
             '/drills/chainrecord',
             '/drills/drill_loader',
-            '/drills/drill_loader_random_seed'
+            '/drills/drill_loader_manual_seed'
           ]
         },
         {
