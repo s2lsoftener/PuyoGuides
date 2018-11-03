@@ -81,7 +81,7 @@ export default {
   },
   created () {
     // Set seed of mersenne twister to random number
-    if (this.useRandomSeed === false && this.manualSeed !== undefined) {
+    if (this.manualSeed !== undefined) {
       this.seed = this.manualSeed
       console.log(this.seed)
     } else if (this.useRandomSeed === true) {

@@ -10,8 +10,11 @@ module.exports = {
   },
   head: [
     ['script', { src: '/js/pixi.min.js' }],
-    ['script', { src: '/js/bezier-easing.js' }]
+    ['script', { src: '/js/bezier-easing.js' }],
+    ['link', { rel: 'manifest', href: '/manifest.json' }],
+    ['meta', { name: 'theme-color', content: '#66bb6a' }]
   ],
+  serviceWorker: true,
   themeConfig: {
     nav: [
       { text: 'Tutorial', link: '/tutorial/' },
