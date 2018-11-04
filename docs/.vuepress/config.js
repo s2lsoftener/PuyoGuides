@@ -16,6 +16,14 @@ module.exports = {
   ],
   serviceWorker: true,
   themeConfig: {
+    serviceWorker: {
+      updatePopup: true // Boolean | Object, default to undefined.
+      // If set to true, the default text config will be: 
+      // updatePopup: { 
+      //    message: "New content is available.", 
+      //    buttonText: "Refresh" 
+      // }
+    },
     nav: [
       { text: 'Tutorial', link: '/tutorial/' },
       { text: 'Form List', link: 'https://puyonexus.com/wiki/List_of_Chaining_Forms'},
