@@ -1,7 +1,7 @@
 {
   "name": "S2's Puyo Puyo Tutorials",
   "short_name": "Puyo Guides",
-  "start_url": "./index.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#66bb6a",
   "description": "New Puyo Puyo Tutorials.",
