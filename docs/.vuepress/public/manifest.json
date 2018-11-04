@@ -1,14 +1,19 @@
 {
-    "name": "S2's Puyo Puyo Tutorials",
-    "short_name": "Puyo Guides",
-    "start_url": "/",
-    "display": "standalone",
-    "background_color": "#66bb6a",
-    "description": "New Puyo Puyo Tutorials.",
-    "theme_color": "#66bb6a",
-    "icons": [{
-      "src": "icon192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    }]
+  "name": "S2's Puyo Puyo Tutorials",
+  "short_name": "Puyo Guides",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#66bb6a",
+  "description": "New Puyo Puyo Tutorials.",
+  "theme_color": "#66bb6a",
+  "icons": [{
+    "src": "icon192.png",
+    "sizes": "192x192",
+    "type": "image/png"
+  },
+  {
+    "src": "icon512.png",
+    "sizes": "512x512",
+    "type": "image/png"
+  }]
 }
