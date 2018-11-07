@@ -302,7 +302,7 @@ module.exports = {
         },
         {
           title: 'Strong Western Players (R2400+)',
-          collapsible: false,
+          collapsable: false,
           children: [
             '/streamers/',
             '/streamers/shiro',
