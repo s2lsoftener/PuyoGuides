@@ -2,7 +2,7 @@
   <div id="figure-wrapper">
     <div id="figure" :class="{ big: big }">
       <div class="image-container">
-        <img :src="imgUrl">
+        <a :href="imgUrl"><img :src="imgUrl"></a>
       </div>
       <div class="text-container">
         {{ caption }}
