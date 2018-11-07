@@ -14,11 +14,4 @@ He's great at helping people with Puyo questions. If you're a newbie, give him a
 :::
 
 ## Twitch
-<iframe
-    src="https://player.twitch.tv/?channel=raikonshurtugal"
-    height="315"
-    width="560"
-    frameborder="0"
-    scrolling="no"
-    allowfullscreen="true">
-</iframe>
+<Twitch :id="'raikonshurtugal'" />

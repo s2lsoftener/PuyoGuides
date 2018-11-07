@@ -11,4 +11,4 @@ My hero. The most popular and strongest western Puyo YouTuber and the coolest du
 :::
 
 ## YouTube
-<iframe width="560" height="315" src="https://www.youtube.com/embed/live_stream?channel=UCPGDMc_WXLvtNt1Qn-9wrzA" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<YouTube :id="'UCPGDMc_WXLvtNt1Qn-9wrzA'" :isStream="true" />

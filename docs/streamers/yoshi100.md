@@ -12,11 +12,4 @@ One of the youngest players in the western Puyo community and our rising star. H
 :::
 
 ## Twitch
-<iframe
-    src="https://player.twitch.tv/?channel=yoshi100_aus"
-    height="315"
-    width="560"
-    frameborder="0"
-    scrolling="no"
-    allowfullscreen="true">
-</iframe>
+<Twitch :id="'yoshi100_aus'" />

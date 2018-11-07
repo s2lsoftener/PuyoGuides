@@ -13,14 +13,7 @@ I'm trying my best ok?
 :::
 
 ## YouTube
-<iframe width="560" height="315" src="https://www.youtube.com/embed/live_stream?channel=UCCbgGkrZxWzX1LyDZtA9hKA" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<YouTube :id="'UCCbgGkrZxWzX1LyDZtA9hKA'" :isStream="true" />
 
 ## Twitch
-<iframe
-    src="https://player.twitch.tv/?channel=S2LSOFTENER"
-    height="315"
-    width="560"
-    frameborder="0"
-    scrolling="no"
-    allowfullscreen="true">
-</iframe>
+<Twitch :id="'S2LSOFTENER'" />

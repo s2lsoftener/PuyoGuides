@@ -12,11 +12,4 @@ My big bro. You might know him from his speedruns, such as for the Crash Bandico
 :::
 
 ## Twitch
-<iframe
-    src="https://player.twitch.tv/?channel=caneofpacci"
-    height="315"
-    width="560"
-    frameborder="0"
-    scrolling="no"
-    allowfullscreen="true">
-</iframe>
+<Twitch :id="'caneofpacci'" />

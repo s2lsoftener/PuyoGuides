@@ -293,6 +293,7 @@ module.exports = {
           title: 'Legends of Japan (~R2800+)',
           collapsable: true,
           children: [
+            '/streamers/momoken'
           ],
         },
         {
