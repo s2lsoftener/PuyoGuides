@@ -291,14 +291,18 @@ module.exports = {
       '/streamers/': [
         {
           title: 'Legends of Japan (~R2800+)',
-          collapsable: true,
+          collapsable: false,
           children: [
-            '/streamers/momoken'
+            '/streamers/momoken',
+            '/streamers/sibakazu',
+            '/streamers/live',
+            '/streamers/amemiyataiyou',
+            '/streamers/mokou'
           ],
         },
         {
           title: 'Strong Western Players (R2400+)',
-          collapsible: true,
+          collapsible: false,
           children: [
             '/streamers/',
             '/streamers/shiro',
