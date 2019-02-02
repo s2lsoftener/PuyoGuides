@@ -1,4 +1,6 @@
 # PuyoGuides
+View the site at https://www.s2lsoftener.com/
+
 A guide website that uses VuePress to generate static pages. I used Pixi.js to make the chain simulator, which is inside reusable vue components.
 I've had to start doing difficult, unmanageable edits because of the way I made the chain simulator dependent on vue.js, so I'm rewriting it over at https://github.com/s2lsoftener/puyosim-ts
 
